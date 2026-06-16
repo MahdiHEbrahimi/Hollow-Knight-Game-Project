@@ -1,7 +1,7 @@
 package com.mahdi.screen.ui;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Sound; // 🌟 پکیج مدیریت صدای خالص LibGDX
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.mahdi.screen.manager.CursorManager;
 
 public class MenuButton extends Actor {
     private String text;
@@ -25,11 +26,7 @@ public class MenuButton extends Actor {
     private final float PADDING = 25f;
 
     private static Texture defaultMarker;
-    
-    // 🌟 رفرنس استاتیک برای صدای هوور
     private static Sound hoverSound;
-    
-    // 💥 رفرنس استاتیک جدید برای ذخیره افکت صوتی کلیک در رم
     private static Sound clickSound;
 
     public MenuButton(String text, BitmapFont font, Runnable clickAction) {
@@ -50,19 +47,22 @@ public class MenuButton extends Actor {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                 if (pointer == -1 && !isHovered) {
-                    getHoverSound().play(); 
+                    getHoverSound().play();
                 }
                 isHovered = true;
+
+                CursorManager.getInstance().setPointerMode(true);
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 isHovered = false;
+
+                CursorManager.getInstance().setPointerMode(false);
             }
 
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // 💥 پخش مستقیم صدای کلیک از حافظه رم بدون تاخیر
                 getClickSound().play();
 
                 if (MenuButton.this.clickAction != null) {
@@ -79,7 +79,6 @@ public class MenuButton extends Actor {
         return defaultMarker;
     }
 
-    // 🛠 متد کمکی لود تنبل صدای هوور
     private static Sound getHoverSound() {
         if (hoverSound == null) {
             hoverSound = Gdx.audio.newSound(Gdx.files.internal("global/BottomSelection.mp3"));
@@ -87,7 +86,6 @@ public class MenuButton extends Actor {
         return hoverSound;
     }
 
-    // 💥 متد کمکی لود تنبل صدای کلیک (فقط یک‌بار فایل mp3 را بارگذاری می‌کند)
     private static Sound getClickSound() {
         if (clickSound == null) {
             clickSound = Gdx.audio.newSound(Gdx.files.internal("global/BottomClicked.mp3"));
@@ -95,17 +93,15 @@ public class MenuButton extends Actor {
         return clickSound;
     }
 
-    // 🧼 متد دیسپوز توسعه‌یافته برای پاک‌سازی کامل رم از مارکر و هر دو صدا
     public static void disposeDefault() {
         if (defaultMarker != null) {
             defaultMarker.dispose();
             defaultMarker = null;
         }
         if (hoverSound != null) {
-            hoverSound.dispose(); 
+            hoverSound.dispose();
             hoverSound = null;
         }
-        // 💥 آزاد کردن حافظه اختصاص داده شده به صدای کلیک
         if (clickSound != null) {
             clickSound.dispose();
             clickSound = null;
@@ -131,10 +127,10 @@ public class MenuButton extends Actor {
         if (isHovered && markerTexture != null) {
             batch.setColor(1f, 1f, 1f, currentAlpha);
 
-            float markerWidth = 70f; 
-            float markerHeight = 44f; 
+            float markerWidth = 70f;
+            float markerHeight = 44f;
             float dynamicPadding = PADDING + 10f;
-            float markerY = getY() + (getHeight() - markerHeight) / 2f; 
+            float markerY = getY() + (getHeight() - markerHeight) / 2f;
 
             batch.draw(markerTexture,
                     textX - dynamicPadding - markerWidth,
@@ -149,7 +145,7 @@ public class MenuButton extends Actor {
                     markerHeight,
                     0, 0,
                     markerTexture.getWidth(), markerTexture.getHeight(),
-                    true, false); 
+                    true, false);
 
             batch.setColor(Color.WHITE);
         }

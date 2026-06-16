@@ -31,12 +31,6 @@ public class MusicManager {
         return instance;
     }
 
-    /**
-     * Call this inside your screen's render() method:
-     * MusicManager.getInstance().update(delta);
-     * 
-     * This handles the non-blocking volume transitions seamlessly over real-time.
-     */
     public void update(float delta) {
         if (fadeState == FadeState.NONE) return;
 
