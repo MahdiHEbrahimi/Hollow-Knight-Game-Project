@@ -1,20 +1,17 @@
 package com.mahdi.model.menus;
 
-import com.mahdi.controller.menuControllers.MainMenuController;
 import com.mahdi.controller.menuControllers.MenuController;
+import com.mahdi.controller.menuControllers.StartGameMenuController;
 import com.mahdi.screen.pannels.BasePanel;
-import com.mahdi.screen.pannels.MainMenuPanel;
 
-public class MainMenu extends Menu {
-
+public class StartGameMenu extends Menu {
     @Override
     public BasePanel getNewPanel() {
-        return new MainMenuPanel();
+        return null;
     }
 
     @Override
     public MenuController getController() {
-        return MainMenuController.getInstance();
+        return StartGameMenuController.getInstance();
     }
-
 }

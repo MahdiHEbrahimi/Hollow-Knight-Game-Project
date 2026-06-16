@@ -1,11 +1,18 @@
 package com.mahdi.model.enums;
 
-import com.mahdi.model.menus.Menu;
-import com.mahdi.model.menus.MainMenu;
+import com.mahdi.controller.menuControllers.MenuController;
+import com.mahdi.model.menus.*;
 import com.mahdi.screen.BaseScreen;
+import com.mahdi.screen.pannels.BasePanel;
 
 public enum MenuType {
-    MAIN_MENU(new MainMenu());
+    MAIN_MENU(new MainMenu()),
+    START_GAME(new StartGameMenu()),
+    SETTINGS(new SettingMenu()),
+    GUIDE(new GuideMenu()),
+    ACHIEVEMENTS(new AchievementsMenu()),
+    PAUSE(new PauseMenu()),
+    INVENTORY(new InventoryMenu());
 
     public final Menu menu;
 
@@ -13,11 +20,11 @@ public enum MenuType {
         this.menu = menu;
     }
 
-    public BaseScreen getScreen() {
-        return this.menu.getScreen();
+    public BasePanel getNewPanel() {
+        return this.menu.getNewPanel();
     }
 
-    public Object getController() {
+    public MenuController getController() {
         return this.menu.getController();
     }
 }

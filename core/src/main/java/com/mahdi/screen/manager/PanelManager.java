@@ -1,8 +1,6 @@
 package com.mahdi.screen.manager;
 
-import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.mahdi.screen.pannels.BasePanel;
 
 public class PanelManager {
@@ -10,8 +8,6 @@ public class PanelManager {
 
     private Stage stage;
     private BasePanel currentPanel;
-
-    private boolean isTransitioning = false;
 
     private PanelManager() {}
 
@@ -26,54 +22,28 @@ public class PanelManager {
         this.stage = stage;
     }
 
+    /**
+     * جایگزینی فوری پنل فعلی با پنل جدید.
+     * بدون هیچ fade یا transition.
+     */
     public void performPanelTransition(BasePanel newPanel) {
         if (stage == null) {
             throw new IllegalStateException("PanelManager not initialized with a Stage. Call initialize() first.");
         }
 
-        // اگر انتقالی در جریان است، درخواست را نادیده بگیر (یا می‌توان صف گذاشت)
-        if (isTransitioning) {
-            return;
-        }
-
-        isTransitioning = true;
-
+        // حذف و پاکسازی فوری پنل قبلی
         if (currentPanel != null) {
-            // Fade Out پنل فعلی
-            currentPanel.addAction(Actions.sequence(
-                Actions.fadeOut(2f),
-                new Action() {
-                    @Override
-                    public boolean act(float delta) {
-                        // حذف از Stage
-                        currentPanel.remove();
-                        // آزادسازی منابع پنل قدیمی
-                        currentPanel.dispose();
-                        currentPanel = null;
-
-                        // اضافه کردن پنل جدید با Fade In
-                        addNewPanelWithFadeIn(newPanel);
-                        isTransitioning = false;
-                        return true;
-                    }
-                }
-            ));
-        } else {
-            addNewPanelWithFadeIn(newPanel);
-            isTransitioning = false;
+            currentPanel.remove();
+            currentPanel.dispose();
+            currentPanel = null;
         }
+
+        // افزودن فوری پنل جدید
+        currentPanel = newPanel;
+        currentPanel.getColor().a = 1f;
+        stage.addActor(currentPanel);
     }
 
-    private void addNewPanelWithFadeIn(BasePanel panel) {
-        panel.getColor().a = 0f;           // شفاف کامل
-        stage.addActor(panel);
-        panel.addAction(Actions.fadeIn(2f));
-        currentPanel = panel;
-    }
-
-    /**
-     * پاک‌سازی نهایی در صورت نیاز.
-     */
     public void dispose() {
         if (currentPanel != null) {
             currentPanel.remove();

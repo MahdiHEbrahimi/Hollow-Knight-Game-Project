@@ -6,6 +6,7 @@ import com.mahdi.model.graphic.GraphicsQuality;
 import com.mahdi.screen.MainMenuScreen;
 import com.mahdi.screen.manager.CursorManager;
 import com.mahdi.screen.manager.FontManager;
+import com.mahdi.screen.manager.PanelManager;
 
 public class HollowKnightGame extends Game {
 
@@ -13,6 +14,8 @@ public class HollowKnightGame extends Game {
 
     @Override
     public void create() {
+        com.mahdi.model.status.Initialization.init();
+        
         com.mahdi.screen.manager.ScreenManager.getInstance().init(this);
 
         updateGraphics(currentQuality);
