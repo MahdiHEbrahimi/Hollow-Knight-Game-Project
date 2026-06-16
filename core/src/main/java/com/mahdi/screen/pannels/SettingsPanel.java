@@ -6,32 +6,43 @@ import com.badlogic.gdx.utils.Align;
 import com.mahdi.model.enums.MenuType;
 import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.manager.FontManager;
-import com.mahdi.screen.manager.PanelManager;
+import com.mahdi.screen.manager.MusicManager;
 import com.mahdi.screen.ui.MenuButton;
-import com.mahdi.view.CommandSender;
-import com.mahdi.view.InputDTOs.settingMenuInputDTOs.BackInputDTO;
+import com.mahdi.screen.ui.MenuSlider;
+import com.mahdi.screen.ui.SliderBinding;
 
 public class SettingsPanel extends BasePanel {
+    int brightness = 50;
 
     public SettingsPanel() {
-        // پوشش کل صفحه و وسط‌چین کردن محتوا
         this.setFillParent(true);
         this.align(Align.center);
 
-        // بارگذاری و افزودن آرت عنوان تنظیمات
+        // عنوان
         Texture titleTexture = new Texture(Gdx.files.internal("SettingsMenu/SettingTittle.png"));
-        addArt(titleTexture, 670f, 870f, 1220f, 520f); // ابعاد و موقعیت مشابه MainMenu
-
-        // فاصله از بالا برای دیده شدن لوگو
+        addArt(titleTexture, 670f, 870f, 1220f, 520f);
         this.padTop(400f);
 
         float spacing = 40f;
 
-        // دکمه‌های تنظیمات با متدهای خالی داخلی
-        this.add(new MenuButton("MUSIC VOLUME",
+        // اسلایدر حجم موسیقی
+        this.add(new MenuSlider("Music Volume",
                 FontManager.getInstance().getEnglishMenuFont(),
-                this::onMusicVolume)).padBottom(spacing).row();
+                null, null, null,
+                new Texture("global/button_marker.png"),
+                new SliderBinding() {
+                    @Override
+                    public int get() {
+                        return (int) (MusicManager.getInstance().getVolume() * 100);
+                    }
 
+                    @Override
+                    public void set(int value) {
+                        MusicManager.getInstance().setVolume(value / 100f);
+                    }
+                })).padBottom(spacing - 20f).row();
+
+        // دکمه‌های صدا و کنترل
         this.add(new MenuButton("MUTE MUSIC",
                 FontManager.getInstance().getEnglishMenuFont(),
                 this::onMuteMusic)).padBottom(spacing).row();
@@ -52,25 +63,34 @@ public class SettingsPanel extends BasePanel {
                 FontManager.getInstance().getEnglishMenuFont(),
                 this::onResetControls)).padBottom(spacing).row();
 
-        this.add(new MenuButton("BRIGHTNESS",
+        // اسلایدر روشنایی
+        this.add(new MenuSlider("Brightness Volume",
                 FontManager.getInstance().getEnglishMenuFont(),
-                this::onBrightness)).padBottom(spacing).row();
+                null, null, null,
+                new Texture("global/button_marker.png"),
+                new SliderBinding() {
+                    @Override
+                    public int get() {
+                        // return AppStatus.getVolume();
+                        return brightness;
+                    }
+
+                    @Override
+                    public void set(int value) {
+                        // AppStatus.setVolume(value);
+                        brightness = value;
+                        System.out.println("[Settings] Brightness set to: " + value);
+                    }
+                })).padBottom(spacing - 20f).row();
 
         this.add(new MenuButton("LANGUAGE",
                 FontManager.getInstance().getEnglishMenuFont(),
                 this::onLanguage)).padBottom(spacing).row();
 
-        // دکمه بازگشت به منوی اصلی
+        // بازگشت
         this.add(new MenuButton("BACK",
                 FontManager.getInstance().getEnglishMenuFont(),
                 this::onBack)).row();
-    }
-
-    // ========== متدهای خالی (فعلاً فقط چاپ و TODO) ==========
-
-    private void onMusicVolume() {
-        System.out.println("[Settings] Music Volume pressed.");
-        // TODO: پیاده‌سازی تغییر حجم صدا
     }
 
     private void onMuteMusic() {
@@ -98,23 +118,17 @@ public class SettingsPanel extends BasePanel {
         // TODO: بازنشانی کنترل‌ها
     }
 
-    private void onBrightness() {
-        System.out.println("[Settings] Brightness adjustment.");
-        // TODO: تغییر روشنایی
-    }
-
     private void onLanguage() {
         System.out.println("[Settings] Language change.");
         // TODO: تغییر زبان
     }
 
     private void onBack() {
-        // CommandSender.send(new BackInputDTO());
         AppStatus.ChangeMenuAndPanel(MenuType.MAIN_MENU);
     }
 
     @Override
     public void dispose() {
-        super.dispose(); // تکسچرهای Art را پاک می‌کند
+        super.dispose();
     }
 }

@@ -5,7 +5,7 @@ import com.badlogic.gdx.audio.Music;
 
 public class MusicManager {
     private static MusicManager instance;
-    
+
     private Music currentMusic;
     private Music previousMusic; // Kept safely for cross-fading to prevent memory leaks
 
@@ -14,15 +14,19 @@ public class MusicManager {
     private String currentTrackName = "";
 
     // Fade State Tracking Flags
-    private enum FadeState { NONE, FADE_IN, CROSS_FADE }
+    private enum FadeState {
+        NONE, FADE_IN, CROSS_FADE
+    }
+
     private FadeState fadeState = FadeState.NONE;
 
     private float fadeTimer = 0f;
-    private float fadeInDuration = 3.0f;   // 3 seconds for clean start
+    private float fadeInDuration = 3.0f; // 3 seconds for clean start
     private float crossFadeDuration = 1.5f; // 1.5 seconds for transitioning tracks
     private float prevMusicVolumeStart = 0f;
 
-    private MusicManager() {}
+    private MusicManager() {
+    }
 
     public static MusicManager getInstance() {
         if (instance == null) {
@@ -32,7 +36,8 @@ public class MusicManager {
     }
 
     public void update(float delta) {
-        if (fadeState == FadeState.NONE) return;
+        if (fadeState == FadeState.NONE)
+            return;
 
         fadeTimer += delta;
 
@@ -42,7 +47,7 @@ public class MusicManager {
                 progress = 1.0f;
                 fadeState = FadeState.NONE; // Transition finished
             }
-            
+
             if (currentMusic != null) {
                 // Linear volume calculation relative to the target master volume
                 float targetVol = progress * masterVolume;
@@ -54,7 +59,7 @@ public class MusicManager {
             if (progress >= 1.0f) {
                 progress = 1.0f;
                 fadeState = FadeState.NONE;
-                
+
                 // End of transition: Safely clean up previous track memory
                 safelyDisposePrevious();
             }
@@ -74,7 +79,8 @@ public class MusicManager {
     }
 
     /**
-     * Unified music trigger method. Handles both clean fade-in and non-blocking cross-fading.
+     * Unified music trigger method. Handles both clean fade-in and non-blocking
+     * cross-fading.
      */
     public void playMusic(String fileName) {
         // If the same track is requested and already active, leave it be
@@ -89,11 +95,11 @@ public class MusicManager {
         if (currentMusic != null) {
             // SCENARIO 2: Cross-Fade transition (1.5 seconds)
             safelyDisposePrevious(); // Ensure older tracks are flushed out completely
-            
+
             previousMusic = currentMusic;
             // Capture the exact volume it left off at to decrease smoothly
-            prevMusicVolumeStart = previousMusic.getVolume(); 
-            
+            prevMusicVolumeStart = previousMusic.getVolume();
+
             fadeState = FadeState.CROSS_FADE;
         } else {
             // SCENARIO 1: Fresh Fade-In (3.0 seconds)
@@ -104,11 +110,11 @@ public class MusicManager {
             currentTrackName = fileName;
             currentMusic = Gdx.audio.newMusic(Gdx.files.internal(fileName));
             currentMusic.setLooping(true);
-            
+
             // Start from absolute silence
             currentMusic.setVolume(0f);
             currentMusic.play();
-            
+
             fadeTimer = 0f; // Reset timeline tracker
         } catch (Exception e) {
             Gdx.app.error("MusicManager", "Error playing music file: " + fileName, e);
@@ -117,11 +123,12 @@ public class MusicManager {
     }
 
     /**
-     * Explicit method to change the target sound volume manually (e.g., slider adjustments)
+     * Explicit method to change the target sound volume manually (e.g., slider
+     * adjustments)
      */
     public void setVolume(float volume) {
         this.masterVolume = Math.max(0f, Math.min(volume, 1f)); // Bounds clamp between 0.0 and 1.0
-        
+
         // If no active fade animation is running, lock instantly to target volume
         if (fadeState == FadeState.NONE && currentMusic != null) {
             currentMusic.setVolume(isMuted ? 0f : masterVolume);
@@ -137,17 +144,18 @@ public class MusicManager {
      */
     public void setMuted(boolean mute) {
         this.isMuted = mute;
-        
+
         // Dynamically shift current active components
         if (currentMusic != null) {
             if (fadeState == FadeState.NONE) {
                 currentMusic.setVolume(mute ? 0f : masterVolume);
             } else {
                 // If mid-fade, force zero instantly to honor the mute button
-                if (mute) currentMusic.setVolume(0f);
+                if (mute)
+                    currentMusic.setVolume(0f);
             }
         }
-        
+
         if (previousMusic != null && mute) {
             previousMusic.setVolume(0f);
         }
@@ -196,5 +204,9 @@ public class MusicManager {
 
     public void dispose() {
         stopMusic();
+    }
+
+    public boolean getMute() {
+        return isMuted;
     }
 }

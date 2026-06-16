@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.mahdi.screen.manager.CursorManager;
+import com.mahdi.screen.manager.SoundManager;
 
 public class MenuButton extends Actor {
     private String text;
@@ -47,7 +48,9 @@ public class MenuButton extends Actor {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                 if (pointer == -1 && !isHovered) {
-                    getHoverSound().play();
+                    // getHoverSound().play();
+                    // 🌟 افکت هاور با رعایت وضعیت سیستم میوت از طریق متد playSound پخش می‌شود
+                    SoundManager.getInstance().playSound(getHoverSound());
                 }
                 isHovered = true;
 
@@ -63,7 +66,9 @@ public class MenuButton extends Actor {
 
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                getClickSound().play();
+                // getClickSound().play();
+                // 🌟 افکت کلیک با رعایت وضعیت سیستم میوت از طریق متد playSound پخش می‌شود
+                SoundManager.getInstance().playSound(getClickSound());
 
                 if (MenuButton.this.clickAction != null) {
                     MenuButton.this.clickAction.run();
