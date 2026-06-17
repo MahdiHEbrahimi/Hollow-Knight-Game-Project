@@ -13,6 +13,9 @@ public class SoundManager {
     // وضعیت مرکزی میوت بودن افکت‌های صوتی
     private boolean isMuted = false;
 
+    // 🌟 متغیر جدید برای ذخیره ولوم اصلی افکت‌ها (پیش‌فرض 0.6)
+    private float masterVolume = 0.6f;
+
     private SoundManager() {
         soundCache = new ObjectMap<>();
     }
@@ -25,9 +28,16 @@ public class SoundManager {
     }
 
     /**
+     * 🌟 متد کمکی داخلی برای محاسبه ولوم بر اساس قانون توان دو
+     * این متد تغییر اسلایدر را برای گوش انسان بسیار طبیعی‌تر می‌کند.
+     */
+    private float getCalculatedVolume() {
+        if (isMuted) return 0f;
+        return masterVolume * masterVolume;
+    }
+
+    /**
      * روش اول: پخش صدا بر اساس مسیر فایل (مدیریت خودکار کش)
-     * برای دکمه‌هایی که نمی‌خواهی دستی شیء Sound را برایشان بسازی و Dispose کنی
-     * عالی است.
      */
     public void playSFX(String filePath) {
         if (isMuted)
@@ -45,22 +55,28 @@ public class SoundManager {
             }
         }
 
-        sound.play();
+        // 🌟 پاس دادن ولوم محاسبه‌شده به متد play
+        sound.play(getCalculatedVolume());
     }
 
     /**
      * روش دوم: پخش مستقیم یک شیء Sound که از قبل لود شده است
-     * این متد بدون دخالت در کش، صدا را دریافت کرده و با رعایت شرط میوت بودن بازی،
-     * آن را پخش می‌کند.
-     * 
-     * @param sound شیء صوتی لود شده در کلاس دکمه یا اسکرین
      */
     public void playSound(Sound sound) {
-        // اگر سیستم میوت بود یا شیء صدا به هر دلیلی نال بود، پخش نکن
         if (isMuted || sound == null)
             return;
 
-        sound.play();
+        sound.play(getCalculatedVolume());
+    }
+
+    // 🌟 اضافه شدن متدهای مدیریت ولوم مشابه با MusicManager
+    public void setVolume(float volume) {
+        // محدود کردن مقدار ورودی بین 0.0 و 1.0 برای امنیت بیشتر
+        this.masterVolume = Math.max(0f, Math.min(volume, 1f));
+    }
+
+    public float getVolume() {
+        return masterVolume;
     }
 
     public boolean isMuted() {

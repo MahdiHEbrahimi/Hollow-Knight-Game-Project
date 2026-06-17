@@ -155,4 +155,13 @@ public class MenuButton extends Actor {
             batch.setColor(Color.WHITE);
         }
     }
+
+    //Dynamic botton
+    public void setText(String newText) {
+        this.text = newText;
+        this.textLayout.setText(font, text);
+        float dynamicWidth = textLayout.width + 150f;
+        setSize(dynamicWidth, getHeight());
+    }
+    
 }

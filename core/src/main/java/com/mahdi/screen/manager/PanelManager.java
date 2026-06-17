@@ -9,7 +9,8 @@ public class PanelManager {
     private Stage stage;
     private BasePanel currentPanel;
 
-    private PanelManager() {}
+    private PanelManager() {
+    }
 
     public static PanelManager getInstance() {
         if (instance == null) {
@@ -42,6 +43,7 @@ public class PanelManager {
         currentPanel = newPanel;
         currentPanel.getColor().a = 1f;
         stage.addActor(currentPanel);
+        stage.addActor(BrightnessController.getInstance());
     }
 
     public void dispose() {

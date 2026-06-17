@@ -1,39 +1,80 @@
 package com.mahdi.model.status;
 
+import com.mahdi.HollowKnightGame;
 import com.mahdi.model.enums.MenuType;
+import com.mahdi.model.graphic.GraphicsQuality;
+import com.mahdi.screen.manager.BrightnessController;
 import com.mahdi.screen.manager.MusicManager;
 import com.mahdi.screen.manager.PanelManager;
 import com.mahdi.screen.manager.SoundManager;
 
 public class AppStatus {
+    public static HollowKnightGame game;
     public static MenuType curreMenu;
+    public static GraphicsQuality Quality = GraphicsQuality.Ultra_High;
+
+    public static void setGame(HollowKnightGame game) {
+        AppStatus.game = game;
+    }
+
+    public static HollowKnightGame getGame() {
+        return game;
+    }
+
+    public static GraphicsQuality getQuality() {
+        return Quality;
+    }
+
+    public static void setQuality(GraphicsQuality quality) {
+        Quality = quality;
+        game.updateGraphics(quality);
+    }
 
     public static void ChangeMenuAndPanel(MenuType target) {
         curreMenu = target;
         PanelManager.getInstance().performPanelTransition(target.getNewPanel());
     }
 
-    public static int getVolume() {
-        return (int) MusicManager.getInstance().getVolume() * 100;
+    // ==========================================
+    // مدیریت ولوم و میوت موسیقی (Music)
+    // ==========================================
+    public static int getMusicVolume() {
+        return (int) (MusicManager.getInstance().getVolume() * 100);
     }
 
-    public static void setVolume(int amount) {
-        MusicManager.getInstance().setVolume(amount / 100);
+    public static void setMusicVolume(int amount) {
+        MusicManager.getInstance().setVolume(amount / 100f);
     }
 
-    public void setMutedSFX(boolean muted) {
-        SoundManager.getInstance().setMuted(muted);
-    }
-
-    public boolean getMuteSFX() {
-        return SoundManager.getInstance().getMute();
-    }
-
-    public void setMutedMusic(boolean muted) {
+    public static void setMutedMusic(boolean muted) {
         MusicManager.getInstance().setMuted(muted);
     }
 
-    public boolean getMuteMusic() {
+    public static boolean getMuteMusic() {
         return MusicManager.getInstance().getMute();
+    }
+
+    public static int getSFXVolume() {
+        return (int) (SoundManager.getInstance().getVolume() * 100);
+    }
+
+    public static void setSFXVolume(int amount) {
+        SoundManager.getInstance().setVolume(amount / 100f);
+    }
+
+    public static void setMutedSFX(boolean muted) {
+        SoundManager.getInstance().setMuted(muted);
+    }
+
+    public static boolean getMuteSFX() {
+        return SoundManager.getInstance().getMute();
+    }
+
+    public static int getBrightness() {
+        return (int) ((BrightnessController.getInstance().getBrightness() + 1f) * 50f);
+    }
+
+    public static void setBrightness(int value) {
+        BrightnessController.getInstance().setBrightness((value / 50f) - 1f);
     }
 }
