@@ -6,8 +6,6 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.mahdi.HollowKnightGame;
 import com.mahdi.screen.manager.MusicManager;
 import com.mahdi.screen.manager.PanelManager;
 import com.mahdi.screen.pannels.MainMenuPanel;
@@ -15,18 +13,16 @@ import com.mahdi.screen.pannels.MainMenuPanel;
 import java.util.ArrayList;
 
 public class MainMenuScreen extends BaseScreen {
-    private Stage stage;
-    private Texture backgroundTexture;
-    private SpriteBatch batch;
+    private final Texture backgroundTexture;
+    private final SpriteBatch batch;
 
     private Texture blurParticleTexture;
-    private ArrayList<VoidParticle> particles;
+    private final ArrayList<VoidParticle> particles;
     private final int PARTICLE_COUNT = 50;
     private final float MAX_HEIGHT_ZONE = 1200f;
 
-    public MainMenuScreen(HollowKnightGame game) {
-        super(game);
-        this.stage = new Stage(this.viewport);
+    public MainMenuScreen() {
+        super();
         this.batch = (SpriteBatch) stage.getBatch();
 
         Gdx.input.setInputProcessor(stage);
@@ -88,8 +84,6 @@ public class MainMenuScreen extends BaseScreen {
         batch.setColor(Color.WHITE);
         batch.end();
 
-        stage.act(Math.min(delta, 1 / 30f));
-        stage.draw();
     }
 
     @Override
@@ -152,14 +146,14 @@ public class MainMenuScreen extends BaseScreen {
 
     @Override
     public void dispose() {
-        if (stage != null) {
-            stage.dispose();
-        }
+        PanelManager.getInstance().dispose();
+
         if (backgroundTexture != null) {
             backgroundTexture.dispose();
         }
         if (blurParticleTexture != null) {
             blurParticleTexture.dispose();
         }
+        super.dispose();
     }
 }

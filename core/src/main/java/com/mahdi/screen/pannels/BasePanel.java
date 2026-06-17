@@ -7,7 +7,6 @@ import java.util.ArrayList;
 
 public abstract class BasePanel extends Table {
 
-    // --- کلاس کمکی برای نگهداری اطلاعات یک تصویر ---
     public static class Art {
         public Texture texture;
         public float x, y, width, height;
@@ -23,9 +22,6 @@ public abstract class BasePanel extends Table {
 
     private final ArrayList<Art> arts = new ArrayList<>();
 
-    /**
-     * اضافه کردن یک Art به پنل.
-     */
     protected void addArt(Texture texture, float x, float y, float width, float height) {
         arts.add(new Art(texture, x, y, width, height));
     }

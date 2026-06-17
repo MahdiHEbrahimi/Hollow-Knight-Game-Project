@@ -23,10 +23,6 @@ public class PanelManager {
         this.stage = stage;
     }
 
-    /**
-     * جایگزینی فوری پنل فعلی با پنل جدید.
-     * بدون هیچ fade یا transition.
-     */
     public void performPanelTransition(BasePanel newPanel) {
         if (stage == null) {
             throw new IllegalStateException("PanelManager not initialized with a Stage. Call initialize() first.");
@@ -43,7 +39,6 @@ public class PanelManager {
         currentPanel = newPanel;
         currentPanel.getColor().a = 1f;
         stage.addActor(currentPanel);
-        stage.addActor(BrightnessController.getInstance());
     }
 
     public void dispose() {

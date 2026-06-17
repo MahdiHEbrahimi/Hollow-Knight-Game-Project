@@ -13,8 +13,8 @@ public class ScreenManager {
 
     private HollowKnightGame game;
     private BaseScreen targetScreen;
-    private SpriteBatch batch;
-    private Texture blackOverlay;
+    private final SpriteBatch batch;
+    private final Texture blackOverlay;
 
     private enum TransitionState {
         NONE, FADE_OUT, FADE_IN
@@ -22,9 +22,9 @@ public class ScreenManager {
 
     private TransitionState state = TransitionState.NONE;
 
-    private float alpha = 0f;
-    
-    private float currentDuration = 2.5f; 
+    private float blackScreenAlpha = 0f;
+
+    private float currentDuration = 2.5f;
 
     private ScreenManager() {
         batch = new SpriteBatch();
@@ -50,18 +50,18 @@ public class ScreenManager {
         this.targetScreen = firstScreen;
         this.game.setScreen(firstScreen);
 
-        this.currentDuration = 5.0f;       
+        this.currentDuration = 5.0f;
         this.state = TransitionState.FADE_IN;
-        this.alpha = 1.0f;
+        this.blackScreenAlpha = 1.0f;
     }
 
     public void performTransition(BaseScreen nextScreen) {
-        if (state != TransitionState.NONE) return; 
+        if (state != TransitionState.NONE) return;
 
         this.targetScreen = nextScreen;
-        this.currentDuration = 2.5f;       
+        this.currentDuration = 2.5f;
         this.state = TransitionState.FADE_OUT;
-        this.alpha = 0f;                
+        this.blackScreenAlpha = 0f;
     }
 
     public void updateAndRender(float delta) {
@@ -70,24 +70,24 @@ public class ScreenManager {
 
         if (state == TransitionState.FADE_OUT) {
 
-            alpha += delta / currentDuration;
-            if (alpha >= 1.0f) {
-                alpha = 1.0f;
+            blackScreenAlpha += delta / currentDuration;
+            if (blackScreenAlpha >= 1.0f) {
+                blackScreenAlpha = 1.0f;
                 game.setScreen(targetScreen);
                 state = TransitionState.FADE_IN;
             }
         } else if (state == TransitionState.FADE_IN) {
 
-            alpha -= delta / currentDuration;
-            if (alpha <= 0.0f) {
-                alpha = 0.0f;
+            blackScreenAlpha -= delta / currentDuration;
+            if (blackScreenAlpha <= 0.0f) {
+                blackScreenAlpha = 0.0f;
                 state = TransitionState.NONE;
                 targetScreen = null;
             }
         }
 
         batch.begin();
-        batch.setColor(1f, 1f, 1f, alpha);
+        batch.setColor(1f, 1f, 1f, blackScreenAlpha);
         batch.draw(blackOverlay, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch.setColor(Color.WHITE);
         batch.end();

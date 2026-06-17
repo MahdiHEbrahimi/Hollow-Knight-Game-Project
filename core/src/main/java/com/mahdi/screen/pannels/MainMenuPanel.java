@@ -6,9 +6,7 @@ import com.badlogic.gdx.utils.Align;
 import com.mahdi.model.enums.MenuType;
 import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.manager.FontManager;
-import com.mahdi.screen.manager.PanelManager;
 import com.mahdi.screen.ui.MenuButton;
-import com.mahdi.view.InputDTOs.mainMenuInputDTOs.ChangeMenuInputDTO;
 
 public class MainMenuPanel extends BasePanel {
 

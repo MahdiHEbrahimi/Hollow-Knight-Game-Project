@@ -20,11 +20,11 @@ public class SettingsPanel extends BasePanel {
     public Texture soundOnTex;
     public Texture soundOffTex;
 
-    private MenuSlider musicSlider;
-    private MenuSlider sfxSlider;
-    private MenuSlider brightnessSlider;
+    private final MenuSlider musicSlider;
+    private final MenuSlider sfxSlider;
+    private final MenuSlider brightnessSlider;
 
-    private MenuButton qualityButton;
+    private final MenuButton qualityButton;
 
     public SettingsPanel() {
         this.setFillParent(true);

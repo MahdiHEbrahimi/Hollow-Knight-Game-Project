@@ -17,27 +17,27 @@ import com.mahdi.screen.manager.CursorManager;
 import com.mahdi.screen.manager.SoundManager;
 
 public class MenuSlider extends Actor {
-    private Texture trackTexture;
-    private Texture fillTexture;
-    private Texture knobTexture;
-    private Texture markerTexture;
+    private final Texture trackTexture;
+    private final Texture fillTexture;
+    private final Texture knobTexture;
+    private final Texture markerTexture;
 
     // متغیرهای مربوط به آیکون تنظیم وضعیت
-    private boolean hasIcon;
-    private Texture iconOnTexture;
-    private Texture iconOffTexture;
-    private Rectangle iconBounds;
-    private float iconSize = 72f;
-    private ToggleBinding toggleBinding;
+    private final boolean hasIcon;
+    private final Texture iconOnTexture;
+    private final Texture iconOffTexture;
+    private final Rectangle iconBounds;
+    private final float iconSize = 72f;
+    private final ToggleBinding toggleBinding;
     private int preMuteValue = 50;
 
     private int value;
     private String valueText = "";
-    private BitmapFont font;
-    private GlyphLayout textLayout;
+    private final BitmapFont font;
+    private final GlyphLayout textLayout;
 
-    private String labelText;
-    private GlyphLayout labelLayout;
+    private final String labelText;
+    private final GlyphLayout labelLayout;
 
     private boolean isHovered = false;
     private float hoverAlpha = 0.5f;
@@ -47,12 +47,12 @@ public class MenuSlider extends Actor {
     private static Sound hoverSound;
     private static Sound clickSound;
 
-    private float trackHeight = 20f;
-    private float knobWidth = 30f;
-    private float knobHeight = 40f;
-    private float padding = 15f;
+    private final float trackHeight = 20f;
+    private final float knobWidth = 30f;
+    private final float knobHeight = 40f;
+    private final float padding = 15f;
 
-    private SliderBinding binding;
+    private final SliderBinding binding;
 
     public MenuSlider(String label, BitmapFont font,
                       Texture trackTexture, Texture fillTexture,
@@ -65,20 +65,20 @@ public class MenuSlider extends Actor {
         this.fillTexture = fillTexture;
         this.knobTexture = knobTexture;
         this.markerTexture = markerTexture;
-        
+
         this.hasIcon = hasIcon;
         this.iconOnTexture = iconOnTexture;
         this.iconOffTexture = iconOffTexture;
         this.binding = binding;
         this.toggleBinding = toggleBinding;
-        
+
         this.iconBounds = new Rectangle();
         this.textLayout = new GlyphLayout();
         this.labelLayout = new GlyphLayout();
         if (labelText != null && !labelText.isEmpty()) {
             labelLayout.setText(font, labelText);
         }
-        
+
         this.setSize(450, 110f);
 
         if (binding != null) {
@@ -106,13 +106,13 @@ public class MenuSlider extends Actor {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (button == 0) {
                     SoundManager.getInstance().playSound(getClickSound());
-                    
+
                     // بررسی کلیک روی آیکون
                     if (hasIcon && iconBounds.contains(x, y)) {
                         if (MenuSlider.this.toggleBinding != null) {
                             boolean currentState = MenuSlider.this.toggleBinding.get();
                             MenuSlider.this.toggleBinding.set(!currentState);
-                            
+
                             if (!currentState) { // اگر میوت شد
                                 if (value > 0) preMuteValue = value;
                                 setValue(0);
@@ -143,14 +143,14 @@ public class MenuSlider extends Actor {
         float sliderLeftOffset = hasIcon ? (iconSize + 15f) : 0f;
         float usableWidth = getWidth() - padding * 2f - sliderLeftOffset;
         float knobSpace = knobWidth / 2f;
-        
+
         float minX = padding + sliderLeftOffset + knobSpace;
         float maxX = padding + sliderLeftOffset + usableWidth - knobSpace;
 
         float clampedX = MathUtils.clamp(mouseX, minX, maxX);
         float percent = (clampedX - minX) / (maxX - minX);
         int newValue = MathUtils.round(percent * 100f);
-        
+
         setValue(newValue);
 
         // آپدیت خودکار سیستم میوت اگر اسلایدر دستی روی صفر یا بیشتر از صفر رفت
@@ -196,7 +196,7 @@ public class MenuSlider extends Actor {
         if (labelText != null && !labelText.isEmpty() && labelLayout != null) {
             font.setColor(1f, 1f, 1f, hoverAlpha);
             float labelX = getX() + (getWidth() - labelLayout.width) / 2f;
-            float labelY = trackCenterY + trackHeight + 20f + labelLayout.height; 
+            float labelY = trackCenterY + trackHeight + 20f + labelLayout.height;
             font.draw(batch, labelText, labelX, labelY);
         }
 
@@ -204,10 +204,10 @@ public class MenuSlider extends Actor {
         if (hasIcon) {
             // آپدیت محدوده کلیک آیکون (نسبت به خود اکتور)
             iconBounds.set(padding, 40f - iconSize / 2f, iconSize, iconSize);
-            
+
             boolean isMuted = toggleBinding != null ? toggleBinding.get() : (value == 0);
             Texture currentIcon = isMuted ? iconOffTexture : iconOnTexture;
-            
+
             if (currentIcon != null) {
                 batch.setColor(1f, 1f, 1f, hoverAlpha);
                 batch.draw(currentIcon, getX() + iconBounds.x, getY() + iconBounds.y, iconBounds.width, iconBounds.height);
@@ -251,7 +251,7 @@ public class MenuSlider extends Actor {
         // رسم عدد
         font.setColor(1f, 1f, 1f, hoverAlpha);
         // 🌟 انتقال عدد به ۱۵ پیکسل راست‌تر (مقدار 10f به 25f تغییر کرد)
-        float textX = getX() + getWidth() + 25f; 
+        float textX = getX() + getWidth() + 25f;
         float textY = trackCenterY + textLayout.height / 2f;
         font.draw(batch, valueText, textX, textY);
 
