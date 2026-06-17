@@ -9,9 +9,9 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 public class BrightnessController extends Actor {
     private static BrightnessController instance;
     private Texture overlayTexture;
-    
+
     // مقدار بین 1.0- تا 1.0+
-    private float brightnessValue = 0f; 
+    private float brightnessValue = 0f;
 
     private BrightnessController() {
         Pixmap pix = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
@@ -22,7 +22,8 @@ public class BrightnessController extends Actor {
     }
 
     public static BrightnessController getInstance() {
-        if (instance == null) instance = new BrightnessController();
+        if (instance == null)
+            instance = new BrightnessController();
         return instance;
     }
 
@@ -37,7 +38,8 @@ public class BrightnessController extends Actor {
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        if (brightnessValue == 0) return;
+        if (brightnessValue == 0)
+            return;
 
         // اگر مثبت باشد سفید، اگر منفی باشد سیاه
         Color color = (brightnessValue > 0) ? Color.WHITE : Color.BLACK;
@@ -47,5 +49,11 @@ public class BrightnessController extends Actor {
         batch.setColor(color.r, color.g, color.b, alpha);
         batch.draw(overlayTexture, 0, 0, getStage().getWidth(), getStage().getHeight());
         batch.setColor(Color.WHITE);
+    }
+
+    public void dispose() {
+        if (overlayTexture != null) {
+            overlayTexture.dispose();
+        }
     }
 }

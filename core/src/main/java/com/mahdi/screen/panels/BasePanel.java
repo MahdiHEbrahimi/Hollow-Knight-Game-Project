@@ -1,4 +1,4 @@
-package com.mahdi.screen.pannels;
+package com.mahdi.screen.panels;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;

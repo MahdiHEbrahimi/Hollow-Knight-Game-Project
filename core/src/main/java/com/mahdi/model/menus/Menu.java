@@ -1,7 +1,7 @@
 package com.mahdi.model.menus;
 
 import com.mahdi.controller.menuControllers.MenuController;
-import com.mahdi.screen.pannels.BasePanel;
+import com.mahdi.screen.panels.BasePanel;
 
 public abstract class Menu {
     public abstract BasePanel getNewPanel();

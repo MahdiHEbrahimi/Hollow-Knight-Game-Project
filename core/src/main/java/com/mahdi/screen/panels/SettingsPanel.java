@@ -1,4 +1,4 @@
-package com.mahdi.screen.pannels;
+package com.mahdi.screen.panels;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
@@ -150,13 +150,13 @@ public class SettingsPanel extends BasePanel {
                 FontManager.getInstance().getEnglishMenuFont(),
                 this::onResetSounds)).padBottom(spacing).row();
 
-        this.add(new MenuButton("CHANGE CONTROLS",
+        this.add(new MenuButton("KEYBOARD",
                 FontManager.getInstance().getEnglishMenuFont(),
-                this::onChangeControls)).padBottom(spacing).row();
+                this::onKeyboard)).padBottom(spacing).row();
 
-        this.add(new MenuButton("RESET CONTROLS",
-                FontManager.getInstance().getEnglishMenuFont(),
-                this::onResetControls)).padBottom(spacing).row();
+        // this.add(new MenuButton("RESET CONTROLS",
+        // FontManager.getInstance().getEnglishMenuFont(),
+        // this::onResetControls)).padBottom(spacing).row();
 
         this.add(new MenuButton("LANGUAGE",
                 FontManager.getInstance().getEnglishMenuFont(),
@@ -176,14 +176,14 @@ public class SettingsPanel extends BasePanel {
         CommandSender.send(new ResetVolumeInputDTO(musicSlider, sfxSlider, brightnessSlider));
     }
 
-    private void onChangeControls() {
-        System.out.println("[Settings] Change Controls requested.");
+    private void onKeyboard() {
+        AppStatus.ChangeMenuAndPanel(MenuType.KEYBOARD);
     }
 
-    private void onResetControls() {
-        System.out.println("[Settings] Reset Controls to default.");
-        // TODO: بازنشانی کنترل‌ها
-    }
+    // private void onResetControls() {
+    // System.out.println("[Settings] Reset Controls to default.");
+    // // TODO: بازنشانی کنترل‌ها
+    // }
 
     private void onLanguage() {
         System.out.println("[Settings] Language change.");

@@ -8,7 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.mahdi.screen.manager.MusicManager;
 import com.mahdi.screen.manager.PanelManager;
-import com.mahdi.screen.pannels.MainMenuPanel;
+import com.mahdi.screen.panels.MainMenuPanel;
 
 import java.util.ArrayList;
 

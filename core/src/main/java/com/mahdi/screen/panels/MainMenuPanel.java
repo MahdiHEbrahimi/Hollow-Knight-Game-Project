@@ -1,4 +1,4 @@
-package com.mahdi.screen.pannels;
+package com.mahdi.screen.panels;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
@@ -49,7 +49,6 @@ public class MainMenuPanel extends BasePanel {
     // ========== رفتار هر دکمه در خود پنل ==========
 
     private void onStartGame() {
-        // com.mahdi.view.CommandSender.send(new ChangeMenuInputDTO(MenuType.START_GAME));
         AppStatus.ChangeMenuAndPanel(MenuType.START_GAME);
     }
 

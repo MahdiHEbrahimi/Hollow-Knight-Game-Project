@@ -4,9 +4,7 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.mahdi.model.graphic.GraphicsQuality;
 import com.mahdi.screen.MainMenuScreen;
-import com.mahdi.screen.manager.CursorManager;
-import com.mahdi.screen.manager.FontManager;
-import com.mahdi.screen.manager.ScreenManager;
+import com.mahdi.screen.manager.*;
 
 public class HollowKnightGame extends Game {
 
@@ -39,6 +37,9 @@ public class HollowKnightGame extends Game {
         CursorManager.getInstance().dispose();
         FontManager.getInstance().dispose();
         ScreenManager.getInstance().dispose();
+        BrightnessController.getInstance().dispose();
+        MusicManager.getInstance().dispose();
+
     }
 
     public void updateGraphics(GraphicsQuality quality) {

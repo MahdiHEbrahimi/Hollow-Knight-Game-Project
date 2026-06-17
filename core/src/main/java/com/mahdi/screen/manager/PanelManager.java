@@ -1,7 +1,7 @@
 package com.mahdi.screen.manager;
 
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.mahdi.screen.pannels.BasePanel;
+import com.mahdi.screen.panels.BasePanel;
 
 public class PanelManager {
     private static PanelManager instance;

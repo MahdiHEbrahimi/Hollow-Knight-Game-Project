@@ -35,9 +35,7 @@ public class AppStatus {
         PanelManager.getInstance().performPanelTransition(target.getNewPanel());
     }
 
-    // ==========================================
-    // مدیریت ولوم و میوت موسیقی (Music)
-    // ==========================================
+
     public static int getMusicVolume() {
         return (int) (MusicManager.getInstance().getVolume() * 100);
     }

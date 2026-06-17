@@ -1,6 +1,7 @@
 package com.mahdi.screen.manager;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -16,14 +17,10 @@ public class ScreenManager {
     private final SpriteBatch batch;
     private final Texture blackOverlay;
 
-    private enum TransitionState {
-        NONE, FADE_OUT, FADE_IN
-    }
-
+    private enum TransitionState { NONE, FADE_OUT, FADE_IN }
     private TransitionState state = TransitionState.NONE;
 
     private float blackScreenAlpha = 0f;
-
     private float currentDuration = 2.5f;
 
     private ScreenManager() {
@@ -36,9 +33,7 @@ public class ScreenManager {
     }
 
     public static ScreenManager getInstance() {
-        if (instance == null) {
-            instance = new ScreenManager();
-        }
+        if (instance == null) instance = new ScreenManager();
         return instance;
     }
 
@@ -49,7 +44,6 @@ public class ScreenManager {
     public void startWithFadeIn(BaseScreen firstScreen) {
         this.targetScreen = firstScreen;
         this.game.setScreen(firstScreen);
-
         this.currentDuration = 5.0f;
         this.state = TransitionState.FADE_IN;
         this.blackScreenAlpha = 1.0f;
@@ -59,25 +53,28 @@ public class ScreenManager {
         if (state != TransitionState.NONE) return;
 
         this.targetScreen = nextScreen;
-        this.currentDuration = 2.5f;
+        this.currentDuration = 1.5f; // ۱.۵ ثانیه زمان استاندارد برای تعویض صفحات
         this.state = TransitionState.FADE_OUT;
         this.blackScreenAlpha = 0f;
     }
 
     public void updateAndRender(float delta) {
-        if (state == TransitionState.NONE)
-            return;
+        if (state == TransitionState.NONE) return;
 
         if (state == TransitionState.FADE_OUT) {
-
             blackScreenAlpha += delta / currentDuration;
             if (blackScreenAlpha >= 1.0f) {
                 blackScreenAlpha = 1.0f;
+
+                Screen currentScreen = game.getScreen();
+                if (currentScreen != null) {
+                    currentScreen.dispose();
+                }
+
                 game.setScreen(targetScreen);
                 state = TransitionState.FADE_IN;
             }
         } else if (state == TransitionState.FADE_IN) {
-
             blackScreenAlpha -= delta / currentDuration;
             if (blackScreenAlpha <= 0.0f) {
                 blackScreenAlpha = 0.0f;
@@ -86,6 +83,7 @@ public class ScreenManager {
             }
         }
 
+        batch.getProjectionMatrix().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch.begin();
         batch.setColor(1f, 1f, 1f, blackScreenAlpha);
         batch.draw(blackOverlay, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -94,9 +92,7 @@ public class ScreenManager {
     }
 
     public void dispose() {
-        if (blackOverlay != null)
-            blackOverlay.dispose();
-        if (batch != null)
-            batch.dispose();
+        if (blackOverlay != null) blackOverlay.dispose();
+        if (batch != null) batch.dispose();
     }
 }

@@ -3,9 +3,10 @@ package com.mahdi.model.enums;
 import com.mahdi.controller.menuControllers.MenuController;
 import com.mahdi.model.menus.*;
 import com.mahdi.screen.BaseScreen;
-import com.mahdi.screen.pannels.BasePanel;
+import com.mahdi.screen.panels.BasePanel;
 
 public enum MenuType {
+    KEYBOARD(new KeyboardMenu()),
     MAIN_MENU(new MainMenu()),
     START_GAME(new StartGameMenu()),
     SETTINGS(new SettingMenu()),
