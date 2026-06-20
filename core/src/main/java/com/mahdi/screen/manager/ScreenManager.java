@@ -53,7 +53,7 @@ public class ScreenManager {
         if (state != TransitionState.NONE) return;
 
         this.targetScreen = nextScreen;
-        this.currentDuration = 1.5f; // ۱.۵ ثانیه زمان استاندارد برای تعویض صفحات
+        this.currentDuration = 1.5f; 
         this.state = TransitionState.FADE_OUT;
         this.blackScreenAlpha = 0f;
     }

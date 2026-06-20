@@ -2,7 +2,6 @@ package com.mahdi.model.enums;
 
 import com.mahdi.controller.menuControllers.MenuController;
 import com.mahdi.model.menus.*;
-import com.mahdi.screen.BaseScreen;
 import com.mahdi.screen.panels.BasePanel;
 
 public enum MenuType {

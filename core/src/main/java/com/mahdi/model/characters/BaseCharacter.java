@@ -1,161 +1,120 @@
 package com.mahdi.model.characters;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.mahdi.model.characters.enums.State;
 
 public abstract class BaseCharacter {
+    
+    // =======================================================
+    // 🌟 ثوابت فیزیکی جهانی و غیرقابل تغییر مپ (Global Constants)
+    // =======================================================
+    protected static final float GRAVITY = 0;           // شتاب جاذبه زمین
+    protected static final float TERMINAL_VELOCITY_Y = -1000f; // حداکثر سرعت سقوط مجاز
+    protected static final float FRICTION = 0.85f;           // اصطکاک افقی (کاهش سرعت در زمان توقف)
 
-    // --- وضعیت‌های کاراکتر (State Machine) ---
-    protected State currentState;
-    protected State previousState;
-    protected float stateTime;
-
-    // --- موقعیت و فیزیک ---
+    // ویژگی‌های فیزیکی نمونه
     protected Vector2 position;
     protected Vector2 velocity;
-    protected Rectangle boundingBox; // مستطیل برخورد برای تشخیص تصادف با دیوار و زمین
-
-    protected float maxSpeed = 400f;
-    protected float acceleration = 2000f;
-    protected float deceleration = 2500f;
-    protected float gravity = -2000f;
-    protected float terminalVelocity = 1500f; // سقف سرعت سقوط آزاد
-
-    // --- پرچم‌ها (Flags) ---
-    protected boolean isFacingLeft;
+    protected Rectangle bounds;
+    
     protected boolean isGrounded;
     protected boolean isAlive;
+    protected boolean hasGravity;
+    protected boolean isMoving; // 🌟 پرچم نشان‌دهنده اینکه کاراکتر در این فریم قصد حرکت دارد یا نه
 
-    // --- پرچم‌های درخواست حرکت (جهت جداسازی منطق کیبورد/هوش مصنوعی از فیزیک) ---
-    protected boolean moveLeftFlag;
-    protected boolean moveRightFlag;
+    // =======================================================
+    // 🌟 ویژگی‌های فیزیکی قابل تنظیم از طریق کانتراکتور فرزند
+    // =======================================================
+    protected final float maxXSpeed;      // حداکثر سرعت افقی مجاز این کاراکتر
+    protected final float acceleration;   // شتاب حرکت افقی این کاراکتر
+    
+    // جهت حرکت فعلی: 1 = راست، 1- = چپ، 0 = بدون حرکت دستی
+    private int moveDirection = 0; 
 
-    public BaseCharacter(float startX, float startY) {
-        this.position = new Vector2(startX, startY);
-        this.velocity = new Vector2(0, 0);
-        // ابعاد فرضی مستطیل برخورد (در کلاس‌های فرزند مقدار دقیق‌تر می‌گیرد)
-        this.boundingBox = new Rectangle(startX, startY, 50, 80);
-
-        this.currentState = State.IDLE;
-        this.previousState = State.IDLE;
-        this.stateTime = 0f;
+    public BaseCharacter(float x, float y, float width, float height, float maxXSpeed, float acceleration) {
+        this.position = new Vector2(x, y);
+        this.velocity = new Vector2(0, 0); 
+        this.bounds = new Rectangle(x, y, width, height);
         this.isAlive = true;
-        this.isFacingLeft = false;
         this.isGrounded = false;
-
-        loadAnimations(); // صدا زدن متد لود انیمیشن‌ها در لحظه تولد کاراکتر
+        this.hasGravity = true;
+        this.isMoving = false;
+        
+        // مقداردهی ویژگی‌های اختصاصی هر کاراکتر از طریق کانتراکتور
+        this.maxXSpeed = maxXSpeed;
+        this.acceleration = acceleration;
     }
 
-
-    protected abstract void loadAnimations();
-
-    // برگرداندن فریم فعلی انیمیشن بر اساس استیت (برای رندر شدن)
-    protected abstract TextureRegion getCurrentFrame();
-
-    // ==========================================
-    // چرخه حیات (آپدیت و رسم)
-    // ==========================================
-
-    public void update(float delta) {
-        if (!isAlive) return; // اگر کاراکتر مرده است، این منطق دیگر اجرا نمی‌شود
-
-        stateTime += delta;
-
-        applyPhysics(delta);
-        updateBoundingBox();
-        updateState();
+    /**
+     * 🌟 متد عمومی حرکت برای استفاده کیبورد پلیر یا تصمیم‌گیری هوش مصنوعی (AI)
+     * @param direction : 1 برای راست، 1- برای چپ، 0 برای ایستادن
+     */
+    public void move(int direction) {
+        this.moveDirection = direction;
+        this.isMoving = (direction != 0);
     }
 
-    private void applyPhysics(float delta) {
-        // ۱. اعمال شتاب، اصطکاک و لغزش در راستای افقی
-        if (moveRightFlag) {
-            velocity.x += acceleration * delta;
-            if (velocity.x > maxSpeed) velocity.x = maxSpeed;
-            isFacingLeft = false;
-        } else if (moveLeftFlag) {
-            velocity.x -= acceleration * delta;
-            if (velocity.x < -maxSpeed) velocity.x = -maxSpeed;
-            isFacingLeft = true;
+    /**
+     * چرخه فیزیک اصلی موتور بازی
+     */
+    public final void update(float delta) {
+        if (!isAlive) return;
+
+        // ۱. اعمال جاذبه و مهار آن توسط سرعت حد عمودی
+        if (hasGravity && !isGrounded) {
+            velocity.y += GRAVITY * delta; 
+            if (velocity.y < TERMINAL_VELOCITY_Y) {
+                velocity.y = TERMINAL_VELOCITY_Y;
+            }
+        }
+
+        // ۲. صدا زدن منطق فرزند (جهت مقداردهی متد move یا پرش)
+        updateCustomLogic(delta);
+
+        // ۳. 🌟 اعمال شتاب افقی بر اساس جهتِ دستور داده شده (پاس داده شده به متد move)
+        if (isMoving) {
+            velocity.x += moveDirection * acceleration * delta;
         } else {
-            // اعمال ترمز و اصطکاک وقتی دکمه‌ای فشرده نیست
-            if (velocity.x > 0) {
-                velocity.x -= deceleration * delta;
-                if (velocity.x < 0) velocity.x = 0;
-            } else if (velocity.x < 0) {
-                velocity.x += deceleration * delta;
-                if (velocity.x > 0) velocity.x = 0;
+            // اگر دکمه رها شده یا AI متوقف شده، اصطکاک فعال می‌شود تا سُر خورده و بایستد
+            velocity.x *= FRICTION;
+            // برای جلوگیری از محاسبات اعشاری بی‌نهایت کوچک نزدیک به صفر
+            if (Math.abs(velocity.x) < 1f) {
+                velocity.x = 0;
             }
         }
 
-        // ۲. اعمال جاذبه در راستای عمودی
-        if (!isGrounded) {
-            velocity.y += gravity * delta;
-            // جلوگیری از بی‌نهایت شدن سرعت سقوط
-            if (velocity.y < -terminalVelocity) {
-                velocity.y = -terminalVelocity;
-            }
+        // ۴. مهار کردن سرعت افقی توسط سرعت حد اختصاصی (maxXSpeed)
+        if (velocity.x > maxXSpeed) {
+            velocity.x = maxXSpeed;
+        } else if (velocity.x < -maxXSpeed) {
+            velocity.x = -maxXSpeed;
         }
 
-        // ۳. جابجایی نهایی بر اساس سرعت محاسبه‌شده
+        // ۵. اعمال نهایی تغییرات روی پوزیشن
         position.x += velocity.x * delta;
         position.y += velocity.y * delta;
 
-        // ریست کردن درخواست‌های حرکتی برای فریم بعدی
-        moveLeftFlag = false;
-        moveRightFlag = false;
+        // ۶. تنظیم کادر برخورد بر اساس پوزیشن جدید
+        bounds.setPosition(position.x, position.y);
     }
 
-    private void updateBoundingBox() {
-        // مستطیل برخورد همیشه باید همراه با کاراکتر جابجا شود
-        boundingBox.setPosition(position.x, position.y);
+    protected abstract void updateCustomLogic(float delta);
+    public abstract void draw(Batch batch);
+
+    public void die() {
+        this.isAlive = false;
+        this.hasGravity = true; 
+        this.velocity.x = 0; 
+        this.isMoving = false;
     }
 
-    private void updateState() {
-        previousState = currentState;
-
-        // منطق تشخیص انیمیشن بر اساس سرعت و وضعیت
-        if (velocity.y > 0) {
-            currentState = State.JUMPING;
-        } else if (velocity.y < 0 && !isGrounded) {
-            currentState = State.FALLING;
-        } else if (velocity.x != 0) {
-            currentState = State.WALKING;
-        } else {
-            currentState = State.IDLE;
-        }
-
-        // صفر کردن تایمر انیمیشن هنگام تغییر وضعیت (تا انیمیشن جدید از فریم اول پخش شود)
-        if (currentState != previousState) {
-            stateTime = 0f;
-        }
-    }
-
-    public void draw(Batch batch) {
-        TextureRegion frame = getCurrentFrame();
-        if (frame != null) {
-            // چرخاندن تصویر کاراکتر اگر مسیر حرکتش به سمت چپ باشد
-            if (isFacingLeft && !frame.isFlipX()) {
-                frame.flip(true, false);
-            } else if (!isFacingLeft && frame.isFlipX()) {
-                frame.flip(true, false);
-            }
-            batch.draw(frame, position.x, position.y);
-        }
-    }
-
-    // ==========================================
-    // متدهای کنترلی (برای استفاده توسط کلاس Player یا هوش مصنوعی)
-    // ==========================================
-
-    public void moveLeft() { this.moveLeftFlag = true; }
-    public void moveRight() { this.moveRightFlag = true; }
-    public void setGrounded(boolean grounded) { this.isGrounded = grounded; }
-
-    public void die() { this.isAlive = false; }
-    public boolean isAlive() { return isAlive; }
+    // --- گترها و سترها ---
     public Vector2 getPosition() { return position; }
-    public Rectangle getBoundingBox() { return boundingBox; }
+    public Vector2 getVelocity() { return velocity; }
+    public Rectangle getBounds() { return bounds; }
+    public boolean isAlive() { return isAlive; }
+    public boolean isGrounded() { return isGrounded; }
+    public boolean isMoving() { return isMoving; }
+    public void setGrounded(boolean grounded) { this.isGrounded = grounded; }
 }

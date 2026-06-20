@@ -7,7 +7,10 @@ import com.badlogic.gdx.utils.Align;
 import com.mahdi.model.enums.MenuType;
 import com.mahdi.model.save.SaveManager;
 import com.mahdi.model.status.AppStatus;
+import com.mahdi.screen.GameScreen;
+import com.mahdi.screen.MainMenuScreen;
 import com.mahdi.screen.manager.FontManager;
+import com.mahdi.screen.manager.ScreenManager;
 import com.mahdi.screen.ui.MenuButton;
 
 public class StartGamePanel extends BasePanel {
@@ -106,7 +109,7 @@ public class StartGamePanel extends BasePanel {
     }
 
     private void onStart() {
-        //todo
+        ScreenManager.getInstance().performTransition(new GameScreen());
     }
 
 

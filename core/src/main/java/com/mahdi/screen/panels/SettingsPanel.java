@@ -180,11 +180,6 @@ public class SettingsPanel extends BasePanel {
         AppStatus.ChangeMenuAndPanel(MenuType.KEYBOARD);
     }
 
-    // private void onResetControls() {
-    // System.out.println("[Settings] Reset Controls to default.");
-    // // TODO: بازنشانی کنترل‌ها
-    // }
-
     private void onLanguage() {
         System.out.println("[Settings] Language change.");
     }

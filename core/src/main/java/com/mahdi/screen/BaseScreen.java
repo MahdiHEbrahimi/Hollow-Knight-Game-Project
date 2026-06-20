@@ -1,6 +1,7 @@
 package com.mahdi.screen;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -16,12 +17,14 @@ public abstract class BaseScreen implements Screen {
     protected FillViewport viewport;
 
     protected Stage stage;
+    // 🌟 اضافه کردن مالتی‌پلکسر برای مدیریت چند منبع ورودی به صورت همزمان
+    protected InputMultiplexer multiplexer;
 
     protected static final float VIRTUAL_WIDTH = 2560;
     protected static final float VIRTUAL_HEIGHT = 1440;
 
     public BaseScreen() {
-        this.game = AppStatus.getGame();
+        this.game = AppStatus.getHollowKnightGame();
 
         camera = new OrthographicCamera();
         viewport = new FillViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, camera);
@@ -29,11 +32,16 @@ public abstract class BaseScreen implements Screen {
 
         stage = new Stage(viewport);
         stage.addActor(BrightnessController.getInstance());
+
+        // 🌟 مقداردهی اولیه مالتی‌پلکسر و اضافه کردن استیج به عنوان پردازنده‌ پیش‌فرض
+        multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(stage);
     }
 
     @Override
     public void show() {
-        Gdx.input.setInputProcessor(stage);
+        // 🌟 به جای استیج، کل مالتی‌پلکسر را به موتور بازی معرفی می‌کنیم
+        Gdx.input.setInputProcessor(multiplexer);
     }
 
     @Override
@@ -70,17 +78,29 @@ public abstract class BaseScreen implements Screen {
 
     @Override
     public void hide() {
+        // 🌟 پاک کردن پردازنده ورودی هنگام تغییر اسکرین
         Gdx.input.setInputProcessor(null);
     }
 
     @Override
     public void dispose() {
         if (stage != null) {
+            // ابتدا پردازنده‌ ورودی را بردار تا استیج درگیر رویداد جدیدی نشود
+            if (Gdx.input.getInputProcessor() == multiplexer || Gdx.input.getInputProcessor() == stage) {
+                Gdx.input.setInputProcessor(null);
+            }
+
             stage.dispose();
+            stage = null; // 🌟 بسیار مهم: نال کردن جلوی دیسپوز دوباره در فراخوانی‌های بعدی را می‌گیرد
             System.out.println("[BaseScreen] Stage disposed safely.");
         }
     }
 
-    @Override public void pause() {}
-    @Override public void resume() {}
+    @Override
+    public void pause() {
+    }
+
+    @Override
+    public void resume() {
+    }
 }

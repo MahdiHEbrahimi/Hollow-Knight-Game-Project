@@ -28,14 +28,12 @@ public class PanelManager {
             throw new IllegalStateException("PanelManager not initialized with a Stage. Call initialize() first.");
         }
 
-        // حذف و پاکسازی فوری پنل قبلی
         if (currentPanel != null) {
             currentPanel.remove();
             currentPanel.dispose();
             currentPanel = null;
         }
 
-        // افزودن فوری پنل جدید
         currentPanel = newPanel;
         currentPanel.getColor().a = 1f;
         stage.addActor(currentPanel);

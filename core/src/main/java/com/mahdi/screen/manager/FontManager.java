@@ -29,13 +29,11 @@ public class FontManager {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/TrajanPro-Regular.ttf"));
         FreeTypeFontParameter parameter = new FreeTypeFontParameter();
         
-        // تنظیمات برای منو (English)
         parameter.size = 54;
         parameter.minFilter = Texture.TextureFilter.Linear;
         parameter.magFilter = Texture.TextureFilter.Linear;
         englishMenuFont = generator.generateFont(parameter);
 
-        // تنظیمات برای تایتل (English)
         parameter.size = 72;
         englishTitleFont = generator.generateFont(parameter);
 
@@ -46,16 +44,13 @@ public class FontManager {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Vazir.ttf"));
         FreeTypeFontParameter parameter = new FreeTypeFontParameter();
         
-        // اضافه کردن کاراکترهای فارسی به پارامترها
         parameter.characters = PERSIAN_CHARS; 
         
-        // تنظیمات برای منو (Persian)
         parameter.size = 54;
         parameter.minFilter = Texture.TextureFilter.Linear;
         parameter.magFilter = Texture.TextureFilter.Linear;
         persianMenuFont = generator.generateFont(parameter);
 
-        // تنظیمات برای تایتل (Persian)
         parameter.size = 72;
         persianTitleFont = generator.generateFont(parameter);
 
@@ -69,11 +64,9 @@ public class FontManager {
         return instance;
     }
 
-    // متدهای دریافت برای انگلیسی
     public BitmapFont getEnglishMenuFont() { return englishMenuFont; }
     public BitmapFont getEnglishTitleFont() { return englishTitleFont; }
 
-    // متدهای دریافت برای فارسی
     public BitmapFont getPersianMenuFont() { return persianMenuFont; }
     public BitmapFont getPersianTitleFont() { return persianTitleFont; }
 
