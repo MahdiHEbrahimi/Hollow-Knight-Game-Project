@@ -9,9 +9,9 @@ public abstract class BaseCharacter {
     // =======================================================
     // 🌟 ثوابت فیزیکی جهانی و غیرقابل تغییر مپ (Global Constants)
     // =======================================================
-    protected static final float GRAVITY = 0;           // شتاب جاذبه زمین
+    protected static final float GRAVITY = -2800f;           // شتاب جاذبه زمین
     protected static final float TERMINAL_VELOCITY_Y = -1000f; // حداکثر سرعت سقوط مجاز
-    protected static final float FRICTION = 0.85f;           // اصطکاک افقی (کاهش سرعت در زمان توقف)
+    protected static float FRICTION = 0.85f;           // اصطکاک افقی (کاهش سرعت در زمان توقف)
 
     // ویژگی‌های فیزیکی نمونه
     protected Vector2 position;

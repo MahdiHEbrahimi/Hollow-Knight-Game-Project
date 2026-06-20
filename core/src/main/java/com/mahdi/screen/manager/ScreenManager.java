@@ -8,12 +8,14 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mahdi.HollowKnightGame;
 import com.mahdi.screen.BaseScreen;
+import java.util.function.Supplier; // 🌟 اضافه شدن ابزار ساخت تأخیری
 
 public class ScreenManager {
     private static ScreenManager instance;
 
     private HollowKnightGame game;
-    private BaseScreen targetScreen;
+    // 🌟 تغییر از آبجکت مستقیم به کارخانه/تامین‌کننده اسکرین بعدی
+    private Supplier<BaseScreen> pendingScreenSupplier; 
     private final SpriteBatch batch;
     private final Texture blackOverlay;
 
@@ -42,17 +44,18 @@ public class ScreenManager {
     }
 
     public void startWithFadeIn(BaseScreen firstScreen) {
-        this.targetScreen = firstScreen;
+        // برای شروع اولیه بازی نیازی به تأخیر نیست و مستقیم ست می‌شود
         this.game.setScreen(firstScreen);
-        this.currentDuration = 5.0f;
+        this.currentDuration = 3.0f;
         this.state = TransitionState.FADE_IN;
         this.blackScreenAlpha = 1.0f;
     }
 
-    public void performTransition(BaseScreen nextScreen) {
+    // 🌟 تغییر امضای متد: حالا یک تامین‌کننده (Supplier) می‌گیرد تا اسکرین جلوتر نیو نشود
+    public void performTransition(Supplier<BaseScreen> screenSupplier) {
         if (state != TransitionState.NONE) return;
 
-        this.targetScreen = nextScreen;
+        this.pendingScreenSupplier = screenSupplier;
         this.currentDuration = 1.5f; 
         this.state = TransitionState.FADE_OUT;
         this.blackScreenAlpha = 0f;
@@ -71,7 +74,13 @@ public class ScreenManager {
                     currentScreen.dispose();
                 }
 
-                game.setScreen(targetScreen);
+                // 🌟 جادوی اصلی اینجاست: صفحه ۱۰۰٪ تاریک شده، حالا اسکرین را می‌سازیم!
+                if (pendingScreenSupplier != null) {
+                    BaseScreen nextScreen = pendingScreenSupplier.get();
+                    game.setScreen(nextScreen);
+                    pendingScreenSupplier = null; // پاک کردن رفرنس برای مدیریت حافظه
+                }
+                
                 state = TransitionState.FADE_IN;
             }
         } else if (state == TransitionState.FADE_IN) {
@@ -79,7 +88,6 @@ public class ScreenManager {
             if (blackScreenAlpha <= 0.0f) {
                 blackScreenAlpha = 0.0f;
                 state = TransitionState.NONE;
-                targetScreen = null;
             }
         }
 

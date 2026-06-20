@@ -32,7 +32,7 @@ public class GameScreen extends BaseScreen {
 
     @Override
     protected void renderScreen(float delta) {
-        delta = Math.min(delta, 1/600f);
+
         GameStatus gameStatus = AppStatus.getGameStatus();
         gameStatus.update(Math.min(delta, 1 / 30f));
 

@@ -8,7 +8,6 @@ import com.mahdi.model.enums.MenuType;
 import com.mahdi.model.save.SaveManager;
 import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.GameScreen;
-import com.mahdi.screen.MainMenuScreen;
 import com.mahdi.screen.manager.FontManager;
 import com.mahdi.screen.manager.ScreenManager;
 import com.mahdi.screen.ui.MenuButton;
@@ -34,66 +33,67 @@ public class StartGamePanel extends BasePanel {
 
         // ردیف اسلات ۱
         slot1Button = new MenuButton(SaveManager.getSlotInfo(1),
-            FontManager.getInstance().getEnglishMenuFont(),
-            () -> onSlotClicked(1));
+                FontManager.getInstance().getEnglishMenuFont(),
+                () -> onSlotClicked(1));
         remove1Button = new MenuButton("REMOVE",
-            FontManager.getInstance().getEnglishMenuFont(),
-            () -> onRemoveSlot(1));
+                FontManager.getInstance().getEnglishMenuFont(),
+                () -> onRemoveSlot(1));
         remove1Button.setVisible(SaveManager.isSlotFileExists(1)); // فقط برای اسلات پر
         contentTable.add(slot1Button).width(600f).padRight(500f);
         contentTable.add(remove1Button).width(100f).padBottom(spacing).row();
 
         // ردیف اسلات ۲
         slot2Button = new MenuButton(SaveManager.getSlotInfo(2),
-            FontManager.getInstance().getEnglishMenuFont(),
-            () -> onSlotClicked(2));
+                FontManager.getInstance().getEnglishMenuFont(),
+                () -> onSlotClicked(2));
         remove2Button = new MenuButton("REMOVE",
-            FontManager.getInstance().getEnglishMenuFont(),
-            () -> onRemoveSlot(2));
+                FontManager.getInstance().getEnglishMenuFont(),
+                () -> onRemoveSlot(2));
         remove2Button.setVisible(SaveManager.isSlotFileExists(2));
         contentTable.add(slot2Button).width(600f).padRight(500f);
         contentTable.add(remove2Button).width(100f).padBottom(spacing).row();
 
         // ردیف اسلات ۳
         slot3Button = new MenuButton(SaveManager.getSlotInfo(3),
-            FontManager.getInstance().getEnglishMenuFont(),
-            () -> onSlotClicked(3));
+                FontManager.getInstance().getEnglishMenuFont(),
+                () -> onSlotClicked(3));
         remove3Button = new MenuButton("REMOVE",
-            FontManager.getInstance().getEnglishMenuFont(),
-            () -> onRemoveSlot(3));
+                FontManager.getInstance().getEnglishMenuFont(),
+                () -> onRemoveSlot(3));
         remove3Button.setVisible(SaveManager.isSlotFileExists(3));
         contentTable.add(slot3Button).width(600f).padRight(500f);
         contentTable.add(remove3Button).width(100f).padBottom(spacing).row();
 
         // ردیف اسلات ۴
         slot4Button = new MenuButton(SaveManager.getSlotInfo(4),
-            FontManager.getInstance().getEnglishMenuFont(),
-            () -> onSlotClicked(4));
+                FontManager.getInstance().getEnglishMenuFont(),
+                () -> onSlotClicked(4));
         remove4Button = new MenuButton("REMOVE",
-            FontManager.getInstance().getEnglishMenuFont(),
-            () -> onRemoveSlot(4));
+                FontManager.getInstance().getEnglishMenuFont(),
+                () -> onRemoveSlot(4));
         remove4Button.setVisible(SaveManager.isSlotFileExists(4));
         contentTable.add(slot4Button).width(600f).padRight(500f);
         contentTable.add(remove4Button).width(100f).padBottom(spacing).row();
 
         this.add(new MenuButton("Start",
-            FontManager.getInstance().getEnglishMenuFont(),
-            this::onStart)).padTop(50f).row();
+                FontManager.getInstance().getEnglishMenuFont(),
+                this::onStart)).padTop(50f).row();
 
         // افزودن جدول محتوا به پنل اصلی
         this.add(contentTable).padTop(200f).row();
 
         // دکمه بازگشت
         this.add(new MenuButton("BACK",
-            FontManager.getInstance().getEnglishMenuFont(),
-            this::onBack)).padTop(50f).row();
+                FontManager.getInstance().getEnglishMenuFont(),
+                this::onBack)).padTop(50f).row();
     }
 
     private void onSlotClicked(int slot) {
         if (SaveManager.isSlotFileExists(slot)) {
             // اسلات پر → بارگذاری بازی
             System.out.println("[StartGame] Loading game from slot " + slot);
-            // TODO: ScreenManager.getInstance().performTransition(new GameplayScreen(game, slot));
+            // TODO: ScreenManager.getInstance().performTransition(new GameplayScreen(game,
+            // slot));
         } else {
             // اسلات خالی → ایجاد بازی جدید
             SaveManager.createNewGame(slot);
@@ -109,9 +109,8 @@ public class StartGamePanel extends BasePanel {
     }
 
     private void onStart() {
-        ScreenManager.getInstance().performTransition(new GameScreen());
+        ScreenManager.getInstance().performTransition(() -> new GameScreen());
     }
-
 
     private void updateSlotVisual(int slot) {
         boolean exists = SaveManager.isSlotFileExists(slot);

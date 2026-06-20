@@ -1,4 +1,32 @@
 package com.mahdi.model.characters.enums;
 
-public enum State { IDLE, WALKING, JUMPING, FALLING, DEAD }
+public enum State {
+    // --- حرکت و ایستادن پایه ---
+    IDLE,              // ایستادن معمولی (فایل‌های Idle)
+    WALKING,           // راه رفتن/دویدن (فایل‌های Run و Walk)
+    RUN_TO_IDLE,       // ترمز نرم و انتقال از دویدن به ایستادن (فایل‌های Run To Idle)
+    LOOK_UP,           // نگاه کردن به بالا (فایل‌های LookUp)
+    LOOK_DOWN,         // نگاه کردن به پایین (فایل‌های LookDown)
 
+    // --- وضعیت‌های فیزیکی هوایی ---
+    JUMPING,           // شروع پرش و بالا رفتن در هوا (فایل‌های Airborne)
+    FALLING,           // سقوط آزاد (فایل‌های Fall)
+    LANDING,           // انیمیشن فشرده شدن شوالیه هنگام فرود روی زمین (فایل‌های Landing)
+
+    // --- سیستم مبارزه (اکشن‌ها) ---
+    SLASH,             // ضربه شمشیر افقی معمولی (فایل‌های Slash و SlashAlt)
+    UP_SLASH,          // ضربه شمشیر به سمت بالا (فایل‌های UpSlash)
+    DOWN_SLASH,        // ضربه شمشیر به سمت پایین روی هوا / پوجو (فایل‌های DownSlash)
+
+    // --- مکانیزم‌های حرکتی پیشرفته ---
+    DASH,              // دَش زدن سریع افقی (فایل‌های Dash)
+    WALL_SLIDE,        // سر خوردن آرام روی دیوار (فایل‌های Wall Slide)
+    WALL_JUMP,         // پرش از روی دیوار (فایل‌های Walljump)
+
+    // --- جادو، سلامتی و مرگ ---
+    FOCUS,             // اوربِ تمرکز و پر کردن جان/خون (فایل‌های Focus و Focus Start/End)
+    FIREBALL_CAST,     // شلیک جادوی روح یا همان فایربال (فایل‌های Fireball Cast)
+    HURT,              // آسیب دیدن و افکت عقب‌رانده شدن (فایل‌های Idle Hurt)
+    SCREAM,            // فریادِ خشم یا انیمیشن‌های شروع ابیلیتی‌ها (فایل‌های Scream)
+    DEAD               // مرگ شوالیه (فایل‌های Death)
+}

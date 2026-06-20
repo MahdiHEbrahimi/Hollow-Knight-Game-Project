@@ -7,26 +7,27 @@ import com.mahdi.model.enums.GameAction;
 
 public class Player extends BaseCharacter {
 
-    private int hp;
+    private int hp = 5;
     private int maxHp;
-    private int geo; // سکه‌ها
-    private float soul; // مقدار روح از 0 تا 100
-    private float maxSoul;
+    private int geo = 20; // سکه‌ها
+    private float soul = 54; // مقدار روح از 0 تا 100
+    private float maxSoul = 100;
 
     // تعریف دقیق استیت‌های شوالیه
     public enum State { IDLE, WALKING, JUMPING, FALLING, DEAD }
     
     private State currentState;
 
-    private static final float JUMP_FORCE = 850f;
+    private static final float JUMP_FORCE = 1500f;
     private static final float JUMP_RELEASE_DAMPING = 0.4f; 
 
     // رندرر تستی برای کشیدن مستطیل رنگی روی صفحه
     private final ShapeRenderer stateDebugRenderer;
 
     public Player(float x, float y) {
+        FRICTION = 0.5f;
         // فیکس کردن سرعت مکس روی 350 و شتاب روی 2000 برای تست اولیه حرکت نرم
-        super(x, y, 40, 60, 35000f, 2000f); 
+        super(x + 500, y, 80, 120, 700f, 2000f); 
         this.currentState = State.IDLE;
         this.stateDebugRenderer = new ShapeRenderer();
     }
@@ -77,9 +78,7 @@ public class Player extends BaseCharacter {
         }
     }
 
-    /**
-     * پیاده‌سازی متد ابسترکتِ رسم با استفاده از مستطیل‌های رنگی دیباگ متناسب با استیت فعلی
-     */
+
     @Override
     public void draw(Batch batch) {
         // ۱. ابتدا بچ اصلی بازی را موقتاً می‌بندیم تا رندرر اشکال هندسی بتواند کارش را انجام دهد
