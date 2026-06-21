@@ -3,6 +3,7 @@ package com.mahdi;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.mahdi.model.graphic.GraphicsQuality;
+import com.mahdi.screen.GameScreen;
 import com.mahdi.screen.MainMenuScreen;
 import com.mahdi.screen.manager.*;
 
@@ -18,7 +19,9 @@ public class HollowKnightGame extends Game {
 
         CursorManager.getInstance();
 
-        com.mahdi.screen.manager.ScreenManager.getInstance().startWithFadeIn(new MainMenuScreen());
+//       com.mahdi.screen.manager.ScreenManager.getInstance().startWithFadeIn(new MainMenuScreen());
+        com.mahdi.screen.manager.ScreenManager.getInstance().startWithFadeIn(new GameScreen());
+
     }
 
     @Override

@@ -5,19 +5,19 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 public abstract class BaseCharacter {
-    
+
     // =======================================================
     // 🌟 ثوابت فیزیکی جهانی و غیرقابل تغییر مپ (Global Constants)
     // =======================================================
-    protected static final float GRAVITY = -2800f;           // شتاب جاذبه زمین
+    protected static final float GRAVITY = -2800f; // شتاب جاذبه زمین
     protected static final float TERMINAL_VELOCITY_Y = -1000f; // حداکثر سرعت سقوط مجاز
-    protected static float FRICTION = 0.85f;           // اصطکاک افقی (کاهش سرعت در زمان توقف)
+    protected static float FRICTION = 0.85f; // اصطکاک افقی (کاهش سرعت در زمان توقف)
 
     // ویژگی‌های فیزیکی نمونه
     protected Vector2 position;
     protected Vector2 velocity;
     protected Rectangle bounds;
-    
+
     protected boolean isGrounded;
     protected boolean isAlive;
     protected boolean hasGravity;
@@ -26,21 +26,21 @@ public abstract class BaseCharacter {
     // =======================================================
     // 🌟 ویژگی‌های فیزیکی قابل تنظیم از طریق کانتراکتور فرزند
     // =======================================================
-    protected final float maxXSpeed;      // حداکثر سرعت افقی مجاز این کاراکتر
-    protected final float acceleration;   // شتاب حرکت افقی این کاراکتر
-    
+    protected final float maxXSpeed; // حداکثر سرعت افقی مجاز این کاراکتر
+    protected final float acceleration; // شتاب حرکت افقی این کاراکتر
+
     // جهت حرکت فعلی: 1 = راست، 1- = چپ، 0 = بدون حرکت دستی
-    private int moveDirection = 0; 
+    private int moveDirection = 0;
 
     public BaseCharacter(float x, float y, float width, float height, float maxXSpeed, float acceleration) {
         this.position = new Vector2(x, y);
-        this.velocity = new Vector2(0, 0); 
+        this.velocity = new Vector2(0, 0);
         this.bounds = new Rectangle(x, y, width, height);
         this.isAlive = true;
         this.isGrounded = false;
         this.hasGravity = true;
         this.isMoving = false;
-        
+
         // مقداردهی ویژگی‌های اختصاصی هر کاراکتر از طریق کانتراکتور
         this.maxXSpeed = maxXSpeed;
         this.acceleration = acceleration;
@@ -48,6 +48,7 @@ public abstract class BaseCharacter {
 
     /**
      * 🌟 متد عمومی حرکت برای استفاده کیبورد پلیر یا تصمیم‌گیری هوش مصنوعی (AI)
+     * 
      * @param direction : 1 برای راست، 1- برای چپ، 0 برای ایستادن
      */
     public void move(int direction) {
@@ -59,11 +60,12 @@ public abstract class BaseCharacter {
      * چرخه فیزیک اصلی موتور بازی
      */
     public final void update(float delta) {
-        if (!isAlive) return;
+        if (!isAlive)
+            return;
 
         // ۱. اعمال جاذبه و مهار آن توسط سرعت حد عمودی
         if (hasGravity && !isGrounded) {
-            velocity.y += GRAVITY * delta; 
+            velocity.y += GRAVITY * delta;
             if (velocity.y < TERMINAL_VELOCITY_Y) {
                 velocity.y = TERMINAL_VELOCITY_Y;
             }
@@ -100,21 +102,46 @@ public abstract class BaseCharacter {
     }
 
     protected abstract void updateCustomLogic(float delta);
+
     public abstract void draw(Batch batch);
 
     public void die() {
         this.isAlive = false;
-        this.hasGravity = true; 
-        this.velocity.x = 0; 
+        this.hasGravity = true;
+        this.velocity.x = 0;
         this.isMoving = false;
     }
 
+    public void dispose() {
+
+    }
+
     // --- گترها و سترها ---
-    public Vector2 getPosition() { return position; }
-    public Vector2 getVelocity() { return velocity; }
-    public Rectangle getBounds() { return bounds; }
-    public boolean isAlive() { return isAlive; }
-    public boolean isGrounded() { return isGrounded; }
-    public boolean isMoving() { return isMoving; }
-    public void setGrounded(boolean grounded) { this.isGrounded = grounded; }
+    public Vector2 getPosition() {
+        return position;
+    }
+
+    public Vector2 getVelocity() {
+        return velocity;
+    }
+
+    public Rectangle getBounds() {
+        return bounds;
+    }
+
+    public boolean isAlive() {
+        return isAlive;
+    }
+
+    public boolean isGrounded() {
+        return isGrounded;
+    }
+
+    public boolean isMoving() {
+        return isMoving;
+    }
+
+    public void setGrounded(boolean grounded) {
+        this.isGrounded = grounded;
+    }
 }
