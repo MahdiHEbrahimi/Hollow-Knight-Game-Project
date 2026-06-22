@@ -1,5 +1,6 @@
 package com.mahdi.model.characters;
 
+import com.badlogic.gdx.Version;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -48,7 +49,7 @@ public abstract class BaseCharacter {
 
     /**
      * 🌟 متد عمومی حرکت برای استفاده کیبورد پلیر یا تصمیم‌گیری هوش مصنوعی (AI)
-     * 
+     *
      * @param direction : 1 برای راست، 1- برای چپ، 0 برای ایستادن
      */
     public void move(int direction) {

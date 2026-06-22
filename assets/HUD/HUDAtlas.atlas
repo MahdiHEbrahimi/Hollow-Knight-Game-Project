@@ -1,0 +1,209 @@
+
+HUDAtlas.png
+size: 1024, 1024
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+BreakHealth
+  rotate: false
+  xy: 2, 343
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 0
+BreakHealth
+  rotate: false
+  xy: 2, 174
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 1
+BreakHealth
+  rotate: false
+  xy: 130, 343
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 2
+BreakHealth
+  rotate: false
+  xy: 2, 5
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 3
+BreakHealth
+  rotate: false
+  xy: 130, 174
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 4
+BreakHealth
+  rotate: false
+  xy: 130, 5
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 5
+EmptyHealth
+  rotate: false
+  xy: 261, 509
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: -1
+FilledHealth
+  rotate: false
+  xy: 389, 509
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: -1
+FilledHealthShine
+  rotate: false
+  xy: 520, 675
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 0
+FilledHealthShine
+  rotate: false
+  xy: 648, 675
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 1
+FilledHealthShine
+  rotate: false
+  xy: 779, 841
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 2
+FilledHealthShine
+  rotate: false
+  xy: 258, 340
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 3
+FilledHealthShine
+  rotate: false
+  xy: 258, 171
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 4
+Geo
+  rotate: false
+  xy: 907, 946
+  size: 62, 62
+  orig: 62, 62
+  offset: 0, 0
+  index: 1
+Geo
+  rotate: false
+  xy: 645, 611
+  size: 62, 62
+  orig: 62, 62
+  offset: 0, 0
+  index: 2
+Geo
+  rotate: false
+  xy: 907, 882
+  size: 62, 62
+  orig: 62, 62
+  offset: 0, 0
+  index: 3
+Geo
+  rotate: false
+  xy: 645, 547
+  size: 62, 62
+  orig: 62, 62
+  offset: 0, 0
+  index: 4
+Geo
+  rotate: false
+  xy: 709, 611
+  size: 62, 62
+  orig: 62, 62
+  offset: 0, 0
+  index: 5
+HealthBar
+  rotate: false
+  xy: 2, 844
+  size: 257, 164
+  orig: 257, 164
+  offset: 0, 0
+  index: 0
+HealthBar
+  rotate: false
+  xy: 2, 678
+  size: 257, 164
+  orig: 257, 164
+  offset: 0, 0
+  index: 1
+HealthBar
+  rotate: false
+  xy: 261, 844
+  size: 257, 164
+  orig: 257, 164
+  offset: 0, 0
+  index: 2
+HealthBar
+  rotate: false
+  xy: 2, 512
+  size: 257, 164
+  orig: 257, 164
+  offset: 0, 0
+  index: 3
+HealthBar
+  rotate: false
+  xy: 261, 678
+  size: 257, 164
+  orig: 257, 164
+  offset: 0, 0
+  index: 4
+HealthBar
+  rotate: false
+  xy: 520, 844
+  size: 257, 164
+  orig: 257, 164
+  offset: 0, 0
+  index: 5
+HealthRefill
+  rotate: false
+  xy: 386, 340
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 0
+HealthRefill
+  rotate: false
+  xy: 386, 171
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 1
+HealthRefill
+  rotate: false
+  xy: 258, 2
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 2
+HealthRefill
+  rotate: false
+  xy: 386, 2
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 3
+HealthRefill
+  rotate: false
+  xy: 517, 506
+  size: 126, 167
+  orig: 126, 167
+  offset: 0, 0
+  index: 4

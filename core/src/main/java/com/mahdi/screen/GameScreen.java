@@ -1,6 +1,10 @@
 package com.mahdi.screen;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.mahdi.model.game.GameHud;
 import com.mahdi.model.game.GameStatus;
 import com.mahdi.model.status.AppStatus;
@@ -10,12 +14,10 @@ public class GameScreen extends BaseScreen {
 
     private final SpriteBatch gameBatch;
     private GameHud gameHud;
-    // ۱. تعریف ضریب نرمی حرکت دوربین (هر چه کوچکتر باشد، دوربین نرم‌تر و کندتر
-    // تعقیب می‌کند)
-    private final float LERP_FACTOR = 1f; // عددی بین 0 تا 1
+    private Stage hudStage;   // Stage ثابت برای HUD
 
     public GameScreen() {
-        super(); // ساخت دوربین، ویوپورت و استیج در کلاس مادر
+        super();
         this.gameBatch = new SpriteBatch();
 
         MusicManager.getInstance().playMusic("MainMenu/MainMenu_BackGround.ogg");
@@ -24,49 +26,85 @@ public class GameScreen extends BaseScreen {
 
     @Override
     public void show() {
-        super.show(); // فعال‌سازی ورودی کیبورد روی استیج در کلاس مادر
+        super.show(); // فعال‌سازی ورودی کیبورد روی استیج اصلی (BaseScreen)
 
+        // ساخت Stage مستقل برای HUD با یک Viewport که همیشه ثابت می‌ماند
+        hudStage = new Stage(new ExtendViewport(2560, 1440));
         gameHud = new GameHud();
-        super.stage.addActor(gameHud);
+        hudStage.addActor(gameHud);
     }
 
     @Override
     protected void renderScreen(float delta) {
-
         GameStatus gameStatus = AppStatus.getGameStatus();
         gameStatus.update(Math.min(delta, 1 / 30f));
 
-        // ۲. صدا زدن متد مدیریت هوشمند و نرم دوربین
+        // دوربین نرم دنبال‌کننده
         updateCamera(gameStatus);
 
+        // رسم دنیای بازی با دوربین خودش
         gameBatch.setProjectionMatrix(camera.combined);
-
         gameStatus.draw(camera, gameBatch);
-
     }
 
-    /**
-     * مدیریت حرکت نرم دوربین (Lerp) به همراه پشتیبانی از محورهای X و Y
-     */
-    private void updateCamera(GameStatus gameStatus) {
-        if (gameStatus.getPlayer() == null)
-            return;
+    // بعد از رسم دنیا و استیج اصلی، HUD ثابت را رسم می‌کنیم
+    @Override
+    public void render(float delta) {
+        super.render(delta);   // همه چیز را طبق BaseScreen اجرا می‌کند (renderScreen + stage.draw)
 
-        // موقعیت فعلی دوربین
+        // حالا HUD همیشه بالای همه چیز، ثابت روی صفحه
+        if (hudStage != null) {
+            hudStage.act(Math.min(delta, 1 / 30f));
+            hudStage.draw();
+        }
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        if (hudStage != null) {
+            hudStage.getViewport().update(width, height, true);
+        }
+    }
+
+    // ========== دوربین ==========
+    private static final float MIN_CRITICAL_DIST = 50f;
+    private static final float MAX_CRITICAL_DIST = 400f;
+    private static final float MIN_LERP = 0.08f;
+    private static final float MAX_LERP = 1.00f;
+
+    private void updateCamera(GameStatus gameStatus) {
+        if (gameStatus.getPlayer() == null) return;
+
         float currentX = camera.position.x;
         float currentY = camera.position.y;
 
-        // موقعیت مقصد (جایی که شوالیه قرار دارد)
-        float targetX = gameStatus.getPlayer().getPosition().x;
-        float targetY = gameStatus.getPlayer().getPosition().y;
+        float targetX = gameStatus.getPlayer().getEyeSight().x;
+        float targetY = gameStatus.getPlayer().getEyeSight().y;
 
-        // 🌟 اعمال فرمول Lerp برای جابجایی نرم
-        // دوربین در هر فریم 10% (LERP_FACTOR) از فاصله باقی‌مانده تا بازیکن را طی
-        // می‌کند
-        float newX = currentX + (targetX - currentX) * LERP_FACTOR;
-        float newY = currentY + (targetY - currentY) * LERP_FACTOR;
+        float diffX = targetX - currentX;
+        float diffY = targetY - currentY;
 
-        // اعمال پوزیشن‌های نرم جدید روی دوربین
+        float absDiffX = Math.abs(diffX);
+        float absDiffY = Math.abs(diffY);
+
+        float lerpX = MIN_LERP;
+        if (absDiffX > MIN_CRITICAL_DIST) {
+            float tX = (absDiffX - MIN_CRITICAL_DIST) / (MAX_CRITICAL_DIST - MIN_CRITICAL_DIST);
+            tX = Math.min(Math.max(tX, 0f), 1f);
+            lerpX = MIN_LERP + (MAX_LERP - MIN_LERP) * tX;
+        }
+
+        float lerpY = MIN_LERP;
+        if (absDiffY > MIN_CRITICAL_DIST) {
+            float tY = (absDiffY - MIN_CRITICAL_DIST) / (MAX_CRITICAL_DIST - MIN_CRITICAL_DIST);
+            tY = Math.min(Math.max(tY, 0f), 1f);
+            lerpY = MIN_LERP + (MAX_LERP - MIN_LERP) * tY;
+        }
+
+        float newX = currentX + diffX * lerpX;
+        float newY = currentY + diffY * lerpY;
+
         camera.position.set(newX, newY, 0);
         camera.update();
     }
@@ -81,6 +119,9 @@ public class GameScreen extends BaseScreen {
         super.dispose();
         if (gameBatch != null) {
             gameBatch.dispose();
+        }
+        if (hudStage != null) {
+            hudStage.dispose();
         }
         System.out.println("[GameScreen] Game resources disposed cleanly.");
     }
