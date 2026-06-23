@@ -11,9 +11,9 @@ public enum GameAction {
     MOVE_DOWN(Keys.S),
 
     JUMP(Keys.SPACE),
-    DASH(Keys.SHIFT_LEFT),
+    DASH(Keys.J),
     ATTACK(Keys.K),
-    FOCUS(Keys.F),  
+    FOCUS(Keys.F),
 
     PAUSE(Keys.ESCAPE),
     INVENTORY(Keys.I);

@@ -32,6 +32,8 @@ public abstract class BaseCharacter {
 
     // جهت حرکت فعلی: 1 = راست، 1- = چپ، 0 = بدون حرکت دستی
     private int moveDirection = 0;
+    protected float totalTime = 0f;   // زمان سپری‌شده از شروع بازی (یا منطق شخصیت)
+    protected float lastAttackTime = -1f;
 
     public BaseCharacter(float x, float y, float width, float height, float maxXSpeed, float acceleration) {
         this.position = new Vector2(x, y);
@@ -64,6 +66,7 @@ public abstract class BaseCharacter {
         if (!isAlive)
             return;
 
+        totalTime += delta;
         // ۱. اعمال جاذبه و مهار آن توسط سرعت حد عمودی
         if (hasGravity && !isGrounded) {
             velocity.y += GRAVITY * delta;

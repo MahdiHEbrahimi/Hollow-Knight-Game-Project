@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.mahdi.model.enums.GameAction;
@@ -26,7 +27,7 @@ public class Player extends BaseCharacter {
     private int hp = 5;
     private int maxHp = 10;
     private int geo = 20;
-    private float soul = 54;
+    private float soul = 67;
     private float maxSoul = 100;
 
     private State currentState;
@@ -35,7 +36,7 @@ public class Player extends BaseCharacter {
     // ========== پارامترهای فیزیکی ==========
     private static final float JUMP_FORCE = 1350f;
     private static final float JUMP_RELEASE_DAMPING = 0.4f;
-    private static final float DASH_SPEED = 12000f;
+    private static final float DASH_SPEED = 1400f;
     private static final float DASH_DURATION = 0.3f;
 
     // ========== انیمیشن ==========
@@ -57,10 +58,20 @@ public class Player extends BaseCharacter {
     private float lastAttackTime = -1f;      // زمان آخرین حمله برای زنجیره‌ی کمبو
     private float dashTimer = 0f;
     private boolean isDashing = false;
+    private float focusActiveTime = 0f;
 
     // ========== حسگرهای محیطی (توسط GameStatus پر می‌شوند) ==========
     private boolean touchingWallLeft = false;
     private boolean touchingWallRight = false;
+    //==== texture for arts
+    private TextureAtlas vfxAtlas;
+    private HashMap<String, Animation<TextureRegion>> vfxAnimations;
+    private String currentEffect = null;        // افکت در حال پخش
+    private float effectTimer = 0f;
+    private boolean effectActive = false;
+    private boolean effectFlip = false;         // برای افکت‌های ضربه (باید جهت‌دار باشند)
+
+    private Rectangle attackHitbox = null;  // مستطیل هیت‌باکس موقت (برای دیباگ)
 
     public Player(float x, float y) {
         super(x + 500, y, 80, 120, 700f, 2000f);
@@ -98,7 +109,7 @@ public class Player extends BaseCharacter {
         loadAnimation(State.WALL_SLIDE, "Wall Slide", 0.10f, Animation.PlayMode.LOOP);
         loadAnimation(State.WALL_JUMP, "Walljump", 0.10f, Animation.PlayMode.NORMAL);
         loadAnimation(State.FOCUS_START, "Focus Start", 0.08f, Animation.PlayMode.NORMAL);
-        loadAnimation(State.FOCUS, "Focus", 0.10f, Animation.PlayMode.LOOP);
+        loadAnimation(State.FOCUS, "Focus", 0.10f, Animation.PlayMode.LOOP_PINGPONG);
         loadAnimation(State.FOCUS_GET, "Focus Get", 0.08f, Animation.PlayMode.NORMAL);
         loadAnimation(State.FOCUS_END, "Focus End", 0.08f, Animation.PlayMode.NORMAL);
         loadAnimation(State.FIREBALL_CAST, "Fireball Cast", 0.08f, Animation.PlayMode.NORMAL);
@@ -111,7 +122,7 @@ public class Player extends BaseCharacter {
         if (idleRegions.size > 0) {
             float rawW = idleRegions.first().getRegionWidth();
             float rawH = idleRegions.first().getRegionHeight();
-            float sizeMultiplier = 1.5f;
+            float sizeMultiplier = 2f; // ضریب سایز برای آرت انیمیشن
             float scale = (bounds.height / rawH) * sizeMultiplier;
             renderWidth = rawW * scale;
             renderHeight = rawH * scale;
@@ -119,6 +130,34 @@ public class Player extends BaseCharacter {
             renderWidth = 80;
             renderHeight = 120;
         }
+
+
+        vfxAtlas = new TextureAtlas("Knight_Animations/vfx.atlas");
+        vfxAnimations = new HashMap<>();
+
+// انفجارها
+        loadVfxAnimation("Blast", "Blast", 0.08f, Animation.PlayMode.NORMAL);
+        loadVfxAnimation("Dash Effect", "Dash Effect", 0.03f, Animation.PlayMode.NORMAL);
+        loadVfxAnimation("SlashEffect", "SlashEffect", 0.04f, Animation.PlayMode.NORMAL);
+        loadVfxAnimation("SlashEffectAlt", "SlashEffectAlt", 0.04f, Animation.PlayMode.NORMAL);
+        loadVfxAnimation("UpSlashEffect", "UpSlashEffect", 0.04f, Animation.PlayMode.NORMAL);
+        loadVfxAnimation("DownSlashEffect", "DownSlashEffect", 0.04f, Animation.PlayMode.NORMAL);
+        loadVfxAnimation("LaserCircle", "LaserCircle", 0.08f, Animation.PlayMode.LOOP);  // برای Focus
+        loadVfxAnimation("Quake Blast", "Quake Blast", 0.06f, Animation.PlayMode.NORMAL);
+        loadVfxAnimation("Shockwave", "Shockwave", 0.06f, Animation.PlayMode.NORMAL);
+        loadVfxAnimation("Shockwave Spurt", "Shockwave Spurt", 0.05f, Animation.PlayMode.NORMAL);
+        loadVfxAnimation("SoulScream", "SoulScream", 0.07f, Animation.PlayMode.NORMAL);
+        loadVfxAnimation("ShadowScream", "ShadowScream", 0.07f, Animation.PlayMode.NORMAL);
+
+    }
+
+    private void loadVfxAnimation(String name, String regionPrefix, float frameDuration, Animation.PlayMode playMode) {
+        Array<AtlasRegion> regions = vfxAtlas.findRegions(regionPrefix);
+        if (regions.size == 0) {
+            System.out.println("WARNING: VFX missing for " + regionPrefix);
+            return;
+        }
+        vfxAnimations.put(name, new Animation<>(frameDuration, regions, playMode));
     }
 
     private void loadAnimation(State state, String regionName, float frameDuration, Animation.PlayMode playMode) {
@@ -149,153 +188,262 @@ public class Player extends BaseCharacter {
 
     @Override
     protected void updateCustomLogic(float delta) {
-        stateTime += delta;
+        stateTime += delta;                     // پیشبرد تایمر انیمیشن
 
-        // اگر در انیمیشن قفل‌شده هستیم و تمام نشده، سایر ورودی‌ها را نادیده بگیر
-        if (isFixAnimationActive) {
-            Animation<TextureRegion> anim = animations.get(currentState);
-            if (anim != null && anim.isAnimationFinished(stateTime)) {
-                isFixAnimationActive = false;
-                onFixAnimationFinished(); // انتقال پس از پایان انیمیشن
-            } else {
-                // در حین انیمیشن، فقط جاذبه اعمال شود (اگر در هوا)
-                applyGravity(delta);
-                return;
-            }
-        }
-
-        // ========== مدیریت Dash (در اولویت بالاتر) ==========
-        if (GameAction.DASH.isJustPressed() && !isFixAnimationActive) {
-            startDash();
-            return;
-        }
-
-        // ========== مدیریت Attack ==========
-        if (GameAction.ATTACK.isJustPressed() && !isFixAnimationActive) {
-            startAttack();
-            return;
-        }
-
-        // ========== مدیریت Focus ==========
-        if (GameAction.FOCUS.isPressed() && isGrounded && !isFixAnimationActive) {
-            startFocus();
-            return;
-        }
-        // اگر دکمه Focus رها شده باشد و در حالت Focus هستیم
-        if (!GameAction.FOCUS.isPressed() && (currentState == State.FOCUS_START || currentState == State.FOCUS || currentState == State.FOCUS_GET)) {
-            endFocus();
-            return;
-        }
-
-        // ========== مدیریت پرش (روی زمین یا دیوار) ==========
-        if (GameAction.JUMP.isJustPressed()) {
-            if (isGrounded) {
-                velocity.y = JUMP_FORCE;
-                isGrounded = false;
-                currentState = State.JUMPING;
-                stateTime = 0f;
-            } else if (hasDoubleJump && !isGrounded && currentState != State.WALL_SLIDE) {
-                // پرش دوبل در هوا
-                velocity.y = JUMP_FORCE * 1.8f; // کمی ضعیف‌تر
-                hasDoubleJump = false;
-                currentState = State.DOUBLE_JUMP;
-                stateTime = 0f;
-                isFixAnimationActive = true;   // ← اضافه شود
-            } else if (currentState == State.WALL_SLIDE && !isGrounded) {
-                // پرش از دیوار
-                float wallJumpX = (facingRight ? -1 : 1) * 400f;
-                velocity.x = wallJumpX;
-                velocity.y = JUMP_FORCE * 0.8f;
-                isGrounded = false;
-                currentState = State.WALL_JUMP;
-                stateTime = 0f;
-                isFixAnimationActive = true;
-            }
-        }
-
-        // پرش متغیر
-        if (!GameAction.JUMP.isPressed() && velocity.y > 0 && (currentState == State.JUMPING || currentState == State.DOUBLE_JUMP)) {
-            velocity.y *= JUMP_RELEASE_DAMPING;
-        }
-
-        // ورودی حرکت افقی (فقط زمانی که حالت عادی باشد)
+        handleFixedAnimation();                 // بررسی پایان انیمیشن‌های قفل‌شده
         int direction = 0;
-        if (GameAction.MOVE_LEFT.isPressed()) direction = -1;
-        if (GameAction.MOVE_RIGHT.isPressed()) direction = GameAction.MOVE_LEFT.isPressed() ? 0 : 1;
-        move(direction);
 
-        // تشخیص دیوار (برای Wall Slide)
+        if (handleFocus(delta)) return;              // اگر فوکوس شروع/پایان یافت، بقیه را اجرا نکن
+        if (!isFocusActive()){
+            if (handleDash(delta)) return;          // اگر دش فعال شد، برگرد
+            if (handleAttack()) return;             // اگر حمله شروع شد، برگرد
+            handleJump();                           // مدیریت پرش (می‌تواند بدون return ادامه دهد)
+
+            handleVariableJump();                   // کاهش سرعت پرش با رها کردن دکمه
+            direction = handleMovementInput();
+        }  // دریافت جهت از ورودی و اعمال move
+
         boolean isTouchingWall = (touchingWallLeft && direction == -1) || (touchingWallRight && direction == 1);
         boolean isFallingDown = velocity.y < 0 && !isGrounded;
 
-        // ماشین حالت اصلی
-        if (!isFixAnimationActive) {
-            if (!isAlive) {
-                currentState = State.DEATH;
-            } else if (!isGrounded) {
-                if (isTouchingWall && isFallingDown && !GameAction.DASH.isPressed()) {
-                    // سر خوردن روی دیوار
-                    currentState = State.WALL_SLIDE;
-                    velocity.y = Math.max(velocity.y, -200f); // سرعت سقوط کم
-                    hasDoubleJump = true; // پرش دوبل هنگام دیوار دوباره شارژ می‌شود
-                } else if (currentState != State.WALL_SLIDE && currentState != State.LANDING) {
-                    if (velocity.y > 0) {
-                        currentState = State.JUMPING;
-                    } else {
-                        currentState = State.FALLING;
-                    }
-                }
-            } else {
-                // روی زمین
-                hasDoubleJump = true; // شارژ پرش دوبل
-                if (previousState == State.FALLING || previousState == State.WALL_SLIDE) {
-                    // فرود آمدن
-                    currentState = State.LANDING;
-                    stateTime = 0f;
-                } else if (Math.abs(velocity.x) > 0.1f) {
-                    currentState = State.RUNNING;
-                } else {
-                    currentState = State.IDLE;
-                }
+        updateStateMachine(direction, isTouchingWall, isFallingDown); // ماشین حالت اصلی
 
-                // نگاه به بالا / پایین (فقط در حالت ایستاده یا دویدن)
-                if (currentState == State.IDLE || currentState == State.RUNNING) {
-                    if (GameAction.MOVE_UP.isPressed()) currentState = State.LOOK_UP;
-                    else if (GameAction.MOVE_DOWN.isPressed()) currentState = State.LOOK_DOWN;
-                }
+        updateSmokeParticles(delta);            // به‌روزرسانی و تولید ذرات دود
+        updateVFX(delta);                       // به‌روزرسانی افکت‌های بصری
+    }
+
+// ======================= زیرمتدهای خصوصی =========================
+
+    /**
+     * بررسی می‌کند که آیا انیمیشن قفل‌شده (یک‌باره) به پایان رسیده یا خیر.
+     * در صورت پایان، قفل را برمی‌دارد و رویداد onFixAnimationFinished را صدا می‌زند.
+     */
+    private void handleFixedAnimation() {
+        if (!isFixAnimationActive) return;
+
+        Animation<TextureRegion> anim = animations.get(currentState);
+        if (anim != null && anim.isAnimationFinished(stateTime)) {
+            isFixAnimationActive = false;
+            onFixAnimationFinished();
+        }
+    }
+
+    /**
+     * مدیریت حالت فوکوس (Focus):
+     * - اگر روی زمین دکمه فوکوس فشرده شود و در انیمیشن قفل نباشیم، شروع فوکوس.
+     * - اگر دکمه رها شود و در یکی از مراحل فوکوس باشیم، پایان فوکوس.
+     * @return true اگر یکی از شاخه‌های فوکوس اجرا شد (برای return از متد اصلی)
+     */
+    private boolean handleFocus(float delta) {
+        if (isFocusActive()) {
+            this.velocity.x = 0;
+            focusActiveTime += delta;
+            if (focusActiveTime > 1.5f && soul >= 33 && hp < maxHp){
+                focusActiveTime = 0;
+                reduceSoul(33f);
+                increaseHP(1);
+            }
+        } else {
+            focusActiveTime = 0;
+        }
+        if (GameAction.FOCUS.isPressed() && isGrounded && !isFixAnimationActive) {
+            startFocus();
+            return true;
+        }
+        if (!GameAction.FOCUS.isPressed() && (currentState == State.FOCUS_START || currentState == State.FOCUS || currentState == State.FOCUS_GET)) {
+            endFocus();
+            return true;
+        }
+        return  false;
+    }
+
+    /**
+     * مدیریت دش (Dash):
+     * - اگر دکمه دش تازه فشرده شود، startDash را صدا می‌زند.
+     * - اگر در حالت isDashing باشیم (حرکت مستقل دش)، جابه‌جایی و تایمر را به‌روز می‌کند.
+     * @return true اگر دش تازه شروع شد (برای return از متد اصلی)
+     */
+    private boolean handleDash(float delta) {
+        if (GameAction.DASH.isJustPressed()) {
+            startDash();
+            return true;
+        }
+
+        if (isDashing) {
+            this.position.x += ((facingRight ? 1 : -1) * DASH_SPEED) * delta;
+            applyNoGravity(delta);
+            dashTimer -= delta;
+            if (dashTimer < 0) {
+                isDashing = false;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * مدیریت حمله (Attack):
+     * اگر دکمه حمله تازه فشرده شود، startAttack صدا زده می‌شود.
+     * @return true اگر حمله شروع شد (برای return از متد اصلی)
+     */
+    private boolean handleAttack() {
+        if (GameAction.ATTACK.isJustPressed()) {
+            // اگر در یک انیمیشن زمینی قفل شده باشیم، حمله را رد می‌کنیم
+            if (isFixAnimationActive
+                && currentState != State.JUMPING
+                && currentState != State.DOUBLE_JUMP
+                && currentState != State.FALLING) {
+                return false;
+            }
+            startAttack();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * مدیریت پرش (Jump):
+     * - پرش از زمین
+     * - پرش دوبل در هوا
+     * - پرش از دیوار
+     */
+    private void handleJump() {
+        if (!GameAction.JUMP.isJustPressed()) return;
+
+        if (isGrounded) {
+            velocity.y = JUMP_FORCE;
+            isGrounded = false;
+            currentState = State.JUMPING;
+            stateTime = 0f;
+        } else if (hasDoubleJump && !isGrounded && currentState != State.WALL_SLIDE) {
+            velocity.y = JUMP_FORCE * 1f; // پرش دوم کمی ضعیف‌تر
+            hasDoubleJump = false;
+            currentState = State.DOUBLE_JUMP;
+            stateTime = 0f;
+            isFixAnimationActive = true;
+        } else if (currentState == State.WALL_SLIDE && !isGrounded) {
+            float wallJumpX = (facingRight ? -1 : 1) * 400f;
+            velocity.x = wallJumpX;
+            velocity.y = JUMP_FORCE * 0.8f;
+            isGrounded = false;
+            currentState = State.WALL_JUMP;
+            stateTime = 0f;
+            isFixAnimationActive = true;
+        }
+    }
+
+    /**
+     * پرش متغیر: اگر دکمه پرش رها شود و در حال بالا رفتن باشیم، سرعت عمودی کاهش می‌یابد.
+     */
+    private void handleVariableJump() {
+        if (!GameAction.JUMP.isPressed() && velocity.y > 0 &&
+            (currentState == State.JUMPING || currentState == State.DOUBLE_JUMP)) {
+            velocity.y *= JUMP_RELEASE_DAMPING;
+        }
+    }
+
+    /**
+     * دریافت ورودی حرکت افقی و اعمال آن از طریق متد move.
+     * @return جهت حرکت (1 = راست، -1 = چپ، 0 = ساکن)
+     */
+    private int handleMovementInput() {
+        int direction = 0;
+        if (GameAction.MOVE_LEFT.isPressed()) direction = -1;
+        if (GameAction.MOVE_RIGHT.isPressed()) direction = (GameAction.MOVE_LEFT.isPressed() ? 0 : 1);
+        move(direction);
+        return direction;
+    }
+
+    /**
+     * ماشین حالت اصلی (State Machine):
+     * - بررسی مرگ، هوا، زمین و سرخوردن روی دیوار
+     * - به‌روزرسانی جهت و حالت پیشین
+     */
+    private void updateStateMachine(int direction, boolean isTouchingWall, boolean isFallingDown) {
+        if (isFixAnimationActive) return; // در حین انیمیشن قفل، حالت را تغییر نده
+
+        if (!isAlive) {
+            currentState = State.DEATH;
+            return;
+        }
+
+        if (!isGrounded) {
+            // در هوا
+            if (isTouchingWall && isFallingDown && !GameAction.DASH.isPressed()) {
+                currentState = State.WALL_SLIDE;
+                velocity.y = Math.max(velocity.y, -200f); // محدود کردن سرعت سقوط روی دیوار
+                hasDoubleJump = true; // شارژ پرش دوبل
+            } else if (currentState != State.WALL_SLIDE && currentState != State.LANDING) {
+                currentState = (velocity.y > 0) ? State.JUMPING : State.FALLING;
+            }
+        } else {
+            // روی زمین
+            hasDoubleJump = true; // شارژ پرش دوبل
+            if (previousState == State.FALLING || previousState == State.WALL_SLIDE) {
+                currentState = State.LANDING;
+                stateTime = 0f;
+            } else if (Math.abs(velocity.x) > 0.1f) {
+                currentState = State.RUNNING;
+            } else {
+                currentState = State.IDLE;
             }
 
-            // به‌روزرسانی جهت
-            if (velocity.x > 0) facingRight = true;
-            else if (velocity.x < 0) facingRight = false;
-
-            previousState = currentState;
+            // نگاه به بالا/پایین در حالت ایستاده یا دویدن
+            if (currentState == State.IDLE || currentState == State.RUNNING) {
+                if (GameAction.MOVE_UP.isPressed()) currentState = State.LOOK_UP;
+                else if (GameAction.MOVE_DOWN.isPressed()) currentState = State.LOOK_DOWN;
+            }
         }
-        // به‌روزرسانی همه ذرات دود
+
+        // به‌روزرسانی جهت نگاه
+        if (velocity.x > 0) facingRight = true;
+        else if (velocity.x < 0) facingRight = false;
+
+        previousState = currentState;
+    }
+
+    /**
+     * به‌روزرسانی ذرات دود و تولید ذرات جدید با فاصله زمانی مشخص.
+     */
+    private void updateSmokeParticles(float delta) {
+        // به‌روزرسانی ذرات موجود
         for (RisingParticle p : smokeParticles) {
             p.update(delta);
         }
 
-// تولید ذره جدید فقط وقتی حرکت می‌کند یا در هواست
-        if (isAlive) {
-            smokeSpawnTimer += delta;
-            if (smokeSpawnTimer >= SMOKE_INTERVAL) {
-                smokeSpawnTimer -= SMOKE_INTERVAL;
-                // تولید ۳ ذره در هر نوبت از نقاط تصادفی بدنه
-                int spawned = 0;
-                for (RisingParticle p : smokeParticles) {
-                    if (!p.alive) {
-                        float randX = bounds.x + MathUtils.random(0f, bounds.width);
-                        float randY = bounds.y + MathUtils.random(0f, bounds.height);
-                        p.spawn(randX, randY);
-                        spawned++;
-                        if (spawned >= 3) break;  // تعداد ذرات در هر نوبت
-                    }
+        // تولید ذرات جدید در صورت زنده بودن و سپری شدن زمان کافی
+        if (!isAlive) return;
+        smokeSpawnTimer += delta;
+        if (smokeSpawnTimer >= SMOKE_INTERVAL) {
+            smokeSpawnTimer -= SMOKE_INTERVAL;
+            int spawned = 0;
+            for (RisingParticle p : smokeParticles) {
+                if (!p.alive) {
+                    float randX = bounds.x + MathUtils.random(0f, bounds.width);
+                    float randY = bounds.y + MathUtils.random(0f, bounds.height);
+                    p.spawn(randX, randY);
+                    spawned++;
+                    if (spawned >= 3) break;
                 }
             }
         }
     }
 
+    /**
+     * به‌روزرسانی افکت VFX جاری:
+     * - پیشبرد تایمر افکت
+     * - در صورت پایان انیمیشن NORMAL، افکت را غیرفعال می‌کند.
+     */
+    private void updateVFX(float delta) {
+        if (!effectActive || currentEffect == null) return;
+        Animation<TextureRegion> effectAnim = vfxAnimations.get(currentEffect);
+        if (effectAnim != null) {
+            effectTimer += delta;
+            if (effectAnim.getPlayMode() == Animation.PlayMode.NORMAL && effectAnim.isAnimationFinished(effectTimer)) {
+                effectActive = false;
+                currentEffect = null;
+            }
+        }
+    }
 
     // داخل کلاس Player
     private final ArrayList<RisingParticle> smokeParticles = new ArrayList<>();
@@ -355,11 +503,22 @@ public class Player extends BaseCharacter {
         return texture;
     }
 
-    private void applyGravity(float delta) {
+    private void applyNoGravity(float delta) {
         if (hasGravity && !isGrounded) {
-            velocity.y += GRAVITY * delta;
+            velocity.y -= GRAVITY * delta;
             if (velocity.y < TERMINAL_VELOCITY_Y) velocity.y = TERMINAL_VELOCITY_Y;
         }
+    }
+
+    public boolean isFocusActive() {
+        return GameAction.FOCUS.isPressed();
+    }
+
+    private void triggerEffect(String effectName, boolean flip) {
+        this.currentEffect = effectName;
+        this.effectActive = true;
+        this.effectTimer = 0f;
+        this.effectFlip = flip;
     }
 
     // ========== رویدادهای شروع/پایان انیمیشن‌های قفل‌شده ==========
@@ -368,30 +527,93 @@ public class Player extends BaseCharacter {
         stateTime = 0f;
         isFixAnimationActive = true;
         isDashing = true;
-        dashTimer = 5f;
+        dashTimer = 2f;
         velocity.y = 0; // در هنگام دش جاذبه تعلیق می‌شود (اختیاری)
         // سرعت افقی را تنظیم کن
         velocity.x = (facingRight ? 1 : -1) * DASH_SPEED;
+        triggerEffect("Dash Effect", facingRight);
     }
 
+
+    private boolean lastWasAltSlash = false;
+
     private void startAttack() {
-        // زنجیره‌ی کمبو
-        if (currentState == State.SLASH && (stateTime < 0.5f || lastAttackTime > 0 && (stateTime - lastAttackTime) < 0.5f)) {
-            currentState = State.SLASH_ALT;
+        float now = totalTime; // زمان مطلق فعلی
+        boolean up = GameAction.MOVE_UP.isPressed();
+        boolean down = GameAction.MOVE_DOWN.isPressed();
+
+        if (up) {
+            currentState = State.UP_SLASH;
+            triggerEffect("UpSlashEffect", !facingRight);
+        } else if (down) {
+            currentState = State.DOWN_SLASH;
+            triggerEffect("DownSlashEffect", !facingRight);
         } else {
-            currentState = State.SLASH;
+            // اگر کمتر از ۱.۵ ثانیه از آخرین حمله گذشته بود، اسلش جایگزین
+            if (lastAttackTime >= 0 && (now - lastAttackTime) < 1.5f && !lastWasAltSlash) {
+                currentState = State.SLASH_ALT;
+                lastWasAltSlash = true;
+                triggerEffect("SlashEffectAlt", !facingRight);
+            } else {
+                lastWasAltSlash = false;
+                currentState = State.SLASH;
+                triggerEffect("SlashEffect", !facingRight);
+            }
         }
+
+        lastAttackTime = now;  // زمان این حمله را به‌خاطر بسپار
+        setAttackHitbox(currentState);
         stateTime = 0f;
         isFixAnimationActive = true;
-        lastAttackTime = stateTime; // فعلاً صفر می‌شود، بعداً می‌توان timer جداگانه داشت
-        velocity.x = 0; // توقف حرکت
+        velocity.x = 0;
+    }
+
+    private void setAttackHitbox(State slashState) {
+        float hitboxWidth = 150f;   // طول اسلش
+        float hitboxHeight = bounds.height; // 120 پیکسل (قد شوالیه)
+
+        switch (slashState) {
+            case UP_SLASH:
+                // بالای سر، وسط عرض
+                attackHitbox = new Rectangle(
+                    bounds.x + (bounds.width - hitboxWidth) / 2f,
+                    bounds.y + bounds.height,          // از بالای کاراکتر شروع می‌شه
+                    hitboxWidth,
+                    hitboxHeight
+                );
+                break;
+            case DOWN_SLASH:
+                // پایین کاراکتر (زمین)
+                attackHitbox = new Rectangle(
+                    bounds.x + (bounds.width - hitboxWidth) / 2f,
+                    bounds.y - hitboxHeight,           // از پایین کاراکتر به سمت پایین
+                    hitboxWidth,
+                    hitboxHeight
+                );
+                break;
+            default: // SLASH / SLASH_ALT
+                // وسط بدن، برعکس جهت فعلی
+                attackHitbox = new Rectangle(
+                    !facingRight ? bounds.x - hitboxWidth : bounds.x + bounds.width,
+                    bounds.y,                         // هم‌سطح پایین کاراکتر
+                    hitboxWidth,
+                    hitboxHeight
+                );
+                break;
+        }
+    }
+
+    public Rectangle getAttackHitbox() {
+        return attackHitbox;
     }
 
     private void startFocus() {
         if (currentState != State.FOCUS_START && currentState != State.FOCUS) {
             currentState = State.FOCUS_START;
             stateTime = 0f;
+            this.velocity.x = 0f;
             isFixAnimationActive = true;
+            triggerEffect("LaserCircle", facingRight); // افکت دایره‌ای دور شوالیه
         }
     }
 
@@ -400,6 +622,9 @@ public class Player extends BaseCharacter {
             currentState = State.FOCUS_END;
             stateTime = 0f;
             isFixAnimationActive = true;
+            // توقف افکت دایره‌ای
+            currentEffect = null;
+            effectActive = false;
         }
     }
 
@@ -407,6 +632,7 @@ public class Player extends BaseCharacter {
      * پس از پایان یک انیمیشن یک‌باره (NORMAL) صدا زده می‌شود.
      */
     private void onFixAnimationFinished() {
+        attackHitbox = null;   // هیت‌باکس دیباگ حذف بشه
         switch (currentState) {
             case LANDING:
                 currentState = State.IDLE;
@@ -448,58 +674,132 @@ public class Player extends BaseCharacter {
         stateTime = 0f;
     }
 
+    // درون کلاس Player
+
     @Override
     public void draw(Batch batch) {
+        TextureRegion frame = getCurrentFrame();
+        if (frame == null) return;
+
+        drawGlow(batch);
+        drawBlackParticles(batch);
+        drawKnight(batch, frame);
+        drawVFX(batch);
+        drawDebug(batch);
+    }
+
+    private TextureRegion getCurrentFrame() {
         Animation<TextureRegion> anim = animations.get(currentState);
-        if (anim == null) return;
+        if (anim == null) return null;
+        return anim.getKeyFrame(stateTime);
+    }
 
-        TextureRegion frame = anim.getKeyFrame(stateTime);
-        float drawX = (bounds.x + bounds.width / 2f) - (renderWidth / 2f);
-        float drawY = bounds.y;
-
-        // ⚡ ۱. رسم هاله نورانی (Additive Blending برای درخشش)
+    private void drawGlow(Batch batch) {
         float centerX = bounds.x + bounds.width / 2f;
         float centerY = bounds.y + bounds.height / 2f;
         float glowRadius = 500f;
         float glowDiameter = glowRadius * 2f;
 
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE); // حالت جمع‌شونده
-        batch.draw(glowTexture,
-            centerX - glowRadius, centerY - glowRadius,
-            glowDiameter, glowDiameter);
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA); // بازگشت به حالت عادی
+        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+        batch.draw(glowTexture, centerX - glowRadius, centerY - glowRadius, glowDiameter, glowDiameter);
+        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+    }
 
-        // ۲. رسم ذرات دود مشکی (با شفافیت)
+    private void drawBlackParticles(Batch batch) {
         for (RisingParticle p : smokeParticles) {
             if (p.alive) {
-                batch.setColor(0f, 0f, 0f, p.alpha);  // مشکی
+                batch.setColor(0f, 0f, 0f, p.alpha);
                 float half = p.size / 2f;
                 batch.draw(smokeTexture, p.x - half, p.y - half, p.size, p.size);
             }
         }
-        batch.setColor(Color.WHITE); // برگرداندن رنگ
+        batch.setColor(Color.WHITE);
+    }
 
-        // ۳. رسم خود شوالیه با اسپرایت
+    private void drawKnight(Batch batch, TextureRegion frame) {
+        float drawX = (bounds.x + bounds.width / 2f) - (renderWidth / 2f);
+        float drawY = bounds.y;
+
         boolean flip = facingRight;
         float scaleX = flip ? -1 : 1;
         float originX = renderWidth / 2f;
         float originY = renderHeight / 2f;
 
-        batch.draw(frame,
-            drawX, drawY,
-            originX, originY,
-            renderWidth, renderHeight,
-            scaleX, 1, 0);
+        batch.draw(frame, drawX, drawY, originX, originY, renderWidth, renderHeight, scaleX, 1, 0);
+    }
 
-        // ۴. مستطیل دیباگ (دور کادر فیزیکی)
+    private void drawVFX(Batch batch) {
+        if (!effectActive || currentEffect == null) return;
+
+        Animation<TextureRegion> effectAnim = vfxAnimations.get(currentEffect);
+        if (effectAnim == null) return;
+
+        TextureRegion effectFrame = effectAnim.getKeyFrame(effectTimer, false);
+        float w = effectFrame.getRegionWidth();
+        float h = effectFrame.getRegionHeight();
+        float scaleFactorX = 1.5f;
+        float scaleFactorY = 1.5f;
+
+        float offsetX = 0f;
+        float offsetY = 0f;
+
+        // تنظیم آفست برای هر افکت خاص
+        switch (currentEffect) {
+            case "SlashEffect":
+                offsetX = 10f * (facingRight ? 1 : -1);
+                offsetY = 40f;
+                break;
+            case "SlashEffectAlt":
+                offsetX = 5f * (facingRight ? 1 : -1);
+                offsetY = 25f;
+                break;
+            case "UpSlashEffect":
+                offsetY = 55f;
+                break;
+            case "DownSlashEffect":
+                offsetY = -45f;
+                break;
+            case "Dash Effect":
+                offsetX = -160f * (facingRight ? 1 : -1);
+                offsetY = 0f;
+                break;
+            case "LaserCircle":
+                offsetX = -50f * (facingRight ? 1 : -1);
+                offsetY = 30f;
+                scaleFactorY = scaleFactorX = 2.0f;
+                break;
+            case "Blast":
+            default:
+                // بدون آفست اضافه
+                break;
+        }
+
+        float drawW = w * scaleFactorX;
+        float drawH = h * scaleFactorY;
+        float ex = bounds.x + bounds.width / 2f - drawW / 2f + offsetX;
+        float ey = bounds.y + bounds.height / 2f - drawH / 2f + offsetY;
+        float sX = effectFlip ? 1 : -1;
+
+        batch.draw(effectFrame, ex, ey, drawW / 2f, drawH / 2f, drawW, drawH, sX, 1, 0);
+    }
+
+    private void drawDebug(Batch batch) {
         batch.end();
         debugRenderer.setProjectionMatrix(batch.getProjectionMatrix());
         debugRenderer.begin(ShapeRenderer.ShapeType.Line);
+
         debugRenderer.setColor(Color.GREEN);
         debugRenderer.rect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+        if (attackHitbox != null) {
+            debugRenderer.setColor(Color.RED);
+            debugRenderer.rect(attackHitbox.x, attackHitbox.y, attackHitbox.width, attackHitbox.height);
+        }
+
         debugRenderer.end();
         batch.begin();
     }
+
     // ========== Getter & Setter ==========
     private final float EYE_SIGHT = 300f;
 
@@ -519,8 +819,18 @@ public class Player extends BaseCharacter {
         return hp;
     }
 
-    public void setHp(int hp) {
-        this.hp = hp;
+    public void increaseHP(int amount){
+        hp += amount;
+        if (hp > maxHp) hp = maxHp;
+    }
+
+    public void takeDamage(int damage) {
+        if (!isAlive) return;
+        hp -= damage;
+        System.out.println("Player damaged! HP = " + hp);
+        if (hp <= 0) {
+            die();
+        }
     }
 
     public int getMaxHp() {
@@ -543,8 +853,14 @@ public class Player extends BaseCharacter {
         return soul;
     }
 
-    public void setSoul(float soul) {
-        this.soul = soul;
+    public  void increaseSoul(float amount){
+        soul += amount;
+        if (soul > 99) soul = 99;
+    }
+
+    public void reduceSoul(float amount){
+        soul -= amount;
+        if (soul < 0) soul = 0;
     }
 
     public float getMaxSoul() {

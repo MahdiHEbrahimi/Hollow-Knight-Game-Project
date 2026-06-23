@@ -22,12 +22,15 @@
             "scaleInEditor": 1
         },
         "untitled.tmx": {
-            "scale": 0.015625,
+            "scale": 0.5,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": -19104,
-                "y": -9568
+                "x": 1233,
+                "y": 769
             }
+        },
+        "untitled.tmx#mine_break_wall": {
+            "scaleInDock": 1
         }
     },
     "last.externalTilesetPath": "C:/Users/mahdi/Desktop/hallow knight/new map/NEW TEST 32 MAP/map 1",
@@ -36,16 +39,16 @@
     "map.width": 50,
     "openFiles": [
         "untitled.tmx",
-        "map 1/mine_break_wall.tsx",
-        "map 1/brk_Crystal3.tsx"
+        "map 1/dream_lamp_01.tsx",
+        "map 1/antique_r_0009_a.tsx"
     ],
     "project": "untitled.tiled-project",
     "recentFiles": [
         "map 1/antique_r_0009_a.tsx",
         "map 1/dream_lamp_01.tsx",
+        "untitled.tmx",
         "map 1/brk_Crystal3.tsx",
-        "map 1/mine_break_wall.tsx",
-        "untitled.tmx"
+        "map 1/mine_break_wall.tsx"
     ],
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx"

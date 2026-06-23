@@ -1,12 +1,10 @@
 package com.mahdi.screen;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.mahdi.model.game.GameHud;
-import com.mahdi.model.game.GameStatus;
+import com.mahdi.model.game.GameEngine;
 import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.manager.MusicManager;
 
@@ -21,7 +19,7 @@ public class GameScreen extends BaseScreen {
         this.gameBatch = new SpriteBatch();
 
         MusicManager.getInstance().playMusic("MainMenu/MainMenu_BackGround.ogg");
-        AppStatus.setGameStatus(new GameStatus());
+        AppStatus.setGameStatus(new GameEngine());
     }
 
     @Override
@@ -36,15 +34,15 @@ public class GameScreen extends BaseScreen {
 
     @Override
     protected void renderScreen(float delta) {
-        GameStatus gameStatus = AppStatus.getGameStatus();
-        gameStatus.update(Math.min(delta, 1 / 30f));
+        GameEngine gameEngine = AppStatus.getGameStatus();
+        gameEngine.update(Math.min(delta, 1 / 30f));
 
         // دوربین نرم دنبال‌کننده
-        updateCamera(gameStatus);
+        updateCamera(gameEngine);
 
         // رسم دنیای بازی با دوربین خودش
         gameBatch.setProjectionMatrix(camera.combined);
-        gameStatus.draw(camera, gameBatch);
+        gameEngine.draw(camera, gameBatch);
     }
 
     // بعد از رسم دنیا و استیج اصلی، HUD ثابت را رسم می‌کنیم
@@ -73,14 +71,14 @@ public class GameScreen extends BaseScreen {
     private static final float MIN_LERP = 0.08f;
     private static final float MAX_LERP = 1.00f;
 
-    private void updateCamera(GameStatus gameStatus) {
-        if (gameStatus.getPlayer() == null) return;
+    private void updateCamera(GameEngine gameEngine) {
+        if (gameEngine.getPlayer() == null) return;
 
         float currentX = camera.position.x;
         float currentY = camera.position.y;
 
-        float targetX = gameStatus.getPlayer().getEyeSight().x;
-        float targetY = gameStatus.getPlayer().getEyeSight().y;
+        float targetX = gameEngine.getPlayer().getEyeSight().x;
+        float targetY = gameEngine.getPlayer().getEyeSight().y;
 
         float diffX = targetX - currentX;
         float diffY = targetY - currentY;

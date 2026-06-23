@@ -1,9 +1,8 @@
 package com.mahdi.model.status;
 
-import com.badlogic.gdx.Game;
 import com.mahdi.HollowKnightGame;
 import com.mahdi.model.enums.MenuType;
-import com.mahdi.model.game.GameStatus;
+import com.mahdi.model.game.GameEngine;
 import com.mahdi.model.graphic.GraphicsQuality;
 import com.mahdi.screen.manager.BrightnessController;
 import com.mahdi.screen.manager.MusicManager;
@@ -13,14 +12,14 @@ import com.mahdi.screen.manager.SoundManager;
 public class AppStatus {
     public static HollowKnightGame hollowKnightGame;
     public static MenuType curreMenu;
-    private static GameStatus game;
+    private static GameEngine game;
     public static GraphicsQuality Quality = GraphicsQuality.Ultra_High;
 
-    public  static void setGameStatus(GameStatus game) {
+    public  static void setGameStatus(GameEngine game) {
         AppStatus.game = game;
     }
 
-    public static GameStatus getGameStatus() {
+    public static GameEngine getGameStatus() {
         return game;
     }
 
