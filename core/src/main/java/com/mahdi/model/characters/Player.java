@@ -18,13 +18,14 @@ import com.mahdi.model.enums.GameAction;
 import com.mahdi.model.characters.enums.State;
 import com.mahdi.model.game.RisingParticle;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Player extends BaseCharacter {
 
     // ========== ویژگی‌های بازیکن ==========
-    private int hp = 5;
+    ;
     private int maxHp = 10;
     private int geo = 20;
     private float soul = 67;
@@ -40,7 +41,7 @@ public class Player extends BaseCharacter {
     private static final float DASH_DURATION = 0.3f;
 
     // ========== انیمیشن ==========
-    private final TextureAtlas atlas;
+    private static TextureAtlas atlas;
     private HashMap<State, Animation<TextureRegion>> animations;
     private float stateTime = 0f;
 
@@ -64,7 +65,7 @@ public class Player extends BaseCharacter {
     private boolean touchingWallLeft = false;
     private boolean touchingWallRight = false;
     //==== texture for arts
-    private TextureAtlas vfxAtlas;
+    private static TextureAtlas vfxAtlas;
     private HashMap<String, Animation<TextureRegion>> vfxAnimations;
     private String currentEffect = null;        // افکت در حال پخش
     private float effectTimer = 0f;
@@ -74,13 +75,13 @@ public class Player extends BaseCharacter {
     private Rectangle attackHitbox = null;  // مستطیل هیت‌باکس موقت (برای دیباگ)
 
     public Player(float x, float y) {
-        super(x + 500, y, 80, 120, 700f, 2000f);
+        super(x + 500, y, 80, 120, 700f, 2000f, 5);
 
         this.currentState = State.IDLE;
         this.debugRenderer = new ShapeRenderer();
 
-        // بارگذاری اطلس
-        atlas = new TextureAtlas("Knight_Animations/knight.atlas");
+        if (atlas == null)
+            atlas = new TextureAtlas("Knight_Animations/knight.atlas");
         animations = new HashMap<>();
 
         // ایجاد بافت دود (دایره‌ی محو) – دقیقاً مثل MainMenuScreen
@@ -131,8 +132,8 @@ public class Player extends BaseCharacter {
             renderHeight = 120;
         }
 
-
-        vfxAtlas = new TextureAtlas("Knight_Animations/vfx.atlas");
+        if (vfxAtlas == null)
+            vfxAtlas = new TextureAtlas("Knight_Animations/vfx.atlas");
         vfxAnimations = new HashMap<>();
 
 // انفجارها
@@ -189,18 +190,19 @@ public class Player extends BaseCharacter {
     @Override
     protected void updateCustomLogic(float delta) {
         stateTime += delta;                     // پیشبرد تایمر انیمیشن
+        lastTimeKnightGotDamaged += delta;
 
         handleFixedAnimation();                 // بررسی پایان انیمیشن‌های قفل‌شده
         int direction = 0;
 
         if (handleFocus(delta)) return;              // اگر فوکوس شروع/پایان یافت، بقیه را اجرا نکن
-        if (!isFocusActive()){
+        if (!isFocusActive()) {
             if (handleDash(delta)) return;          // اگر دش فعال شد، برگرد
             if (handleAttack()) return;             // اگر حمله شروع شد، برگرد
             handleJump();                           // مدیریت پرش (می‌تواند بدون return ادامه دهد)
 
             handleVariableJump();                   // کاهش سرعت پرش با رها کردن دکمه
-            direction = handleMovementInput();
+            direction = handleMovementInput(delta);
         }  // دریافت جهت از ورودی و اعمال move
 
         boolean isTouchingWall = (touchingWallLeft && direction == -1) || (touchingWallRight && direction == 1);
@@ -232,13 +234,14 @@ public class Player extends BaseCharacter {
      * مدیریت حالت فوکوس (Focus):
      * - اگر روی زمین دکمه فوکوس فشرده شود و در انیمیشن قفل نباشیم، شروع فوکوس.
      * - اگر دکمه رها شود و در یکی از مراحل فوکوس باشیم، پایان فوکوس.
+     *
      * @return true اگر یکی از شاخه‌های فوکوس اجرا شد (برای return از متد اصلی)
      */
     private boolean handleFocus(float delta) {
         if (isFocusActive()) {
             this.velocity.x = 0;
             focusActiveTime += delta;
-            if (focusActiveTime > 1.5f && soul >= 33 && hp < maxHp){
+            if (focusActiveTime > 1.5f && soul >= 33 && hp < maxHp) {
                 focusActiveTime = 0;
                 reduceSoul(33f);
                 increaseHP(1);
@@ -254,13 +257,14 @@ public class Player extends BaseCharacter {
             endFocus();
             return true;
         }
-        return  false;
+        return false;
     }
 
     /**
      * مدیریت دش (Dash):
      * - اگر دکمه دش تازه فشرده شود، startDash را صدا می‌زند.
      * - اگر در حالت isDashing باشیم (حرکت مستقل دش)، جابه‌جایی و تایمر را به‌روز می‌کند.
+     *
      * @return true اگر دش تازه شروع شد (برای return از متد اصلی)
      */
     private boolean handleDash(float delta) {
@@ -283,6 +287,7 @@ public class Player extends BaseCharacter {
     /**
      * مدیریت حمله (Attack):
      * اگر دکمه حمله تازه فشرده شود، startAttack صدا زده می‌شود.
+     *
      * @return true اگر حمله شروع شد (برای return از متد اصلی)
      */
     private boolean handleAttack() {
@@ -343,13 +348,14 @@ public class Player extends BaseCharacter {
 
     /**
      * دریافت ورودی حرکت افقی و اعمال آن از طریق متد move.
+     *
      * @return جهت حرکت (1 = راست، -1 = چپ، 0 = ساکن)
      */
-    private int handleMovementInput() {
+    private int handleMovementInput(float delta) {
         int direction = 0;
         if (GameAction.MOVE_LEFT.isPressed()) direction = -1;
         if (GameAction.MOVE_RIGHT.isPressed()) direction = (GameAction.MOVE_LEFT.isPressed() ? 0 : 1);
-        move(direction);
+        move(direction, delta);
         return direction;
     }
 
@@ -510,6 +516,35 @@ public class Player extends BaseCharacter {
         }
     }
 
+
+
+    private  float lastTimeKnightGotDamaged = 0;
+
+    public void takeDamageFormGround(){
+        if (!isAlive || lastTimeKnightGotDamaged < 2.0f) return;
+        lastTimeKnightGotDamaged = 0;
+        setThrown(new Vector2(0f , 6 * THROW_SPEED));
+        if (hp <= 0) {
+            die();
+        }
+    }
+
+    public void takeDamage(int damage, Enemy enemy) {
+        if (!isAlive || lastTimeKnightGotDamaged < 2.0f) return;
+        hp -= damage;
+        lastTimeKnightGotDamaged = 0;
+        if (enemy.getPosition().x + enemy.getBounds().width / 2f < this.getPosition().x + this.getBounds().width / 2f) {
+            this.setThrown(new Vector2(THROW_SPEED, 0f));
+            enemy.setThrown(new Vector2(-THROW_SPEED, 0f));
+        } else {
+            this.setThrown(new Vector2(-THROW_SPEED, 0f));
+            enemy.setThrown(new Vector2(THROW_SPEED, 0f));
+        }
+        if (hp <= 0) {
+            die();
+        }
+    }
+
     public boolean isFocusActive() {
         return GameAction.FOCUS.isPressed();
     }
@@ -568,9 +603,38 @@ public class Player extends BaseCharacter {
         velocity.x = 0;
     }
 
+    public void attackWasSuccessful(Enemy enemy) {
+        switch (currentState) {
+            case DOWN_SLASH:
+                setThrown(new Vector2(0, 4 * THROW_SPEED));
+//                enemy.setThrown(new Vector2(0, -THROW_SPEED));
+                break;
+            case UP_SLASH:
+                setThrown(new Vector2(0, -THROW_SPEED));
+                enemy.setThrown(new Vector2(0, THROW_SPEED));
+                break;
+            case SLASH:
+            case SLASH_ALT:
+                if (facingRight) {
+                    setThrown(new Vector2(-THROW_SPEED, 0));
+                    enemy.setThrown(new Vector2(THROW_SPEED, 0));
+                }
+                else {
+                    setThrown(new Vector2(THROW_SPEED, 0));
+                    enemy.setThrown(new Vector2(-THROW_SPEED, 0));
+                }
+                break;
+        }
+
+        this.attackHitbox = null;
+        enemy.takeDamage(1);
+    }
+
     private void setAttackHitbox(State slashState) {
-        float hitboxWidth = 150f;   // طول اسلش
-        float hitboxHeight = bounds.height; // 120 پیکسل (قد شوالیه)
+        float hitboxMultiplayer = 1.5f;
+        float hitboxWidth = 150f * hitboxMultiplayer;   // طول اسلش
+        float hitboxHeight = bounds.height * hitboxMultiplayer; // 120 پیکسل (قد شوالیه)
+
 
         switch (slashState) {
             case UP_SLASH:
@@ -800,6 +864,14 @@ public class Player extends BaseCharacter {
         batch.begin();
     }
 
+        public void die() {
+            // todo
+            this.isAlive = false;
+            this.hasGravity = true;
+            this.velocity.x = 0;
+            this.isMoving = false;
+        }
+
     // ========== Getter & Setter ==========
     private final float EYE_SIGHT = 300f;
 
@@ -815,22 +887,10 @@ public class Player extends BaseCharacter {
         return new Vector2(x, y);
     }
 
-    public int getHp() {
-        return hp;
-    }
 
-    public void increaseHP(int amount){
+    public void increaseHP(int amount) {
         hp += amount;
         if (hp > maxHp) hp = maxHp;
-    }
-
-    public void takeDamage(int damage) {
-        if (!isAlive) return;
-        hp -= damage;
-        System.out.println("Player damaged! HP = " + hp);
-        if (hp <= 0) {
-            die();
-        }
     }
 
     public int getMaxHp() {
@@ -853,12 +913,12 @@ public class Player extends BaseCharacter {
         return soul;
     }
 
-    public  void increaseSoul(float amount){
+    public void increaseSoul(float amount) {
         soul += amount;
         if (soul > 99) soul = 99;
     }
 
-    public void reduceSoul(float amount){
+    public void reduceSoul(float amount) {
         soul -= amount;
         if (soul < 0) soul = 0;
     }
@@ -886,7 +946,15 @@ public class Player extends BaseCharacter {
     @Override
     public void dispose() {
         if (glowTexture != null) glowTexture.dispose();
-        if (atlas != null) atlas.dispose();
+        if (atlas != null) {
+            atlas.dispose();
+            atlas = null;
+        }
+
+        if (vfxAtlas != null){
+            vfxAtlas.dispose();
+            vfxAtlas = null;
+        }
         if (debugRenderer != null) debugRenderer.dispose();
         if (smokeTexture != null) smokeTexture.dispose();
     }

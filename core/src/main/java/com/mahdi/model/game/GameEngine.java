@@ -10,9 +10,11 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
+import com.mahdi.model.characters.BaseCharacter;
+import com.mahdi.model.characters.Corpse;
 import com.mahdi.model.characters.Enemy;
 import com.mahdi.model.characters.Player;
-import com.mahdi.model.characters.enemis.Cockroach;
+import com.mahdi.model.characters.enemis.Crawled;
 import com.mahdi.model.map.SolidBlock;
 import com.mahdi.model.map.TiledMapHelper;
 
@@ -23,6 +25,7 @@ public class GameEngine {
 
     private final Player player;
     private final ArrayList<Enemy> enemies;
+    private final ArrayList<Corpse> corpses;
 
     private final TiledMap tiledMap;
     private final OrthogonalTiledMapRenderer mapRenderer;
@@ -34,6 +37,7 @@ public class GameEngine {
         this.solidBlocks = mapHelper.getSolidRectangles();
         this.mapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
         this.enemies = new ArrayList<>();
+        this.corpses = new ArrayList<>();
 
         float finalSpawnX = spawnX;
         float finalSpawnY = spawnY;
@@ -57,6 +61,7 @@ public class GameEngine {
 
         this.player = new Player(finalSpawnX, finalSpawnY);
         spawnEnemiesFromMap();
+        this.enemies.add(new Crawled(1141 + 300, this.spawnY, this.player));
     }
 
     private void spawnEnemiesFromMap() {
@@ -72,7 +77,6 @@ public class GameEngine {
             if (name == null) continue;
 
             if (name.startsWith("Cockroach")) {
-                // فقط اگر شیء مستطیلی باشد پردازش می‌کنیم
                 if (!(object instanceof RectangleMapObject)) {
                     System.out.println("WARNING: Cockroach spawn point is not a rectangle, skipping.");
                     continue;
@@ -81,11 +85,12 @@ public class GameEngine {
                 RectangleMapObject rectObj = (RectangleMapObject) object;
                 Rectangle rect = rectObj.getRectangle();
 
-                // تبدیل مختصات Tiled (پایین-چپ) به LibGDX (بالا-چپ)
                 float spawnX = rect.x;
                 float spawnY = totalMapHeight - rect.y - rect.height;
 
-                Enemy cockroach = new Cockroach(this.spawnX + 200, this.spawnY, player);
+                // از مختصات واقعی استفاده کن، نه مقادیر ثابت
+                Enemy cockroach = new Crawled(this.spawnX + 200, this.spawnY, player);
+                //todo
                 enemies.add(cockroach);
                 System.out.println("Spawned Cockroach at: " + spawnX + ", " + spawnY);
             }
@@ -94,25 +99,36 @@ public class GameEngine {
 
     public void update(float delta) {
         player.update(delta);
-        handleMapCollisions(player, delta);
+        handleMapCollisions(player);
+
+        for (Corpse c : corpses) {
+            c.update(delta);
+        }
 
         // بررسی برخورد هیت‌باکس حمله شوالیه با دشمنان
         Rectangle playerAttackBox = player.getAttackHitbox();
         if (playerAttackBox != null) {
             for (Enemy e : enemies) {
-                if (e.isAlive() && e instanceof Cockroach) {
+                if (e.isAlive()) {
                     if (playerAttackBox.overlaps(e.getBounds())) {
-                        ((Cockroach) e).takeDamage(1);
-//                        player.clearAttackHitbox();   // هر ضربه فقط یک آسیب
+                        player.attackWasSuccessful(e);   // هر ضربه فقط یک آسیب
                         break;
                     }
                 }
             }
         }
 
+        for (Corpse corpse : corpses){
+            handleMapCollisions(corpse);
+        }
+
         // به‌روزرسانی دشمنان
         for (Enemy enemy : enemies) {
             enemy.update(delta);
+            handleMapCollisions(enemy);
+            if (enemy.getBounds().overlaps(player.getBounds()) && enemy.isAlive()){
+                player.takeDamage(1, enemy);
+            }
         }
     }
 
@@ -121,6 +137,9 @@ public class GameEngine {
         mapRenderer.render();
 
         batch.begin();
+        for(Corpse c : corpses){
+            c.draw(batch);
+        }
         for (Enemy e : enemies) {
             if (e.isAlive()) {
                 e.draw(batch);
@@ -130,49 +149,64 @@ public class GameEngine {
         batch.end();
     }
 
-    private void handleMapCollisions(Player p, float delta) {
-        Rectangle playerBounds = p.getBounds();
-        p.setGrounded(false);
+    private void handleMapCollisions(BaseCharacter character) {
+        Rectangle charBounds = character.getBounds();
+        character.setGrounded(false);
 
         float sensorHeight = 2f;
         Rectangle footSensor = new Rectangle(
-            playerBounds.x,
-            playerBounds.y - sensorHeight,
-            playerBounds.width,
+            charBounds.x,
+            charBounds.y - sensorHeight,
+            charBounds.width,
             sensorHeight
         );
 
         for (SolidBlock block : solidBlocks) {
-            if (block.isDeadly && playerBounds.overlaps(block.bounds)) {
-                p.takeDamage(1);   // تغییر یافته از reduceHP به takeDamage
+            // برخورد با تیغ‌های مرگبار: فقط بازیکن آسیب ببیند
+            if (block.isDeadly && charBounds.overlaps(block.bounds)) {
+                if (character instanceof Player) {
+                    ((Player) character).takeDamageFormGround();
+                }
                 continue;
             }
 
-            if (p.getVelocity().y < 0 && playerBounds.overlaps(block.bounds)
-                && playerBounds.y + playerBounds.height > block.bounds.y + block.bounds.height) {
-                p.getPosition().y = block.bounds.y + block.bounds.height;
-                p.getVelocity().y = 0;
-                p.setGrounded(true);
-            } else if (p.getVelocity().y > 0 && playerBounds.overlaps(block.bounds)
-                && playerBounds.y < block.bounds.y) {
-                p.getPosition().y = block.bounds.y - playerBounds.height;
-                p.getVelocity().y = 0;
+            // فرود از بالا
+            if (character.getVelocity().y < 0 && charBounds.overlaps(block.bounds)
+                && charBounds.y + charBounds.height > block.bounds.y + block.bounds.height) {
+                character.getPosition().y = block.bounds.y + block.bounds.height;
+                character.getVelocity().y = 0;
+                character.setGrounded(true);
+            }
+            // برخورد از پایین (سقف)
+            else if (character.getVelocity().y > 0 && charBounds.overlaps(block.bounds)
+                && charBounds.y < block.bounds.y) {
+                character.getPosition().y = block.bounds.y - charBounds.height;
+                character.getVelocity().y = 0;
             }
 
-            if (!p.isGrounded() && playerBounds.overlaps(block.bounds)) {
-                if (p.getVelocity().x > 0 && playerBounds.x < block.bounds.x) {
-                    p.getPosition().x = block.bounds.x - playerBounds.width;
-                } else if (p.getVelocity().x < 0 && playerBounds.x > block.bounds.x) {
-                    p.getPosition().x = block.bounds.x + block.bounds.width;
+            // برخورد افقی با دیوارها (فقط وقتی روی زمین نیست)
+            if (!character.isGrounded() && charBounds.overlaps(block.bounds)) {
+                if (character.getVelocity().x > 0 && charBounds.x < block.bounds.x) {
+                    character.getPosition().x = block.bounds.x - charBounds.width;
+                } else if (character.getVelocity().x < 0 && charBounds.x > block.bounds.x) {
+                    character.getPosition().x = block.bounds.x + block.bounds.width;
                 }
             }
 
+            // حسگر پا برای چسبیدن به زمین
             if (footSensor.overlaps(block.bounds) && !block.isDeadly) {
-                p.setGrounded(true);
+                character.setGrounded(true);
             }
         }
 
-        p.getBounds().setPosition(p.getPosition().x, p.getPosition().y);
+        character.getBounds().setPosition(character.getPosition().x, character.getPosition().y);
+    }
+
+    public void enemyIsDead (Enemy enemy) {
+        Corpse corpse = enemy.getCorpse();
+        enemy.die();
+        enemies.remove(enemy);
+        corpses.add(corpse);
     }
 
     public Player getPlayer() {

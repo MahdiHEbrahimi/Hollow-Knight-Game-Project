@@ -19,7 +19,7 @@ public class AppStatus {
         AppStatus.game = game;
     }
 
-    public static GameEngine getGameStatus() {
+    public static GameEngine getGameEngine() {
         return game;
     }
 

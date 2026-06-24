@@ -34,7 +34,7 @@ public class GameScreen extends BaseScreen {
 
     @Override
     protected void renderScreen(float delta) {
-        GameEngine gameEngine = AppStatus.getGameStatus();
+        GameEngine gameEngine = AppStatus.getGameEngine();
         gameEngine.update(Math.min(delta, 1 / 30f));
 
         // دوربین نرم دنبال‌کننده

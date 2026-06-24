@@ -1,9 +1,9 @@
 package com.mahdi.model.characters;
 
-import com.badlogic.gdx.Version;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.mahdi.model.status.AppStatus;
 
 public abstract class BaseCharacter {
 
@@ -16,26 +16,29 @@ public abstract class BaseCharacter {
 
     // ویژگی‌های فیزیکی نمونه
     protected Vector2 position;
-    protected Vector2 velocity;
+    protected Vector2 velocity = new Vector2();
     protected Rectangle bounds;
 
     protected boolean isGrounded;
     protected boolean isAlive;
     protected boolean hasGravity;
     protected boolean isMoving; // 🌟 پرچم نشان‌دهنده اینکه کاراکتر در این فریم قصد حرکت دارد یا نه
+    protected float throwTimeRemaining = 0f;
+    protected Vector2 throwVelocity;
+    protected static final float THROW_SPEED = 1400f;   // سرعت پرتاب (پیکسل در ثانیه)
 
     // =======================================================
     // 🌟 ویژگی‌های فیزیکی قابل تنظیم از طریق کانتراکتور فرزند
     // =======================================================
     protected final float maxXSpeed; // حداکثر سرعت افقی مجاز این کاراکتر
     protected final float acceleration; // شتاب حرکت افقی این کاراکتر
+    protected int hp;
 
     // جهت حرکت فعلی: 1 = راست، 1- = چپ، 0 = بدون حرکت دستی
-    private int moveDirection = 0;
     protected float totalTime = 0f;   // زمان سپری‌شده از شروع بازی (یا منطق شخصیت)
     protected float lastAttackTime = -1f;
 
-    public BaseCharacter(float x, float y, float width, float height, float maxXSpeed, float acceleration) {
+    public BaseCharacter(float x, float y, float width, float height, float maxXSpeed, float acceleration, int hp) {
         this.position = new Vector2(x, y);
         this.velocity = new Vector2(0, 0);
         this.bounds = new Rectangle(x, y, width, height);
@@ -47,6 +50,7 @@ public abstract class BaseCharacter {
         // مقداردهی ویژگی‌های اختصاصی هر کاراکتر از طریق کانتراکتور
         this.maxXSpeed = maxXSpeed;
         this.acceleration = acceleration;
+        this.hp = hp;
     }
 
     /**
@@ -54,8 +58,8 @@ public abstract class BaseCharacter {
      *
      * @param direction : 1 برای راست، 1- برای چپ، 0 برای ایستادن
      */
-    public void move(int direction) {
-        this.moveDirection = direction;
+    public void move(int direction, float delta) {
+            velocity.x += direction * acceleration * delta;
         this.isMoving = (direction != 0);
     }
 
@@ -66,6 +70,7 @@ public abstract class BaseCharacter {
         if (!isAlive)
             return;
 
+        updateThrown(delta);
         totalTime += delta;
         // ۱. اعمال جاذبه و مهار آن توسط سرعت حد عمودی
         if (hasGravity && !isGrounded) {
@@ -79,9 +84,7 @@ public abstract class BaseCharacter {
         updateCustomLogic(delta);
 
         // ۳. 🌟 اعمال شتاب افقی بر اساس جهتِ دستور داده شده (پاس داده شده به متد move)
-        if (isMoving) {
-            velocity.x += moveDirection * acceleration * delta;
-        } else {
+         if (!isMoving){
             // اگر دکمه رها شده یا AI متوقف شده، اصطکاک فعال می‌شود تا سُر خورده و بایستد
             velocity.x *= FRICTION;
             // برای جلوگیری از محاسبات اعشاری بی‌نهایت کوچک نزدیک به صفر
@@ -109,11 +112,55 @@ public abstract class BaseCharacter {
 
     public abstract void draw(Batch batch);
 
-    public void die() {
-        this.isAlive = false;
-        this.hasGravity = true;
-        this.velocity.x = 0;
-        this.isMoving = false;
+    public void moveToPos(Vector2 target, float delta) {
+        Vector2 diff = target.cpy().sub(this.position);   // بردار از خودمان به سمت هدف
+        moveToDirection(diff, delta);
+    }
+
+    public void moveToDirection(Vector2 diffVector, float delta) {
+        float ax = Math.abs(diffVector.x);
+        float ay = Math.abs(diffVector.y);
+        float maxAbs = Math.max(ax, ay);
+        if (maxAbs < 0.0001f) return;   // از تقسیم بر صفر جلوگیری
+        // نرمال‌سازی: تقسیم همه مؤلفه‌ها بر بزرگترین قدرمطلق
+        float normX = diffVector.x / maxAbs;
+        float normY = diffVector.y / maxAbs;
+
+        // اعمال شتاب در جهت نرمال‌شده
+        velocity.x += normX * acceleration * delta;
+        velocity.y += normY * acceleration * delta;
+
+    }
+
+    abstract void die();
+
+//    public void die() {
+//        // todo
+//        this.isAlive = false;
+//        this.hasGravity = true;
+//        this.velocity.x = 0;
+//        this.isMoving = false;
+//    }
+
+    public void setThrown(Vector2 v) {
+        this.throwTimeRemaining = 0.2f;
+        throwVelocity = v;
+    }
+
+    public void updateThrown(float delta) {
+        if (throwTimeRemaining <= 0f || throwVelocity == null) return;
+
+        throwTimeRemaining -= delta;
+        float timeDependedMultiplier = throwTimeRemaining * 5;
+        // حرکت مستقیم (بدون شتاب / جاذبه) در جهت پرتاب
+        position.x += throwVelocity.x * delta * timeDependedMultiplier;
+        position.y += throwVelocity.y * delta * timeDependedMultiplier;
+
+        // پس از پایان زمان، velocity اصلی را صفر می‌کنیم (اختیاری)
+        if (throwTimeRemaining <= 0f) {
+            throwTimeRemaining = 0;
+            throwVelocity = null;
+        }
     }
 
     public void dispose() {
@@ -148,4 +195,9 @@ public abstract class BaseCharacter {
     public void setGrounded(boolean grounded) {
         this.isGrounded = grounded;
     }
+
+    public int getHp() {
+        return hp;
+    }
+
 }

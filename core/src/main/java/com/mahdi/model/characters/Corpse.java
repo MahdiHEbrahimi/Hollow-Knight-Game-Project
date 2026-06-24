@@ -1,50 +1,74 @@
-// package com.mahdi.model.characters;
+package com.mahdi.model.characters;
 
-// import com.badlogic.gdx.graphics.g2d.Batch;
-// import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 
-// public class Corpse extends BaseCharacter {
+public class Corpse extends BaseCharacter {
 
-//     private final TextureRegion corpseTexture;
-//     private float fadeTimer = 3.0f; // جسد ۳ ثانیه روی زمین می‌ماند و بعد محو می‌شود
+    private final Animation<TextureRegion> deathAnim;
+    private float stateTime;
+    private boolean animationFinished;
 
-//     public Corpse(float x, float y, float width, float height, TextureRegion corpseTexture, float deathKnockbackX) {
-//         super(x, y, width, height);
-//         this.corpseTexture = corpseTexture;
-        
-//         // ایجاد افکت پرتاب شدن جسد به عقب بر اساس جهت ضربه شمشیر شوالیه
-//         this.velocity.x = deathKnockbackX;
-//         this.velocity.y = 400f; // یک پرش کوچک رو به بالا موقع مرگ برای حس طبیعی‌تر
-//         this.hasGravity = true;
-//     }
 
-//     @Override
-//     protected void updateCustomLogic(float delta) {
-//         // اصطکاک روی زمین: سرعت افقی جسد آرام‌آرام کم شود تا بایستد
-//         if (isGrounded) {
-//             velocity.x *= 0.85f; 
-//         }
+    /**
+     * @param enemyBounds   مستطیل فیزیکی دشمن در لحظهٔ مرگ
+     * @param initialVel    سرعت اولیه (مثلاً بردار پرتاب)
+     * @param deathAnim     انیمیشن مرگ (PlayMode.NORMAL)
+     */
+    public Corpse(Rectangle enemyBounds, Vector2 initialVel, Animation<TextureRegion> deathAnim) {
+        // ابعاد فیزیکی دقیقاً مثل دشمن
+        super(enemyBounds.x, enemyBounds.y,
+            enemyBounds.width, enemyBounds.height,
+            0f, 0f, 0);  // maxSpeed و شتاب صفر – فیزیک توسط initialVel تأمین می‌شود
 
-//         // تایمر محو شدن جسد
-//         fadeTimer -= delta;
-//         if (fadeTimer <= 0) {
-//             this.isAlive = false; // ماشه حذف نهایی از لیست بازی توسط GameStatus
-//         }
-//     }
+        this.deathAnim = deathAnim;
+        this.velocity.set(initialVel);   // سرعت پرتاب / باقی‌ماندهٔ دشمن
+        this.stateTime = 0f;
+        this.animationFinished = false;
+        this.isAlive = true;             // فیزیک (جاذبه، برخورد) اجرا شود
+        this.hasGravity = true;
+        this.isMoving = false;
+    }
 
-//     @Override
-//     public void draw(Batch batch) {
-//         if (corpseTexture == null) return;
+    @Override
+    protected void updateCustomLogic(float delta) {
+        stateTime += delta;
+        if (deathAnim.isAnimationFinished(stateTime)) {
+            animationFinished = true;
+        }
+    }
 
-//         // اعمال افکت غیب شدن تدریجی (Fade out) روی آلفای رنگِ بچ گرافیکی
-//         if (fadeTimer < 1.0f) {
-//             batch.setColor(1, 1, 1, fadeTimer); // کم کردن شفافیت در ثانیه آخر
-//         }
+    @Override
+    public void draw(Batch batch) {
+        TextureRegion frame;
+        if (!animationFinished) {
+            frame = deathAnim.getKeyFrame(stateTime, false);
+        } else {
+            frame = deathAnim.getKeyFrame(deathAnim.getAnimationDuration(), false);
+        }
 
-//         // رسم جسد
-//         batch.draw(corpseTexture, position.x, position.y, bounds.width, bounds.height);
+        // مرکز مستطیل فیزیکی (bounds)
+        float centerX = bounds.x + bounds.width / 2f;
+        float centerY = bounds.y + bounds.height / 2f;
+        // ابعاد واقعی فریم
+        float w = frame.getRegionWidth();
+        float h = frame.getRegionHeight();
+        // گوشهٔ چپ-پایین اسپرایت برای آنکه مرکز آن روی مرکز bounds بیفتد
+        float drawX = centerX - w / 2f;
+        float drawY = centerY - h / 2f;
 
-//         // ریست کردن رنگ بچ به حالت عادی برای اینکه بقیه بازی خراب نشود
-//         batch.setColor(1, 1, 1, 1);
-//     }
-// }
+        batch.draw(frame, drawX, drawY, w, h);
+    }
+
+    public boolean isCompletelyStopped() {
+        return animationFinished && Math.abs(velocity.x) < 1f && isGrounded;
+    }
+
+    @Override
+    public void die() {
+        //todo
+    }
+}

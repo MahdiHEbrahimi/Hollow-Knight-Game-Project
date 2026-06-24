@@ -8,11 +8,8 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Group;
-import com.badlogic.gdx.utils.Array;
 import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.manager.FontManager;
-
-import java.util.HashMap;
 
 public class GameHud extends Group {
 
@@ -76,13 +73,13 @@ public class GameHud extends Group {
         hudStateTime += delta;
         shineStateTime += delta;
 
-        if (AppStatus.getGameStatus().getPlayer() == null) return;
+        if (AppStatus.getGameEngine().getPlayer() == null) return;
 
         // کپی اطلاعات از پلیر
-        this.currentHp = AppStatus.getGameStatus().getPlayer().getHp();
-        this.currentGeo = AppStatus.getGameStatus().getPlayer().getGeo();
-        this.currentSoul = AppStatus.getGameStatus().getPlayer().getSoul();
-        this.maxHP = AppStatus.getGameStatus().getPlayer().getMaxHp();
+        this.currentHp = AppStatus.getGameEngine().getPlayer().getHp();
+        this.currentGeo = AppStatus.getGameEngine().getPlayer().getGeo();
+        this.currentSoul = AppStatus.getGameEngine().getPlayer().getSoul();
+        this.maxHP = AppStatus.getGameEngine().getPlayer().getMaxHp();
 
         // مقداردهی اولیه برای آرایه قلب‌ها در اولین فریم بازی
         if (!isInitialized && maxHP > 0) {
