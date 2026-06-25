@@ -17,6 +17,7 @@ import com.badlogic.gdx.utils.Array;
 import com.mahdi.model.enums.GameAction;
 import com.mahdi.model.characters.enums.State;
 import com.mahdi.model.game.RisingParticle;
+import com.mahdi.model.status.AppStatus;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -848,6 +849,7 @@ public class Player extends BaseCharacter {
     }
 
     private void drawDebug(Batch batch) {
+        if (!AppStatus.DEBUG)return;
         batch.end();
         debugRenderer.setProjectionMatrix(batch.getProjectionMatrix());
         debugRenderer.begin(ShapeRenderer.ShapeType.Line);

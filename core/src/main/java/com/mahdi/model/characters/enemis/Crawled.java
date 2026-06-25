@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.mahdi.model.characters.Corpse;
 import com.mahdi.model.characters.Enemy;
 import com.mahdi.model.characters.Player;
+import com.mahdi.model.status.AppStatus;
 
 public class Crawled extends Enemy {
 
@@ -31,7 +32,7 @@ public class Crawled extends Enemy {
     private static ShapeRenderer debugRenderer;
 
     public Crawled(float x, float y, Player player) {
-        super(x, y, 80, 120, 1300f, 600f, 3);
+        super(x, y, 120, 80, 1600f, 900f, 3);
         this.player = player;
 
         // بارگذاری اشتراکی اطلس – فقط یک بار
@@ -99,7 +100,7 @@ public class Crawled extends Enemy {
         float w = frame.getRegionWidth();
         float h = frame.getRegionHeight();
         float drawX = bounds.x + (bounds.width - w) / 2f;
-        float drawY = bounds.y + (bounds.height - h) / 2f;
+        float drawY = bounds.y + (bounds.height - h) / 2f + 28f;
 
         // فلیپ افقی بر اساس جهت حرکت
         float scaleX = (currentDirection == 1) ? -1 : 1;
@@ -113,13 +114,15 @@ public class Crawled extends Enemy {
             scaleX, 1, 0);
 
         // رسم مستطیل زرد توخالی برای دیباگ
-        batch.end();
-        debugRenderer.setProjectionMatrix(batch.getProjectionMatrix());
-        debugRenderer.begin(ShapeRenderer.ShapeType.Line);
-        debugRenderer.setColor(Color.YELLOW);
-        debugRenderer.rect(bounds.x, bounds.y, bounds.width, bounds.height);
-        debugRenderer.end();
-        batch.begin();
+        if (AppStatus.DEBUG){
+            batch.end();
+            debugRenderer.setProjectionMatrix(batch.getProjectionMatrix());
+            debugRenderer.begin(ShapeRenderer.ShapeType.Line);
+            debugRenderer.setColor(Color.YELLOW);
+            debugRenderer.rect(bounds.x, bounds.y, bounds.width, bounds.height);
+            debugRenderer.end();
+            batch.begin();
+        }
     }
 
     /**
@@ -128,10 +131,14 @@ public class Crawled extends Enemy {
      */
     @Override
     public Corpse getCorpse() {
-        float corpseScale = (currentDirection == -1) ? -1 : 1;
+        float scale = (currentDirection == 1) ? -1f : 1f;
+        // ☀️ افست‌ها: 0 افقی، -10 پیکسل به سمت پایین (بسته به ظاهر فریم‌های مرگ)
         return new Corpse(new com.badlogic.gdx.math.Rectangle(bounds),
             new Vector2(velocity),
-            Death);
+            Death,
+            scale,
+            0f,   // offsetX
+            -10f); // offsetY
     }
 
     @Override
