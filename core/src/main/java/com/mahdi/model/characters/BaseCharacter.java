@@ -117,6 +117,12 @@ public abstract class BaseCharacter {
         moveToDirection(diff, delta);
     }
 
+    public void moveToPosNoJump(Vector2 target, float delta) {
+        Vector2 diff = target.cpy().sub(this.position);
+        diff.y = 0f;
+        moveToDirection(diff, delta);
+    }
+
     public void moveToDirection(Vector2 diffVector, float delta) {
         float ax = Math.abs(diffVector.x);
         float ay = Math.abs(diffVector.y);

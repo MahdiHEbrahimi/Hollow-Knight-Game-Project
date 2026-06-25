@@ -65,7 +65,7 @@ public class Crawled extends Enemy {
 
         switch (state) {
             case WALK:
-                moveToPos(player.getPosition(), delta);
+                moveToPosNoJump(player.getPosition(), delta);
                 float dx = player.getPosition().x - position.x;
                 int desiredDirection = (dx > 0) ? 1 : -1;
                 if (desiredDirection != currentDirection) {

@@ -524,7 +524,8 @@ public class Player extends BaseCharacter {
     public void takeDamageFormGround(){
         if (!isAlive || lastTimeKnightGotDamaged < 2.0f) return;
         lastTimeKnightGotDamaged = 0;
-        setThrown(new Vector2(0f , 6 * THROW_SPEED));
+        hp--;
+        setThrown(new Vector2(0f , 4.5f * THROW_SPEED));
         if (hp <= 0) {
             die();
         }
@@ -611,7 +612,7 @@ public class Player extends BaseCharacter {
 //                enemy.setThrown(new Vector2(0, -THROW_SPEED));
                 break;
             case UP_SLASH:
-                setThrown(new Vector2(0, -THROW_SPEED));
+//                setThrown(new Vector2(0, -THROW_SPEED));
                 enemy.setThrown(new Vector2(0, THROW_SPEED));
                 break;
             case SLASH:
@@ -627,8 +628,11 @@ public class Player extends BaseCharacter {
                 break;
         }
 
-        this.attackHitbox = null;
         enemy.takeDamage(1);
+    }
+
+    public void clearAttackHitBox(){
+        attackHitbox = null;
     }
 
     private void setAttackHitbox(State slashState) {

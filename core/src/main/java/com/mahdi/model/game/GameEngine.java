@@ -28,6 +28,8 @@
         private final Array<SolidBlock> solidBlocks;
         private final String mapPath;
 
+        private final int mainIdx, fg1Idx;
+
         public GameEngine(String mapPath) {
             this.mapPath = mapPath;
             TiledMapHelper mapHelper = new TiledMapHelper();
@@ -36,6 +38,10 @@
             this.mapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
             this.enemies = new ArrayList<>();
             this.corpses = new ArrayList<>();
+
+//            bg1bjIdx = tiledMap.getLayers().getIndex("bg_1");
+            mainIdx  = tiledMap.getLayers().getIndex("main");
+            fg1Idx   = tiledMap.getLayers().getIndex("fg_1");
 
             spawnPlayerFromMap();
             spawnEnemiesFromMap();
@@ -101,14 +107,19 @@
             // بررسی برخورد هیت‌باکس حمله شوالیه با دشمنان
             Rectangle playerAttackBox = player.getAttackHitbox();
             if (playerAttackBox != null) {
-                for (Enemy e : enemies) {
+                boolean isSuccessful = false;
+                for (int i = 0; i < enemies.size(); i ++) {
+                    Enemy e = enemies.get(i);
                     if (e.isAlive()) {
                         if (playerAttackBox.overlaps(e.getBounds())) {
+                            isSuccessful = true;
                             player.attackWasSuccessful(e);   // هر ضربه فقط یک آسیب
-                            break;
+                            if (!e.isAlive()) i--;
                         }
                     }
                 }
+                if (isSuccessful)
+                    player.clearAttackHitBox();
             }
 
             for (Corpse corpse : corpses) {
@@ -127,21 +138,23 @@
 
         public void draw(OrthographicCamera camera, SpriteBatch batch) {
             mapRenderer.setView(camera);
-            mapRenderer.render();
 
+            // لایه‌های پشت
+//            if (bgIdx    >= 0) mapRenderer.render(new int[]{bgIdx});
+//            if (bgObjIdx >= 0) mapRenderer.render(new int[]{bgObjIdx});
+            if (mainIdx  >= 0) mapRenderer.render(new int[]{mainIdx});
+
+            // موجودات
             batch.begin();
-            for (Corpse c : corpses) {
-                c.draw(batch);
-            }
-            for (Enemy e : enemies) {
-                if (e.isAlive()) {
-                    e.draw(batch);
-                }
-            }
+            for (Corpse c : corpses) c.draw(batch);
+            for (Enemy e : enemies) if (e.isAlive()) e.draw(batch);
             player.draw(batch);
             batch.end();
-        }
 
+            // لایه‌های جلو
+            if (fg1Idx   >= 0) mapRenderer.render(new int[]{fg1Idx});
+//            if (fg2Idx   >= 0) mapRenderer.render(new int[]{fg2Idx});
+        }
         private void handleMapCollisions(BaseCharacter character) {
             Rectangle charBounds = character.getBounds();
             character.setGrounded(false);
@@ -155,30 +168,34 @@
             );
 
             for (SolidBlock block : solidBlocks) {
-                // برخورد با تیغ‌های مرگبار: فقط بازیکن آسیب ببیند
+                // ۱. تیغ‌های مرگبار (فقط بازیکن آسیب ببیند)
                 if (block.isDeadly && charBounds.overlaps(block.bounds)) {
                     if (character instanceof Player) {
                         ((Player) character).takeDamageFormGround();
                     }
-                    continue;
+                    continue;   // تیغ را مانند دیوار هم در نظر نگیریم
                 }
 
-                // فرود از بالا
+                // ۲. برخورد عمودی (فرود / سقف)
+                boolean verticalResolved = false;
                 if (character.getVelocity().y < 0 && charBounds.overlaps(block.bounds)
                     && charBounds.y + charBounds.height > block.bounds.y + block.bounds.height) {
+                    // فرود از بالا
                     character.getPosition().y = block.bounds.y + block.bounds.height;
                     character.getVelocity().y = 0;
                     character.setGrounded(true);
-                }
-                // برخورد از پایین (سقف)
-                else if (character.getVelocity().y > 0 && charBounds.overlaps(block.bounds)
+                    verticalResolved = true;
+                } else if (character.getVelocity().y > 0 && charBounds.overlaps(block.bounds)
                     && charBounds.y < block.bounds.y) {
+                    // برخورد به سقف
                     character.getPosition().y = block.bounds.y - charBounds.height;
                     character.getVelocity().y = 0;
+                    verticalResolved = true;
                 }
 
-                // برخورد افقی با دیوارها (فقط وقتی روی زمین نیست)
-                if (!character.isGrounded() && charBounds.overlaps(block.bounds)) {
+                // ۳. برخورد افقی (همیشه، چه روی زمین چه در هوا)
+                //    فقط در صورتی انجام شود که در همین فریم مشکل عمودی نداشته‌ایم
+                if (!verticalResolved && charBounds.overlaps(block.bounds)) {
                     if (character.getVelocity().x > 0 && charBounds.x < block.bounds.x) {
                         character.getPosition().x = block.bounds.x - charBounds.width;
                     } else if (character.getVelocity().x < 0 && charBounds.x > block.bounds.x) {
@@ -186,7 +203,7 @@
                     }
                 }
 
-                // حسگر پا برای چسبیدن به زمین
+                // ۴. حسگر پا
                 if (footSensor.overlaps(block.bounds) && !block.isDeadly) {
                     character.setGrounded(true);
                 }
@@ -194,7 +211,6 @@
 
             character.getBounds().setPosition(character.getPosition().x, character.getPosition().y);
         }
-
         public void enemyIsDead(Enemy enemy) {
             Corpse corpse = enemy.getCorpse();
             enemy.die();
