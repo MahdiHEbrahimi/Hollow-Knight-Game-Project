@@ -11,13 +11,13 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.IntArray;                     // ☀️
 import com.mahdi.model.characters.*;
 import com.mahdi.model.characters.enemies.Crawled;
 import com.mahdi.model.map.SolidBlock;
 import com.mahdi.model.map.TiledMapHelper;
 
 public class GameEngine {
-
 
     private Player player;
     private final ArrayList<Enemy> enemies;
@@ -26,23 +26,37 @@ public class GameEngine {
     private final TiledMap tiledMap;
     private final OrthogonalTiledMapRenderer mapRenderer;
     private final Array<SolidBlock> solidBlocks;
-    private final String mapPath;
 
-    private final int bg1inx, bg2inx, fg1Idx,mainIdx;
+    // ☀️ لایه‌های داینامیک جایگزین فیلدهای قبلی
+    private final int[] bgLayers;
+    private final int[] fgLayers;
+    private final int mainIdx;
 
     public GameEngine(String mapPath) {
-        this.mapPath = mapPath;
         TiledMapHelper mapHelper = new TiledMapHelper();
-        this.tiledMap = mapHelper.loadMap(this.mapPath);
+        this.tiledMap = mapHelper.loadMap(mapPath);
         this.solidBlocks = mapHelper.getSolidRectangles();
         this.mapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
         this.enemies = new ArrayList<>();
         this.corpses = new ArrayList<>();
 
-        bg1inx = tiledMap.getLayers().getIndex("bg_1");
-        bg2inx = tiledMap.getLayers().getIndex("bg_2");
+        // ☀️ جمع‌آوری خودکار لایه‌های پس‌زمینه (bg_1 تا bg_10)
+        IntArray bgIndices = new IntArray();
+        for (int i = 1; i <= 10; i++) {
+            int idx = tiledMap.getLayers().getIndex("bg_" + i);
+            if (idx >= 0) bgIndices.add(idx);
+        }
+        bgLayers = bgIndices.toArray();
+
         mainIdx = tiledMap.getLayers().getIndex("main");
-        fg1Idx = tiledMap.getLayers().getIndex("fg_1");
+
+        // ☀️ جمع‌آوری خودکار لایه‌های پیش‌زمینه (fg_1 تا fg_10)
+        IntArray fgIndices = new IntArray();
+        for (int i = 1; i <= 10; i++) {
+            int idx = tiledMap.getLayers().getIndex("fg_" + i);
+            if (idx >= 0) fgIndices.add(idx);
+        }
+        fgLayers = fgIndices.toArray();
 
         spawnPlayerFromMap();
         spawnEnemiesFromMap();
@@ -56,7 +70,6 @@ public class GameEngine {
         if (layer != null) {
             for (MapObject object : layer.getObjects()) {
                 if ("SpawnPlayer".equals(object.getName())) {
-
                     if (object instanceof PointMapObject point) {
                         finalSpawnX = point.getPoint().x;
                         finalSpawnY = point.getPoint().y;
@@ -105,7 +118,6 @@ public class GameEngine {
             c.update(delta);
         }
 
-        // بررسی برخورد هیت‌باکس حمله شوالیه با دشمنان
         Rectangle playerAttackBox = player.getAttackHitbox();
         if (playerAttackBox != null) {
             boolean isSuccessful = false;
@@ -114,7 +126,7 @@ public class GameEngine {
                 if (e.isAlive()) {
                     if (playerAttackBox.overlaps(e.getBounds())) {
                         isSuccessful = true;
-                        player.attackWasSuccessful(e);   // هر ضربه فقط یک آسیب
+                        player.attackWasSuccessful(e);
                         if (!e.isAlive()) i--;
                     }
                 }
@@ -127,7 +139,6 @@ public class GameEngine {
             handleMapCollisions(corpse);
         }
 
-        // به‌روزرسانی دشمنان
         for (Enemy enemy : enemies) {
             enemy.update(delta);
             handleMapCollisions(enemy);
@@ -140,9 +151,10 @@ public class GameEngine {
     public void draw(OrthographicCamera camera, SpriteBatch batch) {
         mapRenderer.setView(camera);
 
-        // لایه‌های پشت
-        if (bg1inx    >= 0) mapRenderer.render(new int[]{bg1inx});
-        if (bg2inx    >= 0) mapRenderer.render(new int[]{bg2inx});
+        // ☀️ رسم تمام لایه‌های پس‌زمینه (اگر وجود داشته باشند)
+        if (bgLayers.length > 0) mapRenderer.render(bgLayers);
+
+        // ☀️ لایه اصلی
         if (mainIdx >= 0) mapRenderer.render(new int[]{mainIdx});
 
         // موجودات
@@ -152,9 +164,8 @@ public class GameEngine {
         player.draw(batch);
         batch.end();
 
-        // لایه‌های جلو
-        if (fg1Idx >= 0) mapRenderer.render(new int[]{fg1Idx});
-//            if (fg2Idx   >= 0) mapRenderer.render(new int[]{fg2Idx});
+        // ☀️ رسم تمام لایه‌های پیش‌زمینه (اگر وجود داشته باشند)
+        if (fgLayers.length > 0) mapRenderer.render(fgLayers);
     }
 
     private void handleMapCollisions(BaseCharacter character) {
@@ -170,7 +181,6 @@ public class GameEngine {
         );
 
         for (SolidBlock block : solidBlocks) {
-            // ☀️ تیغ‌های مرگبار (فقط بازیکن آسیب ببیند)
             if (block.isDeadly && charBounds.overlaps(block.bounds)) {
                 if (character instanceof Player) {
                     ((Player) character).takeDamageFormGround();
@@ -178,27 +188,22 @@ public class GameEngine {
                 continue;
             }
 
-            // ═══ دیوارها (از هیچ طرف قابل عبور) ═══
             if ("wall".equals(block.type)) {
                 boolean verticalResolved = false;
 
-                // ☀️ فرود از بالا
                 if (character.getVelocity().y < 0 && charBounds.overlaps(block.bounds)
                     && charBounds.y + charBounds.height > block.bounds.y + block.bounds.height) {
                     character.getPosition().y = block.bounds.y + block.bounds.height;
                     character.getVelocity().y = 0;
                     character.setGrounded(true);
                     verticalResolved = true;
-                }
-                // ☀️ برخورد از پایین (سقف)
-                else if (character.getVelocity().y > 0 && charBounds.overlaps(block.bounds)
+                } else if (character.getVelocity().y > 0 && charBounds.overlaps(block.bounds)
                     && charBounds.y < block.bounds.y) {
                     character.getPosition().y = block.bounds.y - charBounds.height;
                     character.getVelocity().y = 0;
                     verticalResolved = true;
                 }
 
-                // ☀️ برخورد افقی (فقط اگر عمودی حل نشده باشد)
                 if (!verticalResolved && charBounds.overlaps(block.bounds)) {
                     if (character.getVelocity().x > 0 && charBounds.x < block.bounds.x) {
                         character.getPosition().x = block.bounds.x - charBounds.width;
@@ -206,10 +211,7 @@ public class GameEngine {
                         character.getPosition().x = block.bounds.x + block.bounds.width;
                     }
                 }
-            }
-            // ═══ زمین (فقط از بالا قابل ایستادن) ═══
-            else if ("ground".equals(block.type)) {
-                // ☀️ فقط فرود از بالا
+            } else if ("ground".equals(block.type)) {
                 if (character.getVelocity().y < 0 && charBounds.overlaps(block.bounds)
                     && charBounds.y + charBounds.height > block.bounds.y + block.bounds.height) {
                     character.getPosition().y = block.bounds.y + block.bounds.height;
@@ -218,7 +220,6 @@ public class GameEngine {
                 }
             }
 
-            // ☀️ حسگر پا (برای هر دو نوع)
             if (footSensor.overlaps(block.bounds) && !block.isDeadly) {
                 character.setGrounded(true);
             }
@@ -241,7 +242,6 @@ public class GameEngine {
     public void dispose() {
         if (tiledMap != null) tiledMap.dispose();
         if (mapRenderer != null) mapRenderer.dispose();
-        //        if (player != null) player.dispose();
         for (Enemy e : enemies) e.dispose();
         for (Corpse c : corpses) c.dispose();
     }
