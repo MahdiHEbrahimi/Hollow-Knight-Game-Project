@@ -13,13 +13,20 @@ public class GameScreen extends BaseScreen {
     private final SpriteBatch gameBatch;
     private GameHud gameHud;
     private Stage hudStage;   // Stage ثابت برای HUD
+    private final GameEngine gameEngine;
+    private final String mapPath;
+    private final String musicPath;
 
-    public GameScreen() {
+    public GameScreen(String mapPath, String musicPath) {
         super();
         this.gameBatch = new SpriteBatch();
 
+        this.mapPath = mapPath;
+        this.musicPath = musicPath;
+
         MusicManager.getInstance().playMusic("MainMenu/MainMenu_BackGround.ogg");
-        AppStatus.setGameStatus(new GameEngine());
+        gameEngine = new GameEngine(mapPath);
+        AppStatus.setGameStatus(gameEngine);
     }
 
     @Override
@@ -121,6 +128,8 @@ public class GameScreen extends BaseScreen {
         if (hudStage != null) {
             hudStage.dispose();
         }
+        if (gameEngine != null)
+            gameEngine.dispose();
         System.out.println("[GameScreen] Game resources disposed cleanly.");
     }
 }

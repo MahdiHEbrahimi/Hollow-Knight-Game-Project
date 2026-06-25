@@ -47,7 +47,7 @@ public class Player extends BaseCharacter {
     private float stateTime = 0f;
 
     // جهت نگاه (true = راست)
-    private boolean facingRight = false;
+    private boolean facingRight = true;
 
     // ابعاد رسم
     private float renderWidth, renderHeight;
@@ -76,7 +76,7 @@ public class Player extends BaseCharacter {
     private Rectangle attackHitbox = null;  // مستطیل هیت‌باکس موقت (برای دیباگ)
 
     public Player(float x, float y) {
-        super(x + 500, y, 80, 120, 700f, 2000f, 5);
+        super(x, y, 80, 120, 700f, 2000f, 5);
 
         this.currentState = State.IDLE;
         this.debugRenderer = new ShapeRenderer();
@@ -952,8 +952,7 @@ public class Player extends BaseCharacter {
             atlas.dispose();
             atlas = null;
         }
-
-        if (vfxAtlas != null){
+        if (vfxAtlas != null) {
             vfxAtlas.dispose();
             vfxAtlas = null;
         }

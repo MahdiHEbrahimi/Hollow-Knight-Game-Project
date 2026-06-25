@@ -1,4 +1,4 @@
-package com.mahdi.model.characters.enemis;
+package com.mahdi.model.characters.enemies;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;

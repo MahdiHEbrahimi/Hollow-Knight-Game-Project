@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="100" height="40" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="19">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="100" height="40" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="34">
  <tileset firstgid="1" name="mine_break_wall" tilewidth="32" tileheight="32" tilecount="54" columns="6">
   <image source="map 1/mine_break_wall.png" width="222" height="302"/>
  </tileset>
@@ -52,7 +52,10 @@
  </layer>
  <objectgroup id="3" name="logical">
   <object id="1" x="1056.36" y="980.242" width="1275.27" height="199.152"/>
-  <object id="3" name="SpawnPlayer" x="2064" y="748.667">
+  <object id="32" name="SpawnPlayer" x="1500" y="686">
+   <point/>
+  </object>
+  <object id="33" name="crawled" x="1976" y="392">
    <point/>
   </object>
  </objectgroup>

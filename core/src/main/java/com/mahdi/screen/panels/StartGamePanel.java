@@ -109,7 +109,7 @@ public class StartGamePanel extends BasePanel {
     }
 
     private void onStart() {
-        ScreenManager.getInstance().performTransition(() -> new GameScreen());
+        ScreenManager.getInstance().performTransition(() -> new GameScreen("maps/untitled.tmx", "MainMenu/MainMenu_BackGround.ogg"));
     }
 
     private void updateSlotVisual(int slot) {

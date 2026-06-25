@@ -20,7 +20,7 @@ public class HollowKnightGame extends Game {
         CursorManager.getInstance();
 
 //       com.mahdi.screen.manager.ScreenManager.getInstance().startWithFadeIn(new MainMenuScreen());
-        com.mahdi.screen.manager.ScreenManager.getInstance().startWithFadeIn(new GameScreen());
+        com.mahdi.screen.manager.ScreenManager.getInstance().startWithFadeIn(new GameScreen("maps/untitled.tmx", "MainMenu/MainMenu_BackGround.ogg"));
 
     }
 
