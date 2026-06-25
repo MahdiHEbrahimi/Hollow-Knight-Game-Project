@@ -32,7 +32,13 @@ public class TiledMapHelper {
                         isDeadly = object.getProperties().get("deadly", Boolean.class);
                     }
 
-                    solidBlocks.add(new SolidBlock(rect.x, rect.y, rect.width, rect.height, isDeadly));
+                    String type = "wall";
+
+                    if (object.getProperties().containsKey("type")) {
+                        type = object.getProperties().get("type", String.class);
+                    }
+
+                    solidBlocks.add(new SolidBlock(rect.x, rect.y, rect.width, rect.height, isDeadly, type));
                 }
             }
 

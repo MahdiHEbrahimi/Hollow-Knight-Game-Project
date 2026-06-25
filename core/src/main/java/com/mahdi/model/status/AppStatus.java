@@ -10,7 +10,7 @@ import com.mahdi.screen.manager.PanelManager;
 import com.mahdi.screen.manager.SoundManager;
 
 public class AppStatus {
-    public static boolean DEBUG = true;
+    public static boolean DEBUG = false;
     public static HollowKnightGame hollowKnightGame;
     public static MenuType curreMenu;
     private static GameEngine game;

@@ -1,10 +1,49 @@
 {
     "activeFile": "untitled.tmx",
     "expandedProjectPaths": [
-        "map 1",
-        "."
+        ".",
+        "assets",
+        "map 1"
     ],
+    "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
+        "": {
+            "scaleInDock": 1
+        },
+        "C:/Users/mahdi/Desktop/hallow knight/sss/sss/assets/maps/assets/roll_rock_03.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1
+        },
+        "assets/2163-1@2x.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "assets/BG_egg_07_0002_Layer-3.tsx": {
+            "scaleInEditor": 1
+        },
+        "assets/BG_egg_07_0005_Layer-0_0.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "assets/FG_eggs_04_0001_03.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "assets/collapser_long.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "assets/roll_rock_02.tsx": {
+            "scaleInEditor": 1
+        },
+        "assets/roll_rock_03.tsx": {
+            "scaleInDock": 1
+        },
+        "assets/roll_rock_04.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "map 1/antique_r_0009_a.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
@@ -22,35 +61,43 @@
             "scaleInEditor": 1
         },
         "untitled.tmx": {
-            "scale": 0.5,
-            "selectedLayer": 1,
+            "scale": 0.75,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 1405,
-                "y": 769
+                "x": 1894.6666666666665,
+                "y": 981.9999999999999
             }
         },
         "untitled.tmx#mine_break_wall": {
             "scaleInDock": 1
+        },
+        "untitled.tmx#roll_rock_04": {
+            "scaleInDock": 1
         }
     },
-    "last.externalTilesetPath": "C:/Users/mahdi/Desktop/hallow knight/new map/NEW TEST 32 MAP/map 1",
-    "last.imagePath": "C:/Users/mahdi/Desktop/hallow knight/new map/NEW TEST 32 MAP/map 1",
+    "last.externalTilesetPath": "C:/Users/mahdi/Desktop/hallow knight/sss/assets/maps/assets",
+    "last.imagePath": "C:/Users/mahdi/Desktop/hallow knight/sss/assets/maps/assets",
+    "map.height": 200,
     "map.lastUsedFormat": "tmx",
-    "map.width": 50,
+    "map.width": 800,
     "openFiles": [
-        "untitled.tmx",
-        "map 1/dream_lamp_01.tsx",
-        "map 1/antique_r_0009_a.tsx"
+        "untitled.tmx"
     ],
     "project": "untitled.tiled-project",
     "property.type": "bool",
     "recentFiles": [
+        "assets/FG_eggs_04_0001_03.tsx",
+        "assets/2163-1@2x.tsx",
+        "assets/roll_rock_02.tsx",
+        "assets/BG_egg_07_0002_Layer-3.tsx",
+        "assets/BG_egg_07_0005_Layer-0_0.tsx",
+        "untitled.tmx",
+        "assets/roll_rock_04.tsx",
+        "assets/collapser_long.tsx",
         "map 1/antique_r_0009_a.tsx",
         "map 1/dream_lamp_01.tsx",
-        "untitled.tmx",
         "map 1/brk_Crystal3.tsx",
         "map 1/mine_break_wall.tsx"
     ],
-    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx"
 }
