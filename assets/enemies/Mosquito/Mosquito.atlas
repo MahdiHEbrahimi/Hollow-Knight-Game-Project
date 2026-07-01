@@ -1,0 +1,188 @@
+
+Mosquito.png
+size: 2048, 512
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+Attack
+  rotate: false
+  xy: 224, 2
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 0
+Attack
+  rotate: false
+  xy: 446, 159
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 1
+Attack
+  rotate: false
+  xy: 668, 316
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 2
+Attack Anticipate
+  rotate: false
+  xy: 2, 316
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 0
+Attack Anticipate
+  rotate: false
+  xy: 2, 159
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 1
+Attack Anticipate
+  rotate: false
+  xy: 224, 316
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 2
+Attack Anticipate
+  rotate: false
+  xy: 2, 2
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 3
+Attack Anticipate
+  rotate: false
+  xy: 224, 159
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 4
+Attack Anticipate
+  rotate: false
+  xy: 446, 316
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 5
+Death
+  rotate: false
+  xy: 446, 2
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 0
+Death
+  rotate: false
+  xy: 668, 159
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 1
+Death
+  rotate: false
+  xy: 890, 316
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 2
+Death
+  rotate: false
+  xy: 668, 2
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 3
+Death
+  rotate: false
+  xy: 890, 159
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 4
+Idle
+  rotate: false
+  xy: 1112, 316
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 0
+Idle
+  rotate: false
+  xy: 890, 2
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 1
+Idle
+  rotate: false
+  xy: 1112, 159
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 2
+Idle
+  rotate: false
+  xy: 1334, 316
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 3
+Idle
+  rotate: false
+  xy: 1112, 2
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 4
+Idle
+  rotate: false
+  xy: 1334, 159
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 5
+Idle
+  rotate: false
+  xy: 1556, 316
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 6
+Idle
+  rotate: false
+  xy: 1334, 2
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 7
+Turn
+  rotate: false
+  xy: 1556, 2
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 0
+Turn
+  rotate: false
+  xy: 1778, 159
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 1
+Turn2
+  rotate: false
+  xy: 1556, 159
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 0
+Turn2
+  rotate: false
+  xy: 1778, 316
+  size: 220, 155
+  orig: 220, 155
+  offset: 0, 0
+  index: 1

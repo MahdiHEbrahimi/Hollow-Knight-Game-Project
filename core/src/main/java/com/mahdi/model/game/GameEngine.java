@@ -10,6 +10,7 @@ import com.badlogic.gdx.maps.objects.PointMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;                     // ☀️
 import com.mahdi.model.characters.*;
@@ -22,6 +23,7 @@ public class GameEngine {
     private Player player;
     private final ArrayList<Enemy> enemies;
     private final ArrayList<Corpse> corpses;
+    private final ArrayList<Geo> geos;
 
     private final TiledMap tiledMap;
     private final OrthogonalTiledMapRenderer mapRenderer;
@@ -39,6 +41,7 @@ public class GameEngine {
         this.mapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
         this.enemies = new ArrayList<>();
         this.corpses = new ArrayList<>();
+        this.geos = new ArrayList<>();
 
         // ☀️ جمع‌آوری خودکار لایه‌های پس‌زمینه (bg_1 تا bg_10)
         IntArray bgIndices = new IntArray();
@@ -114,9 +117,10 @@ public class GameEngine {
         player.update(delta);
         handleMapCollisions(player);
 
-        for (Corpse c : corpses) {
+        handleGeos(delta);
+
+        for (Corpse c : corpses)
             c.update(delta);
-        }
 
         Rectangle playerAttackBox = player.getAttackHitbox();
         if (playerAttackBox != null) {
@@ -139,13 +143,62 @@ public class GameEngine {
             handleMapCollisions(corpse);
         }
 
-        for (Enemy enemy : enemies) {
-            enemy.update(delta);
-            handleMapCollisions(enemy);
-            if (enemy.getBounds().overlaps(player.getBounds()) && enemy.isAlive()) {
-                player.takeDamage(1, enemy);
+        try {
+            for (Enemy enemy : enemies) {
+                enemy.update(delta);
+                handleMapCollisions(enemy);
+                if (enemy.getBounds().overlaps(player.getBounds()) && enemy.isAlive()) {
+                    player.takeDamage(1, enemy);
+                }
+            }
+        } catch (Exception e) {
+
+        }
+    }
+
+    // ☀️ متد اصلی مدیریت سکه‌ها
+    private void handleGeos(float delta) {
+        for (int i = geos.size() - 1; i >= 0; i--) {
+            Geo g = geos.get(i);
+            g.update(delta);
+            applyGeoCollisions(g);
+
+            if (player.getBounds().overlaps(g.getBounds())) {
+                player.increaseGeo(1);
+                geos.remove(i);
+                continue;
+            }
+
+            if (!g.isAlive()) {
+                geos.remove(i);
             }
         }
+    }
+
+    // ☀️ متد کمکی برای برخورد فیزیکی سکه‌ها با زمین
+    private void applyGeoCollisions(Geo geo) {
+        Rectangle geoBounds = geo.getBounds();
+        boolean grounded = false;
+
+        for (SolidBlock block : solidBlocks) {
+            if (block.isDeadly) continue;
+
+            if (geo.getVelocity().y < 0 && geoBounds.overlaps(block.bounds)
+                && geoBounds.y + geoBounds.height > block.bounds.y + block.bounds.height) {
+                geo.getPosition().y = block.bounds.y + block.bounds.height;
+                geo.getVelocity().y = 0;
+                grounded = true;
+                break;
+            }
+        }
+
+        if (grounded) {
+            geo.getVelocity().x *= 0.85f;
+            if (Math.abs(geo.getVelocity().x) < 1f) geo.getVelocity().x = 0;
+        }
+
+        geo.setGrounded(grounded);
+        geoBounds.setPosition(geo.getPosition().x, geo.getPosition().y);
     }
 
     public void draw(OrthographicCamera camera, SpriteBatch batch) {
@@ -161,6 +214,7 @@ public class GameEngine {
         batch.begin();
         for (Corpse c : corpses) c.draw(batch);
         for (Enemy e : enemies) if (e.isAlive()) e.draw(batch);
+        for (Geo g : geos) g.draw(batch);
         player.draw(batch);
         batch.end();
 
@@ -181,11 +235,17 @@ public class GameEngine {
         );
 
         for (SolidBlock block : solidBlocks) {
+            // ☀️ برخورد با بلوک‌های مرگبار: پرتاب به بالا + آسیب (برای بازیکن)
             if (block.isDeadly && charBounds.overlaps(block.bounds)) {
+                // پرتاب به بالا
                 if (character instanceof Player) {
                     ((Player) character).takeDamageFormGround();
+                } else if (character instanceof Enemy) {
+                    if (character.isAlive())
+                        ((Enemy) character).takeDamage(1);
                 }
-                continue;
+                // توجه: continue باعث می‌شود این بلوک مانند سکوی جامد عمل نکند
+//                continue;
             }
 
             if ("wall".equals(block.type)) {
@@ -229,14 +289,23 @@ public class GameEngine {
     }
 
     public void enemyIsDead(Enemy enemy) {
+        Vector2 position = enemy.getPosition();
         Corpse corpse = enemy.getCorpse();
         enemy.die();
         enemies.remove(enemy);
         corpses.add(corpse);
+        player.increaseSoul(11f);
+        for (int i = 0; i < 3; i++) {
+            geos.add(new Geo(position.x, position.y));
+        }
     }
 
     public Player getPlayer() {
         return player;
+    }
+
+    public Array<SolidBlock> getSolidBlocks() {
+        return solidBlocks;
     }
 
     public void dispose() {

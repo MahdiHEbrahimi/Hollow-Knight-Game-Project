@@ -24,7 +24,7 @@ public class GameScreen extends BaseScreen {
         this.mapPath = mapPath;
         this.musicPath = musicPath;
 
-        MusicManager.getInstance().playMusic("MainMenu/MainMenu_BackGround.ogg");
+        MusicManager.getInstance().playMusic(musicPath);
         gameEngine = new GameEngine(mapPath);
         AppStatus.setGameStatus(gameEngine);
     }

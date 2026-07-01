@@ -6,36 +6,41 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.mahdi.model.characters.Corpse;
 import com.mahdi.model.characters.Enemy;
 import com.mahdi.model.characters.Player;
+import com.mahdi.model.map.SolidBlock;
 import com.mahdi.model.status.AppStatus;
 
 public class Crawled extends Enemy {
 
     private final Player player;
 
-    // اطلس اشتراکی (static)
     private static TextureAtlas atlas;
 
     private final Animation<TextureRegion> animWalk;
     private final Animation<TextureRegion> animTurn;
-    private final Animation<TextureRegion> Death;   // انیمیشن مرگ (Death Air + Death Land ترکیبی)
+    private final Animation<TextureRegion> Death;
 
     private enum EnemyState { WALK, TURN, DEAD }
     private EnemyState state = EnemyState.WALK;
     private float stateTime = 0f;
     private int currentDirection = 1; // 1 = راست، -1 = چپ
 
-    // رندرر دیباگ برای نمایش مستطیل زرد
+    // ☀️ محدودهٔ گشت‌زنی
+    private final float spawnX;
+    private static final float PATROL_RANGE = 1000f;
+
     private static ShapeRenderer debugRenderer;
 
     public Crawled(float x, float y, Player player) {
-        super(x, y, 120, 80, 1600f, 900f, 3);
+        super(x, y, 120, 80, 200f, 460f, 3);
         this.player = player;
+        this.spawnX = x;   // ☀️ ذخیره‌سازی نقطهٔ اسپاون
 
-        // بارگذاری اشتراکی اطلس – فقط یک بار
         if (atlas == null) {
             atlas = new TextureAtlas("enemies/Crawled/Crawled.atlas");
         }
@@ -65,9 +70,8 @@ public class Crawled extends Enemy {
 
         switch (state) {
             case WALK:
-                moveToPosNoJump(player.getPosition(), delta);
-                float dx = player.getPosition().x - position.x;
-                int desiredDirection = (dx > 0) ? 1 : -1;
+                // ☀️ منطق گشت‌زنی
+                int desiredDirection = calculatePatrolDirection();
                 if (desiredDirection != currentDirection) {
                     currentDirection = desiredDirection;
                     if (animTurn != null) {
@@ -75,6 +79,7 @@ public class Crawled extends Enemy {
                         stateTime = 0f;
                     }
                 }
+                move(desiredDirection, delta);
                 break;
 
             case TURN:
@@ -84,6 +89,44 @@ public class Crawled extends Enemy {
                 }
                 break;
         }
+    }
+
+    /**
+     * ☀️ محاسبهٔ جهت حرکت بر اساس محدودهٔ گشت‌زنی، پرتگاه و دیوار.
+     */
+    private int calculatePatrolDirection() {
+        // اگر از محدوده خارج شدیم، به سمت مرکز برگرد
+        float distFromSpawn = position.x - spawnX;
+        if (distFromSpawn > PATROL_RANGE) return -1;
+        if (distFromSpawn < -PATROL_RANGE) return 1;
+
+        // فقط در صورت چسبیدن به زمین، سنسورهای لبه و دیوار بررسی شوند
+        if (isGrounded()) {
+            Array<SolidBlock> blocks = AppStatus.getGameEngine().getSolidBlocks();
+            float sensorOffsetX = (currentDirection == 1) ? bounds.width : -2f;
+            float sensorX = bounds.x + sensorOffsetX;
+
+            // سنسور پرتگاه (زیر پای جلویی)
+            Rectangle edgeSensor = new Rectangle(sensorX, bounds.y - 4f, 2f, 2f);
+            boolean groundAhead = false;
+            for (SolidBlock b : blocks) {
+                if (!b.isDeadly && edgeSensor.overlaps(b.bounds)) {
+                    groundAhead = true;
+                    break;
+                }
+            }
+            if (!groundAhead) return -currentDirection;   // پرتگاه → برگرد
+
+            // سنسور دیوار (جلوی بدن)
+            Rectangle wallSensor = new Rectangle(sensorX, bounds.y, 2f, bounds.height);
+            for (SolidBlock b : blocks) {
+                if ("wall".equals(b.type) && wallSensor.overlaps(b.bounds)) {
+                    return -currentDirection;             // دیوار → برگرد
+                }
+            }
+        }
+
+        return currentDirection;   // همان جهت قبلی را حفظ کن
     }
 
     @Override
@@ -102,7 +145,6 @@ public class Crawled extends Enemy {
         float drawX = bounds.x + (bounds.width - w) / 2f;
         float drawY = bounds.y + (bounds.height - h) / 2f + 28f;
 
-        // فلیپ افقی بر اساس جهت حرکت
         float scaleX = (currentDirection == 1) ? -1 : 1;
         float originX = w / 2f;
         float originY = h / 2f;
@@ -113,8 +155,7 @@ public class Crawled extends Enemy {
             w, h,
             scaleX, 1, 0);
 
-        // رسم مستطیل زرد توخالی برای دیباگ
-        if (AppStatus.DEBUG){
+        if (AppStatus.DEBUG) {
             batch.end();
             debugRenderer.setProjectionMatrix(batch.getProjectionMatrix());
             debugRenderer.begin(ShapeRenderer.ShapeType.Line);
@@ -125,20 +166,15 @@ public class Crawled extends Enemy {
         }
     }
 
-    /**
-     * جسدی متناسب با جهت فعلی دشمن برمی‌گرداند.
-     * انیمیشن Death (ترکیبی از Death Air و Death Land) را با scaleX مناسب به Corpse می‌دهد.
-     */
     @Override
     public Corpse getCorpse() {
         float scale = (currentDirection == 1) ? -1f : 1f;
-        // ☀️ افست‌ها: 0 افقی، -10 پیکسل به سمت پایین (بسته به ظاهر فریم‌های مرگ)
         return new Corpse(new com.badlogic.gdx.math.Rectangle(bounds),
             new Vector2(velocity),
             Death,
             scale,
-            0f,   // offsetX
-            -10f); // offsetY
+            0f,
+            -10f);
     }
 
     @Override
@@ -148,9 +184,6 @@ public class Crawled extends Enemy {
         state = EnemyState.DEAD;
     }
 
-    /**
-     * پاک‌سازی اطلس اشتراکی.
-     */
     public static void disposeAtlas() {
         if (atlas != null) {
             atlas.dispose();

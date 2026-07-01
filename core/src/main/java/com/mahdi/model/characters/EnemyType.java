@@ -1,6 +1,7 @@
 package com.mahdi.model.characters;
 
 import com.mahdi.model.characters.enemies.Crawled;
+import com.mahdi.model.characters.enemies.Mosquito;
 
 public enum EnemyType {
 
@@ -8,6 +9,13 @@ public enum EnemyType {
         @Override
         public Enemy getInstance(float x, float y, Player player) {
             return new Crawled(x, y, player);
+        }
+    },
+
+    MOSQUITO("mosquito") {
+        @Override
+        public Enemy getInstance(float x, float y, Player player) {
+            return new Mosquito(x, y, player);
         }
     };
 

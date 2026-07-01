@@ -90,7 +90,7 @@ public class Corpse extends BaseCharacter {
     }
 
     public boolean isCompletelyStopped() {
-        return animationFinished && Math.abs(velocity.x) < 1f && isGrounded;
+        return animationFinished && Math.abs(velocity.x) < 1f && isGrounded();
     }
 
     @Override

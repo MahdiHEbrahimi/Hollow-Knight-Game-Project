@@ -207,7 +207,7 @@ public class Player extends BaseCharacter {
         }  // دریافت جهت از ورودی و اعمال move
 
         boolean isTouchingWall = (touchingWallLeft && direction == -1) || (touchingWallRight && direction == 1);
-        boolean isFallingDown = velocity.y < 0 && !isGrounded;
+        boolean isFallingDown = velocity.y < 0 && !isGrounded();
 
         updateStateMachine(direction, isTouchingWall, isFallingDown); // ماشین حالت اصلی
 
@@ -250,7 +250,7 @@ public class Player extends BaseCharacter {
         } else {
             focusActiveTime = 0;
         }
-        if (GameAction.FOCUS.isPressed() && isGrounded && !isFixAnimationActive) {
+        if (GameAction.FOCUS.isPressed() && isGrounded() && !isFixAnimationActive) {
             startFocus();
             return true;
         }
@@ -315,22 +315,22 @@ public class Player extends BaseCharacter {
     private void handleJump() {
         if (!GameAction.JUMP.isJustPressed()) return;
 
-        if (isGrounded) {
+        if (isGrounded()) {
             velocity.y = JUMP_FORCE;
-            isGrounded = false;
+            setGrounded(false);
             currentState = State.JUMPING;
             stateTime = 0f;
-        } else if (hasDoubleJump && !isGrounded && currentState != State.WALL_SLIDE) {
+        } else if (hasDoubleJump && !isGrounded() && currentState != State.WALL_SLIDE) {
             velocity.y = JUMP_FORCE * 1f; // پرش دوم کمی ضعیف‌تر
             hasDoubleJump = false;
             currentState = State.DOUBLE_JUMP;
             stateTime = 0f;
             isFixAnimationActive = true;
-        } else if (currentState == State.WALL_SLIDE && !isGrounded) {
+        } else if (currentState == State.WALL_SLIDE && !isGrounded()) {
             float wallJumpX = (facingRight ? -1 : 1) * 400f;
             velocity.x = wallJumpX;
             velocity.y = JUMP_FORCE * 0.8f;
-            isGrounded = false;
+            setGrounded(false);
             currentState = State.WALL_JUMP;
             stateTime = 0f;
             isFixAnimationActive = true;
@@ -373,7 +373,7 @@ public class Player extends BaseCharacter {
             return;
         }
 
-        if (!isGrounded) {
+        if (!isGrounded()) {
             // در هوا
             if (isTouchingWall && isFallingDown && !GameAction.DASH.isPressed()) {
                 currentState = State.WALL_SLIDE;
@@ -511,7 +511,7 @@ public class Player extends BaseCharacter {
     }
 
     private void applyNoGravity(float delta) {
-        if (hasGravity && !isGrounded) {
+        if (hasGravity && !isGrounded()) {
             velocity.y -= GRAVITY * delta;
             if (velocity.y < TERMINAL_VELOCITY_Y) velocity.y = TERMINAL_VELOCITY_Y;
         }
@@ -708,7 +708,7 @@ public class Player extends BaseCharacter {
                 break;
             case DASH:
                 isDashing = false;
-                currentState = isGrounded ? State.IDLE : State.FALLING;
+                currentState = isGrounded() ? State.IDLE : State.FALLING;
                 break;
             case SLASH:
             case SLASH_ALT:
@@ -717,7 +717,7 @@ public class Player extends BaseCharacter {
             case FIREBALL_CAST:
             case SCREAM:
             case DOUBLE_JUMP:
-                currentState = isGrounded ? State.IDLE : State.FALLING;
+                currentState = isGrounded() ? State.IDLE : State.FALLING;
                 break;
             case FOCUS_START:
                 currentState = State.FOCUS; // وارد فاز تلقین (لوپ)
@@ -911,8 +911,8 @@ public class Player extends BaseCharacter {
         return geo;
     }
 
-    public void setGeo(int geo) {
-        this.geo = geo;
+    public void increaseGeo(int geo){
+        this.geo += geo;
     }
 
     public float getSoul() {

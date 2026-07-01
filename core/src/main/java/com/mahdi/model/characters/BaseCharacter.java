@@ -19,7 +19,7 @@ public abstract class BaseCharacter {
     protected Vector2 velocity = new Vector2();
     protected Rectangle bounds;
 
-    protected boolean isGrounded;
+    private boolean isGrounded;
     protected boolean isAlive;
     protected boolean hasGravity;
     protected boolean isMoving; // 🌟 پرچم نشان‌دهنده اینکه کاراکتر در این فریم قصد حرکت دارد یا نه
@@ -112,18 +112,18 @@ public abstract class BaseCharacter {
 
     public abstract void draw(Batch batch);
 
-    public void moveToPos(Vector2 target, float delta) {
+    public void moveToPos(Vector2 target) {
         Vector2 diff = target.cpy().sub(this.position);   // بردار از خودمان به سمت هدف
-        moveToDirection(diff, delta);
+        moveToDirection(diff);
     }
 
     public void moveToPosNoJump(Vector2 target, float delta) {
         Vector2 diff = target.cpy().sub(this.position);
         diff.y = 0f;
-        moveToDirection(diff, delta);
+        moveToDirection(diff);
     }
 
-    public void moveToDirection(Vector2 diffVector, float delta) {
+        public void moveToDirection(Vector2 diffVector) {
         float ax = Math.abs(diffVector.x);
         float ay = Math.abs(diffVector.y);
         float maxAbs = Math.max(ax, ay);
@@ -133,8 +133,8 @@ public abstract class BaseCharacter {
         float normY = diffVector.y / maxAbs;
 
         // اعمال شتاب در جهت نرمال‌شده
-        velocity.x += normX * acceleration * delta;
-        velocity.y += normY * acceleration * delta;
+        velocity.x = normX * maxXSpeed;
+        velocity.y = normY * maxXSpeed;
 
     }
 
@@ -200,6 +200,7 @@ public abstract class BaseCharacter {
 
     public void setGrounded(boolean grounded) {
         this.isGrounded = grounded;
+        if(!hasGravity) grounded = false;
     }
 
     public int getHp() {
