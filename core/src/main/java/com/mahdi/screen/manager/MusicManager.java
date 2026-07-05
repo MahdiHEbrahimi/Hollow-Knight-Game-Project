@@ -10,7 +10,7 @@ public class MusicManager {
     private Music previousMusic; // Kept safely for cross-fading to prevent memory leaks
 
     private boolean isMuted = false;
-    private float masterVolume = 0.6f; // The volume value set by user
+    private float masterVolume = 0.35f; // The volume value set by user
     private String currentTrackName = "";
 
     // Fade State Tracking Flags

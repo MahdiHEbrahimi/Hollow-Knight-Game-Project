@@ -1,0 +1,300 @@
+
+Husk_Hornhead.png
+size: 1024, 2048
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+Attack Anticipate
+  rotate: false
+  xy: 2, 1770
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 0
+Attack Anticipate
+  rotate: false
+  xy: 2, 1549
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 1
+Attack Anticipate
+  rotate: false
+  xy: 243, 1770
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 2
+Attack Anticipate
+  rotate: false
+  xy: 2, 1328
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 3
+Attack Anticipate
+  rotate: false
+  xy: 243, 1549
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 4
+Attack Cooldown
+  rotate: false
+  xy: 484, 1770
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: -1
+Attack Lunge
+  rotate: false
+  xy: 2, 1107
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 0
+Attack Lunge
+  rotate: false
+  xy: 2, 1107
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 4
+Attack Lunge
+  rotate: false
+  xy: 2, 1107
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 8
+Attack Lunge
+  rotate: false
+  xy: 243, 1328
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 1
+Attack Lunge
+  rotate: false
+  xy: 243, 1328
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 9
+Attack Lunge
+  rotate: false
+  xy: 243, 1328
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 5
+Attack Lunge
+  rotate: false
+  xy: 484, 1549
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 2
+Attack Lunge
+  rotate: false
+  xy: 484, 1549
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 6
+Attack Lunge
+  rotate: false
+  xy: 484, 1549
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 10
+Attack Lunge
+  rotate: false
+  xy: 725, 1770
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 3
+Attack Lunge
+  rotate: false
+  xy: 725, 1770
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 11
+Attack Lunge
+  rotate: false
+  xy: 725, 1770
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 7
+Death Land
+  rotate: false
+  xy: 2, 886
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 0
+Death Land
+  rotate: false
+  xy: 243, 1107
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 1
+Death Land
+  rotate: false
+  xy: 484, 1328
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 2
+Death Land
+  rotate: false
+  xy: 725, 1549
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 3
+Death Land
+  rotate: false
+  xy: 2, 665
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 4
+Death Land
+  rotate: false
+  xy: 243, 886
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 5
+Death Land
+  rotate: false
+  xy: 484, 1107
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 6
+Death Land
+  rotate: false
+  xy: 725, 1328
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 7
+Death Land
+  rotate: false
+  xy: 2, 444
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 8
+Idle
+  rotate: false
+  xy: 243, 665
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 0
+Idle
+  rotate: false
+  xy: 484, 886
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 1
+Idle
+  rotate: false
+  xy: 725, 1107
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 2
+Idle
+  rotate: false
+  xy: 2, 223
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 3
+Idle
+  rotate: false
+  xy: 243, 444
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 4
+Idle
+  rotate: false
+  xy: 484, 665
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 5
+Turn
+  rotate: false
+  xy: 725, 886
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 0
+Turn
+  rotate: false
+  xy: 2, 2
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 1
+Walk
+  rotate: false
+  xy: 243, 223
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 0
+Walk
+  rotate: false
+  xy: 484, 444
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 1
+Walk
+  rotate: false
+  xy: 725, 665
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 2
+Walk
+  rotate: false
+  xy: 243, 2
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 3
+Walk
+  rotate: false
+  xy: 484, 223
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 4
+Walk
+  rotate: false
+  xy: 725, 444
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 5
+Walk
+  rotate: false
+  xy: 484, 2
+  size: 239, 219
+  orig: 239, 219
+  offset: 0, 0
+  index: 6

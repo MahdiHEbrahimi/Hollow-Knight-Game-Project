@@ -17,6 +17,7 @@ import com.mahdi.model.characters.*;
 import com.mahdi.model.characters.enemies.Crawled;
 import com.mahdi.model.map.SolidBlock;
 import com.mahdi.model.map.TiledMapHelper;
+import com.mahdi.screen.manager.SoundManager;
 
 public class GameEngine {
 
@@ -239,7 +240,8 @@ public class GameEngine {
             if (block.isDeadly && charBounds.overlaps(block.bounds)) {
                 // پرتاب به بالا
                 if (character instanceof Player) {
-                    ((Player) character).takeDamageFormGround();
+                    if (((Player) character).getAttackHitbox() != null && ((Player) character).getAttackHitbox().overlaps(block.bounds)) character.setThrown(new Vector2(0f, 5000f));
+                    else ((Player) character).takeDamageFormGround();
                 } else if (character instanceof Enemy) {
                     if (character.isAlive())
                         ((Enemy) character).takeDamage(1);
@@ -289,6 +291,7 @@ public class GameEngine {
     }
 
     public void enemyIsDead(Enemy enemy) {
+        SoundManager.getInstance().playSFX("SFX/uumuu_helper_slash.mp3");
         Vector2 position = enemy.getPosition();
         Corpse corpse = enemy.getCorpse();
         enemy.die();

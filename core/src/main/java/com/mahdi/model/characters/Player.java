@@ -1,5 +1,8 @@
 package com.mahdi.model.characters;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -18,6 +21,7 @@ import com.mahdi.model.enums.GameAction;
 import com.mahdi.model.characters.enums.State;
 import com.mahdi.model.game.RisingParticle;
 import com.mahdi.model.status.AppStatus;
+import com.mahdi.screen.manager.SoundManager;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -27,7 +31,7 @@ public class Player extends BaseCharacter {
 
     // ========== ویژگی‌های بازیکن ==========
     ;
-    private int maxHp = 10;
+    private int maxHp = 20;
     private int geo = 20;
     private float soul = 67;
     private float maxSoul = 100;
@@ -72,11 +76,17 @@ public class Player extends BaseCharacter {
     private float effectTimer = 0f;
     private boolean effectActive = false;
     private boolean effectFlip = false;         // برای افکت‌های ضربه (باید جهت‌دار باشند)
+    Music focusSFX = Gdx.audio.newMusic(Gdx.files.internal("SFX/focus_health_charging.wav"));
+    Sound dashSound = Gdx.audio.newSound(Gdx.files.internal("SFX/hero_dash.wav"));
+    Sound attackSound = Gdx.audio.newSound(Gdx.files.internal("SFX/hero_damage.mp3"));
+    Sound healSound = Gdx.audio.newSound(Gdx.files.internal("SFX/focus_health_heal.wav"));
+
+
 
     private Rectangle attackHitbox = null;  // مستطیل هیت‌باکس موقت (برای دیباگ)
 
     public Player(float x, float y) {
-        super(x, y, 80, 120, 700f, 2000f, 5);
+        super(x, y, 80, 120, 700f, 2000f, 20);
 
         this.currentState = State.IDLE;
         this.debugRenderer = new ShapeRenderer();
@@ -238,6 +248,7 @@ public class Player extends BaseCharacter {
      *
      * @return true اگر یکی از شاخه‌های فوکوس اجرا شد (برای return از متد اصلی)
      */
+
     private boolean handleFocus(float delta) {
         if (isFocusActive()) {
             this.velocity.x = 0;
@@ -246,6 +257,7 @@ public class Player extends BaseCharacter {
                 focusActiveTime = 0;
                 reduceSoul(33f);
                 increaseHP(1);
+                SoundManager.getInstance().playSound(healSound);
             }
         } else {
             focusActiveTime = 0;
@@ -560,6 +572,7 @@ public class Player extends BaseCharacter {
 
     // ========== رویدادهای شروع/پایان انیمیشن‌های قفل‌شده ==========
     private void startDash() {
+        com.mahdi.screen.manager.SoundManager.getInstance().playSound(dashSound);
         currentState = State.DASH;
         stateTime = 0f;
         isFixAnimationActive = true;
@@ -575,6 +588,7 @@ public class Player extends BaseCharacter {
     private boolean lastWasAltSlash = false;
 
     private void startAttack() {
+        SoundManager.getInstance().playSound(attackSound);
         float now = totalTime; // زمان مطلق فعلی
         boolean up = GameAction.MOVE_UP.isPressed();
         boolean down = GameAction.MOVE_DOWN.isPressed();
@@ -655,9 +669,9 @@ public class Player extends BaseCharacter {
                 // پایین کاراکتر (زمین)
                 attackHitbox = new Rectangle(
                     bounds.x + (bounds.width - hitboxWidth) / 2f,
-                    bounds.y - hitboxHeight,           // از پایین کاراکتر به سمت پایین
+                    bounds.y - hitboxHeight - 100,           // از پایین کاراکتر به سمت پایین
                     hitboxWidth,
-                    hitboxHeight
+                    hitboxHeight + 100
                 );
                 break;
             default: // SLASH / SLASH_ALT
@@ -677,6 +691,7 @@ public class Player extends BaseCharacter {
     }
 
     private void startFocus() {
+        focusSFX.play();
         if (currentState != State.FOCUS_START && currentState != State.FOCUS) {
             currentState = State.FOCUS_START;
             stateTime = 0f;
@@ -688,10 +703,10 @@ public class Player extends BaseCharacter {
 
     private void endFocus() {
         if (currentState == State.FOCUS || currentState == State.FOCUS_START) {
+            focusSFX.stop();
             currentState = State.FOCUS_END;
             stateTime = 0f;
             isFixAnimationActive = true;
-            // توقف افکت دایره‌ای
             currentEffect = null;
             effectActive = false;
         }
@@ -794,7 +809,16 @@ public class Player extends BaseCharacter {
         float originX = renderWidth / 2f;
         float originY = renderHeight / 2f;
 
+        // ☀️ تنظیم شفافیت در دورهٔ ایمنی (کمتر از ۲ ثانیه)
+        float alpha = 1f;
+        if (lastTimeKnightGotDamaged < 2.0f) {
+            alpha = 0.3f + 0.7f * (float)Math.abs(Math.sin(lastTimeKnightGotDamaged * 12));
+        }
+        batch.setColor(1f, 1f, 1f, alpha);
+
         batch.draw(frame, drawX, drawY, originX, originY, renderWidth, renderHeight, scaleX, 1, 0);
+
+        batch.setColor(Color.WHITE);
     }
 
     private void drawVFX(Batch batch) {
@@ -829,7 +853,7 @@ public class Player extends BaseCharacter {
                 offsetY = -45f;
                 break;
             case "Dash Effect":
-                offsetX = -160f * (facingRight ? 1 : -1);
+                offsetX = -230f * (facingRight ? 1 : -1);
                 offsetY = 0f;
                 break;
             case "LaserCircle":

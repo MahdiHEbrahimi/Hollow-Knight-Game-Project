@@ -14,7 +14,7 @@ public class SoundManager {
     private boolean isMuted = false;
 
     // 🌟 متغیر جدید برای ذخیره ولوم اصلی افکت‌ها (پیش‌فرض 0.6)
-    private float masterVolume = 0.6f;
+    private float masterVolume = 1f;
 
     private SoundManager() {
         soundCache = new ObjectMap<>();

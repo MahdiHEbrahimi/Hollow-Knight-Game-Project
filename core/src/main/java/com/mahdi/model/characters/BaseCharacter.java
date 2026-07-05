@@ -59,7 +59,17 @@ public abstract class BaseCharacter {
      * @param direction : 1 برای راست، 1- برای چپ، 0 برای ایستادن
      */
     public void move(int direction, float delta) {
-            velocity.x += direction * acceleration * delta;
+        velocity.x += direction * acceleration * delta;
+        this.isMoving = (direction != 0);
+    }
+
+    public void move(int direction, float delta, float c) {
+        if (c > 1f)
+            c = 1f;
+        if (c < 0)
+            c = 0;
+
+        velocity.x += direction * acceleration * delta * c;
         this.isMoving = (direction != 0);
     }
 
@@ -84,7 +94,7 @@ public abstract class BaseCharacter {
         updateCustomLogic(delta);
 
         // ۳. 🌟 اعمال شتاب افقی بر اساس جهتِ دستور داده شده (پاس داده شده به متد move)
-         if (!isMoving){
+        if (!isMoving) {
             // اگر دکمه رها شده یا AI متوقف شده، اصطکاک فعال می‌شود تا سُر خورده و بایستد
             velocity.x *= FRICTION;
             // برای جلوگیری از محاسبات اعشاری بی‌نهایت کوچک نزدیک به صفر
@@ -112,18 +122,19 @@ public abstract class BaseCharacter {
 
     public abstract void draw(Batch batch);
 
-    public void moveToPos(Vector2 target) {
+    public void moveToPos(Vector2 target, float coefficent) {
         Vector2 diff = target.cpy().sub(this.position);   // بردار از خودمان به سمت هدف
-        moveToDirection(diff);
+        if (coefficent > 1) coefficent = 1;
+        moveToDirection(diff, coefficent);
     }
 
-    public void moveToPosNoJump(Vector2 target, float delta) {
+    public void moveToPosNoJump(Vector2 target) {
         Vector2 diff = target.cpy().sub(this.position);
         diff.y = 0f;
-        moveToDirection(diff);
+        moveToDirection(diff, 1);
     }
 
-        public void moveToDirection(Vector2 diffVector) {
+    public void moveToDirection(Vector2 diffVector, float coefficent) {
         float ax = Math.abs(diffVector.x);
         float ay = Math.abs(diffVector.y);
         float maxAbs = Math.max(ax, ay);
@@ -133,8 +144,8 @@ public abstract class BaseCharacter {
         float normY = diffVector.y / maxAbs;
 
         // اعمال شتاب در جهت نرمال‌شده
-        velocity.x = normX * maxXSpeed;
-        velocity.y = normY * maxXSpeed;
+        velocity.x = normX * maxXSpeed * coefficent;
+        velocity.y = normY * maxXSpeed * coefficent;
 
     }
 
@@ -200,7 +211,7 @@ public abstract class BaseCharacter {
 
     public void setGrounded(boolean grounded) {
         this.isGrounded = grounded;
-        if(!hasGravity) grounded = false;
+        if (!hasGravity) grounded = false;
     }
 
     public int getHp() {

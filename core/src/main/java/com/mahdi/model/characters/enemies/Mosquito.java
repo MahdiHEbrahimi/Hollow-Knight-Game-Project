@@ -31,17 +31,14 @@ public class Mosquito extends Enemy {
     private MosquitoState state = MosquitoState.IDLE;
     private float stateTime = 0f;
 
-    private int facing = 1;               // 1 = راست، -1 = چپ
-    private int pendingFacing = 1;        // جهت مقصد پس از Turn
+    private int facing = 1;
+    private int pendingFacing = 1;
 
     private Vector2 targetPos = new Vector2();
     private final Vector2 spawnPos;
 
-    private static final float DETECT_RANGE = 800f;
-    private static final float ATTACK_SPEED = 1200f;
-    private static final float PATROL_SPEED = 300f;
-
-    private float attackTimer = 0f;
+    private static final float DETECT_RANGE = 700f;
+    private static final float ATTACK_SPEED = 800f;
     private static final float HOME_RADIUS = 10f;
 
     private static ShapeRenderer debugRenderer;
@@ -84,7 +81,7 @@ public class Mosquito extends Enemy {
 
         switch (state) {
             case IDLE:
-                idleUpdate(delta);
+                idleUpdate();
                 break;
             case TURN:
                 Animation<TextureRegion> turnAnim = (pendingFacing == 1) ? animTurn2 : animTurn;
@@ -95,18 +92,16 @@ public class Mosquito extends Enemy {
                 }
                 break;
             case ANTICIPATE:
-                // ☀️ در حالت آماده‌سازی جهت ثابت می‌ماند – هیچ حرکتی انجام نمی‌شود
                 if (animAnticipate != null && animAnticipate.isAnimationFinished(stateTime)) {
                     startAttack();
                 }
                 break;
             case ATTACK:
-                attackUpdate(delta);
+                attackUpdate();
                 break;
         }
     }
 
-    // ☀️ فقط در حالت Idle (گشت‌زنی) صدا زده می‌شود
     private void updateFacingFromVelocity() {
         if (velocity.x > 0.1f) {
             if (facing != 1) {
@@ -123,12 +118,10 @@ public class Mosquito extends Enemy {
         }
     }
 
-    // --- Idle (بازگشت به خانه) ---
-    private void idleUpdate(float delta) {
+    private void idleUpdate() {
         float distToPlayer = position.dst(player.getPosition());
         if (distToPlayer <= DETECT_RANGE) {
             targetPos.set(player.getPosition());
-            // ☀️ هنگام ورود به آماده‌سازی توقف کامل و قفل جهت بر اساس بازیکن (برای حمله)
             velocity.setZero();
             state = MosquitoState.ANTICIPATE;
             stateTime = 0f;
@@ -137,56 +130,59 @@ public class Mosquito extends Enemy {
 
         float distToSpawn = position.dst(spawnPos);
         if (distToSpawn > HOME_RADIUS) {
-            moveToPos(spawnPos);
+            moveToPos(spawnPos, 0.4f);   // بدون delta
         } else {
             velocity.setZero();
         }
 
-        updateFacingFromVelocity();   // فقط در گشت‌زنی تغییر جهت مجاز است
+        updateFacingFromVelocity();
     }
 
-    // --- شروع حمله ---
     private void startAttack() {
         state = MosquitoState.ATTACK;
         velocity.set(0,0);
         stateTime = 0f;
-        attackTimer = 0f;
 
-        // ☀️ یک‌بار برای همیشه جهت بر اساس هدف تنظیم می‌شود – دیگر تغییر نمی‌کند
         if (targetPos.x > position.x)
             facing = 1;
         else if (targetPos.x < position.x)
             facing = -1;
-        // اگر دقیقاً زیر هم باشند، همان جهت قبلی حفظ می‌شود
 
-        moveToPos(targetPos);   // یک فریم شتاب سنگین برای شروع
+        moveToPos(targetPos, 1);   // شتاب اولیه
     }
 
-    // --- حمله ---
-    private void attackUpdate(float delta) {
-        attackTimer += delta;
-
+    private void attackUpdate() {
+        // اگر به نقطه هدف رسیدیم (با آستانه ۱ پیکسل)
         if (position.epsilonEquals(targetPos, 1f)) {
-            returnToIdle();
+            onAttackFinished();
             return;
         }
 
-        moveToPos(targetPos);
+        moveToPos(targetPos, 1);   // حرکت پیوسته
         setGrounded(false);
 
         Array<SolidBlock> blocks = AppStatus.getGameEngine().getSolidBlocks();
         for (SolidBlock b : blocks) {
             if (!b.isDeadly && bounds.overlaps(b.bounds)) {
-                returnToIdle();
+                onAttackFinished();
                 return;
             }
         }
-        // ☀️ دیگر updateFacingFromVelocity صدا زده نمی‌شود – جهت ثابت است
     }
 
-    private void returnToIdle() {
-        state = MosquitoState.IDLE;
-        stateTime = 0f;
+    // ☀️ متد جدید: پس از پایان حمله (رسیدن به هدف یا برخورد)
+    private void onAttackFinished() {
+        float distToPlayer = position.dst(player.getPosition());
+        if (distToPlayer <= DETECT_RANGE) {
+            // بازیکن هنوز در دید است → حمله بعدی را سریعاً آماده کن
+            targetPos.set(player.getPosition());
+            state = MosquitoState.ANTICIPATE;
+            stateTime = 0f;
+        } else {
+            // بازیکن از دید خارج شده → برگرد به گشت‌زنی (بازگشت به خانه)
+            state = MosquitoState.IDLE;
+            stateTime = 0f;
+        }
         velocity.setZero();
     }
 

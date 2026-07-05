@@ -1,6 +1,7 @@
 package com.mahdi.model.characters;
 
 import com.mahdi.model.characters.enemies.Crawled;
+import com.mahdi.model.characters.enemies.HornheadHusk;
 import com.mahdi.model.characters.enemies.Mosquito;
 
 public enum EnemyType {
@@ -16,6 +17,13 @@ public enum EnemyType {
         @Override
         public Enemy getInstance(float x, float y, Player player) {
             return new Mosquito(x, y, player);
+        }
+    },
+
+    HORNHEAD_HUSK("HornheadHusk") {
+        @Override
+        public Enemy getInstance(float x, float y, Player player) {
+            return new HornheadHusk(x, y, player);
         }
     };
 
