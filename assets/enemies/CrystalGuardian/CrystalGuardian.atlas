@@ -1,0 +1,279 @@
+
+CrystalGuardian.png
+size: 2048, 2048
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+CrystalLaser
+  rotate: false
+  xy: 2, 1655
+  size: 1755, 117
+  orig: 1755, 117
+  offset: 0, 0
+  index: -1
+Death Land
+  rotate: false
+  xy: 2, 1464
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 0
+Death Land
+  rotate: false
+  xy: 2, 1273
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 1
+Death Land
+  rotate: false
+  xy: 289, 1464
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 2
+Death Land
+  rotate: false
+  xy: 2, 1082
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 3
+Death Land
+  rotate: false
+  xy: 289, 1273
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 4
+Death Land
+  rotate: false
+  xy: 576, 1464
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 5
+Evade
+  rotate: false
+  xy: 2, 891
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 0
+Evade
+  rotate: false
+  xy: 2, 891
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 4
+Shoot
+  rotate: false
+  xy: 2, 891
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 5
+Evade
+  rotate: false
+  xy: 289, 1082
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 1
+Evade
+  rotate: false
+  xy: 576, 1273
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 2
+Evade
+  rotate: false
+  xy: 863, 1464
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 3
+Evade
+  rotate: false
+  xy: 2, 700
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 5
+Evade
+  rotate: false
+  xy: 289, 891
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 6
+Idle
+  rotate: false
+  xy: 576, 1082
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 0
+Idle
+  rotate: false
+  xy: 863, 1273
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 1
+Idle
+  rotate: false
+  xy: 1150, 1464
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 2
+Idle
+  rotate: false
+  xy: 2, 509
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 3
+Idle
+  rotate: false
+  xy: 289, 700
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 4
+LaserCircle
+  rotate: false
+  xy: 1150, 957
+  size: 228, 123
+  orig: 228, 123
+  offset: 0, 0
+  index: 0
+LaserCircle
+  rotate: false
+  xy: 1437, 1148
+  size: 228, 123
+  orig: 228, 123
+  offset: 0, 0
+  index: 1
+LaserCircle
+  rotate: false
+  xy: 2, 2
+  size: 228, 123
+  orig: 228, 123
+  offset: 0, 0
+  index: 2
+LaserCircle
+  rotate: false
+  xy: 289, 193
+  size: 228, 123
+  orig: 228, 123
+  offset: 0, 0
+  index: 3
+Run
+  rotate: false
+  xy: 576, 891
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 0
+Run
+  rotate: false
+  xy: 863, 1082
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 1
+Run
+  rotate: false
+  xy: 1150, 1273
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 2
+Run
+  rotate: false
+  xy: 1437, 1464
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 3
+Run
+  rotate: false
+  xy: 2, 318
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 4
+Run
+  rotate: false
+  xy: 289, 509
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 5
+Shoot
+  rotate: false
+  xy: 576, 700
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 0
+Shoot
+  rotate: false
+  xy: 863, 891
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 1
+Shoot
+  rotate: false
+  xy: 863, 891
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 4
+Shoot
+  rotate: false
+  xy: 1150, 1082
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 2
+Shoot
+  rotate: false
+  xy: 1437, 1273
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 3
+Shoot
+  rotate: false
+  xy: 2, 127
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 6
+Turn
+  rotate: false
+  xy: 289, 318
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 0
+Turn
+  rotate: false
+  xy: 576, 509
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 1
+Turn
+  rotate: false
+  xy: 863, 700
+  size: 285, 189
+  orig: 285, 189
+  offset: 0, 0
+  index: 2

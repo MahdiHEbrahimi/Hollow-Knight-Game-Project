@@ -1,8 +1,7 @@
 package com.mahdi.model.characters;
 
-import com.mahdi.model.characters.enemies.Crawled;
-import com.mahdi.model.characters.enemies.HornheadHusk;
-import com.mahdi.model.characters.enemies.Mosquito;
+import com.mahdi.model.characters.enemies.*;
+import com.mahdi.model.status.AppStatus;
 
 public enum EnemyType {
 
@@ -24,6 +23,20 @@ public enum EnemyType {
         @Override
         public Enemy getInstance(float x, float y, Player player) {
             return new HornheadHusk(x, y, player);
+        }
+    },
+
+    CRYSTAL_GUARDAIN ("CrystalGuardian"){
+        @Override
+        public Enemy getInstance(float x, float y, Player player) {
+            return new CrystalGuardian(x, y, player);
+        }
+    },
+
+    FALSE_KNIGHT ("false knight"){
+        @Override
+        public Enemy getInstance(float x, float y, Player player) {
+            return new FalseKnight(x, y, player, 12);
         }
     };
 

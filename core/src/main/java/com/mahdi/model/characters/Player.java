@@ -547,12 +547,15 @@ public class Player extends BaseCharacter {
         if (!isAlive || lastTimeKnightGotDamaged < 2.0f) return;
         hp -= damage;
         lastTimeKnightGotDamaged = 0;
-        if (enemy.getPosition().x + enemy.getBounds().width / 2f < this.getPosition().x + this.getBounds().width / 2f) {
-            this.setThrown(new Vector2(THROW_SPEED, 0f));
-            enemy.setThrown(new Vector2(-THROW_SPEED, 0f));
-        } else {
-            this.setThrown(new Vector2(-THROW_SPEED, 0f));
-            enemy.setThrown(new Vector2(THROW_SPEED, 0f));
+
+        if (enemy != null){
+            if (enemy.getPosition().x + enemy.getBounds().width / 2f < this.getPosition().x + this.getBounds().width / 2f) {
+                this.setThrown(new Vector2(THROW_SPEED, 0f));
+                enemy.setThrown(new Vector2(-THROW_SPEED, 0f));
+            } else {
+                this.setThrown(new Vector2(-THROW_SPEED, 0f));
+                enemy.setThrown(new Vector2(THROW_SPEED, 0f));
+            }
         }
         if (hp <= 0) {
             die();

@@ -1,6 +1,7 @@
 package com.mahdi.model.game;
 
 import java.util.ArrayList;
+import java.util.PrimitiveIterator;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -17,12 +18,14 @@ import com.mahdi.model.characters.*;
 import com.mahdi.model.characters.enemies.Crawled;
 import com.mahdi.model.map.SolidBlock;
 import com.mahdi.model.map.TiledMapHelper;
+import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.manager.SoundManager;
 
 public class GameEngine {
 
     private Player player;
     private final ArrayList<Enemy> enemies;
+    private final ArrayList<Projectile> projectiles = new ArrayList<>();
     private final ArrayList<Corpse> corpses;
     private final ArrayList<Geo> geos;
 
@@ -36,6 +39,7 @@ public class GameEngine {
     private final int mainIdx;
 
     public GameEngine(String mapPath) {
+        AppStatus.setGameStatus(this);
         TiledMapHelper mapHelper = new TiledMapHelper();
         this.tiledMap = mapHelper.loadMap(mapPath);
         this.solidBlocks = mapHelper.getSolidRectangles();
@@ -122,6 +126,18 @@ public class GameEngine {
 
         for (Corpse c : corpses)
             c.update(delta);
+
+        try {
+            for (Projectile p : projectiles) {
+                p.update(delta);
+                if (p.getBounds().overlaps(player.getBounds()))
+                    player.takeDamage(1, null);
+                if (!p.isActive())
+                    projectiles.remove(p);
+            }
+        } catch (Exception e) {
+        }
+
 
         Rectangle playerAttackBox = player.getAttackHitbox();
         if (playerAttackBox != null) {
@@ -216,6 +232,7 @@ public class GameEngine {
         for (Corpse c : corpses) c.draw(batch);
         for (Enemy e : enemies) if (e.isAlive()) e.draw(batch);
         for (Geo g : geos) g.draw(batch);
+        for (Projectile p : projectiles) p.draw(batch);
         player.draw(batch);
         batch.end();
 
@@ -305,6 +322,14 @@ public class GameEngine {
 
     public Player getPlayer() {
         return player;
+    }
+
+    public ArrayList<Projectile> getProjectiles() {
+        return projectiles;
+    }
+
+    public void addProjectile (Projectile projectile){
+        projectiles.add(projectile);
     }
 
     public Array<SolidBlock> getSolidBlocks() {
