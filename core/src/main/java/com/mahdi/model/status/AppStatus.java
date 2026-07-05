@@ -4,6 +4,7 @@ import com.mahdi.HollowKnightGame;
 import com.mahdi.model.enums.MenuType;
 import com.mahdi.model.game.GameEngine;
 import com.mahdi.model.graphic.GraphicsQuality;
+import com.mahdi.screen.BaseScreen;
 import com.mahdi.screen.manager.BrightnessController;
 import com.mahdi.screen.manager.MusicManager;
 import com.mahdi.screen.manager.PanelManager;
@@ -15,6 +16,7 @@ public class AppStatus {
     public static MenuType curreMenu;
     private static GameEngine game;
     public static GraphicsQuality Quality = GraphicsQuality.Ultra_High;
+    public static BaseScreen screen;
 
     public  static void setGameStatus(GameEngine game) {
         AppStatus.game = game;
@@ -81,6 +83,14 @@ public class AppStatus {
 
     public static int getBrightness() {
         return (int) ((BrightnessController.getInstance().getBrightness() + 1f) * 50f);
+    }
+
+    public static void setScreen(BaseScreen screen) {
+        AppStatus.screen = screen;
+    }
+
+    public static BaseScreen getScreen() {
+        return screen;
     }
 
     public static void setBrightness(int value) {

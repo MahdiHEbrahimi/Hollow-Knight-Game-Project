@@ -20,7 +20,7 @@ public class Projectile {
     private boolean flip = false;
 
     private final Rectangle bounds;         // مستطیل برخورد (collision box)
-    private final float animWidth, animHeight;  // ابعاد واقعی فریم انیمیشن
+    private final float animWidth, animHeight;  // ابعاد واقعی فریم انیمیشن (اگر انیمیشن null باشد، صفر است)
     private final float offsetX, offsetY;       // افست‌های دلخواه برای رسم
 
     private static ShapeRenderer debugRenderer; // مشترک بین همه پرتابه‌ها
@@ -30,7 +30,7 @@ public class Projectile {
      * @param vx            سرعت افقی اولیه
      * @param vy            سرعت عمودی اولیه
      * @param lifetime      طول عمر (ثانیه)
-     * @param anim          انیمیشن پرتابه
+     * @param anim          انیمیشن پرتابه — ☀️ می‌تواند null باشد؛ در این صورت هیچ عکسی رسم نمی‌شود
      * @param damagesPlayer اگر true باشد، به بازیکن آسیب می‌زند
      * @param offsetX       جابجایی افقی رسم نسبت به مرکز (پیکسل)
      * @param offsetY       جابجایی عمودی رسم نسبت به مرکز (پیکسل)
@@ -62,10 +62,17 @@ public class Projectile {
         // مرکز پرتابه را در وسط مستطیل قرار می‌دهیم
         this.position = new Vector2(bounds.x + bounds.width / 2f, bounds.y + bounds.height / 2f);
 
-        // ابعاد واقعی فریم اول (برای رسم)
-        TextureRegion firstFrame = anim.getKeyFrame(0);
-        this.animWidth = firstFrame.getRegionWidth();
-        this.animHeight = firstFrame.getRegionHeight();
+        // ☀️ ابعاد واقعی فریم اول (برای رسم) — فقط اگر انیمیشن داده شده باشد.
+        // اگر anim نال باشد، اصلاً به آن دست نمی‌زنیم (نه getKeyFrame، نه هیچ‌چیز دیگر)
+        // و ابعاد رو صفر می‌ذاریم؛ چون draw() هم در این حالت هیچی از انیمیشن رسم نمی‌کند.
+        if (anim != null) {
+            TextureRegion firstFrame = anim.getKeyFrame(0);
+            this.animWidth = firstFrame.getRegionWidth();
+            this.animHeight = firstFrame.getRegionHeight();
+        } else {
+            this.animWidth = 0f;
+            this.animHeight = 0f;
+        }
 
         this.offsetX = offsetX;
         this.offsetY = offsetY;
@@ -103,7 +110,9 @@ public class Projectile {
         debugRenderer.end();
         batch.begin();
 
+        // ☀️ اگر انیمیشنی داده نشده (null)، دقیقاً طبق درخواست هیچ عکسی رسم نمی‌شود
         if (animation == null) return;
+
         TextureRegion frame = animation.getKeyFrame(stateTime, false);
 
         float drawX = position.x - animWidth / 2f + offsetX;

@@ -1,5 +1,6 @@
 package com.mahdi.screen;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
@@ -7,6 +8,7 @@ import com.mahdi.model.game.GameHud;
 import com.mahdi.model.game.GameEngine;
 import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.manager.MusicManager;
+import java.util.Random;
 
 public class GameScreen extends BaseScreen {
 
@@ -27,6 +29,7 @@ public class GameScreen extends BaseScreen {
         MusicManager.getInstance().playMusic(musicPath);
         gameEngine = new GameEngine(mapPath);
         AppStatus.setGameStatus(gameEngine);
+        AppStatus.setScreen(this);
     }
 
     @Override
@@ -72,45 +75,93 @@ public class GameScreen extends BaseScreen {
         }
     }
 
-    // ========== دوربین ==========
-    private static final float MIN_CRITICAL_DIST = 50f;
-    private static final float MAX_CRITICAL_DIST = 400f;
-    private static final float MIN_LERP = 0.08f;
-    private static final float MAX_LERP = 1.00f;
+
+    // شعاع منطقه‌ی مرده: تا این فاصله دوربین اصلاً تکون نمی‌خوره (نه حتی یه‌ذره)
+    private static final float DEAD_ZONE = 40f;
+
+    // از لبه‌ی دد زون تا این‌قدر فاصله‌ی اضافه، سرعت به‌صورت درجه‌دو (t^2) از MIN_LERP به MAX_LERP می‌رسه
+// می‌تونی به‌جای t*t از t*t*t یا (1 - Math.exp(-3f*t)) هم استفاده کنی برای شیب تندتر/نرم‌تر
+    private static final float RAMP_RANGE = 500f;
+
+    private static final float MIN_LERP = 0.05f;
+    private static final float MAX_LERP = 0.35f; // ☀️ عمداً کمتر از ۱ که حتی تو سرعت بالا هم پرش ناگهانی نده
+
+    // سقف قطعی: دوربین هیچ‌وقت بیشتر از این مقدار از هدف عقب نمی‌مونه (صرف‌نظر از این‌که بازیکن چقدر سریع حرکت کنه)
+// این عدد باید از RAMP_RANGE بزرگ‌تر باشه، وگرنه همیشه فعال می‌مونه و نرمی رو از بین می‌بره
+    private static final float MAX_LAG_DISTANCE = 650f;
+
+    // ===================== شیک دوربین =====================
+    private static final float SHAKE_DURATION = 0.4f;   // ☀️ طول لرزش؛ همینجا عوضش کن
+    private static final float SHAKE_MAGNITUDE = 14f;    // ☀️ شدت لرزش (پیکسل)؛ همینجا عوضش کن
+    private float shakeTimer = 0f;
+    private final Random random = new Random(); // import java.util.Random;
+
+    // موقعیت «منطقی/صاف‌شده»‌ی دوربین — جدا از camera.position چون شیک نباید روی محاسبه‌ی فاصله اثر بذاره
+    private boolean cameraInitialized = false;
+    private float smoothCamX, smoothCamY;
+
+    /**
+     * ☀️ صدا زدنش، فارغ از هر حالتی، یه لرزش کوتاه (۰.۴ ثانیه‌ای، نه یه فریم) به دوربین می‌ده.
+     * مثال استفاده: وقتی باس گرزش رو می‌کوبه زمین -> activeCameraShake();
+     */
+    public void activeCameraShake() {
+        shakeTimer = SHAKE_DURATION;
+    }
+
+    /**
+     * ☀️ یه محور (X یا Y) رو با دد زون + رشد درجه‌دوی سرعت + سقف قطعیِ عقب‌موندن، به سمت target می‌بره.
+     * توجه: از دلتا استفاده نمی‌شه؛ دقیقاً مثل کد قبلی، صرفاً بر پایه‌ی فاصله محاسبه می‌شه.
+     */
+    private float smoothAxis(float current, float target) {
+        float diff = target - current;
+        float absDiff = Math.abs(diff);
+
+        // ☀️ دد زون واقعی: داخلش هیچ حرکتی انجام نمی‌شه
+        if (absDiff <= DEAD_ZONE) {
+            return current;
+        }
+
+        float rampDist = absDiff - DEAD_ZONE;
+        float t = Math.min(Math.max(rampDist / RAMP_RANGE, 0f), 1f);
+        float lerp = MIN_LERP + (MAX_LERP - MIN_LERP) * (t * t); // رشد درجه‌دو
+
+        float moved = current + diff * lerp;
+
+        // ☀️ سقف قطعی: اگه بعد از این گام هنوز خیلی عقبیم، مستقیم به فاصله‌ی مجاز برش می‌گردونیم
+        float newDiff = target - moved;
+        if (Math.abs(newDiff) > MAX_LAG_DISTANCE) {
+            moved = target - Math.signum(newDiff) * MAX_LAG_DISTANCE;
+        }
+
+        return moved;
+    }
 
     private void updateCamera(GameEngine gameEngine) {
         if (gameEngine.getPlayer() == null) return;
 
-        float currentX = camera.position.x;
-        float currentY = camera.position.y;
+        com.badlogic.gdx.math.Vector2 eyeSight = gameEngine.getPlayer().getEyeSight();
 
-        float targetX = gameEngine.getPlayer().getEyeSight().x;
-        float targetY = gameEngine.getPlayer().getEyeSight().y;
-
-        float diffX = targetX - currentX;
-        float diffY = targetY - currentY;
-
-        float absDiffX = Math.abs(diffX);
-        float absDiffY = Math.abs(diffY);
-
-        float lerpX = MIN_LERP;
-        if (absDiffX > MIN_CRITICAL_DIST) {
-            float tX = (absDiffX - MIN_CRITICAL_DIST) / (MAX_CRITICAL_DIST - MIN_CRITICAL_DIST);
-            tX = Math.min(Math.max(tX, 0f), 1f);
-            lerpX = MIN_LERP + (MAX_LERP - MIN_LERP) * tX;
+        // ☀️ اولین فراخوانی: مستقیم روی بازیکن اسنپ کن که یه پرش اولیه‌ی زشت نداشته باشیم
+        if (!cameraInitialized) {
+            smoothCamX = eyeSight.x;
+            smoothCamY = eyeSight.y;
+            cameraInitialized = true;
         }
 
-        float lerpY = MIN_LERP;
-        if (absDiffY > MIN_CRITICAL_DIST) {
-            float tY = (absDiffY - MIN_CRITICAL_DIST) / (MAX_CRITICAL_DIST - MIN_CRITICAL_DIST);
-            tY = Math.min(Math.max(tY, 0f), 1f);
-            lerpY = MIN_LERP + (MAX_LERP - MIN_LERP) * tY;
+        smoothCamX = smoothAxis(smoothCamX, eyeSight.x);
+        smoothCamY = smoothAxis(smoothCamY, eyeSight.y);
+
+        // ===================== شیک (جدا از موقعیت منطقی) =====================
+        float shakeOffsetX = 0f, shakeOffsetY = 0f;
+        if (shakeTimer > 0f) {
+            // ☀️ تنها جایی که از دلتا استفاده می‌شه — چون شمارش یه تایمر بدون منبع زمانی ممکن نیست
+            shakeTimer -= Gdx.graphics.getDeltaTime();
+            float fade = Math.max(shakeTimer, 0f) / SHAKE_DURATION; // لرزش کم‌کم محو می‌شه
+            shakeOffsetX = (random.nextFloat() * 2f - 1f) * SHAKE_MAGNITUDE * fade;
+            shakeOffsetY = (random.nextFloat() * 2f - 1f) * SHAKE_MAGNITUDE * fade;
         }
 
-        float newX = currentX + diffX * lerpX;
-        float newY = currentY + diffY * lerpY;
-
-        camera.position.set(newX, newY, 0);
+        camera.position.set(smoothCamX + shakeOffsetX, smoothCamY + shakeOffsetY, 0);
         camera.update();
     }
 

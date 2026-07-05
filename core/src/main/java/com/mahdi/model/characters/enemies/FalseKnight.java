@@ -1,5 +1,7 @@
 package com.mahdi.model.characters.enemies;
 
+import java.util.Random;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -17,15 +19,21 @@ import com.mahdi.model.characters.Player;
 import com.mahdi.model.characters.Projectile;
 import com.mahdi.model.map.SolidBlock;
 import com.mahdi.model.status.AppStatus;
+import com.mahdi.screen.GameScreen;
 
-import java.util.Random;
 
 /**
- * ☀️ باس شوالیه‌ی دروغین (False Knight)
- * پیاده‌سازی FSM دو فازی طبق مستند طراحی:
- * - انتخاب حرکت بر اساس فاصله + رندوم + ضد اسپم
- * - زنجیره‌ی استان در ۵۰٪ جون (DeathFall -> DeathHit -> DeathLand -> Stun -> Recover -> Phase2)
- * - نوار جون تناسبی بالای سر که با تغییر maxHp خراب نمی‌شود
+ * ☀️ باس شوالیه‌ی دروغین (False Knight) — نسخه‌ی به‌روزشده طبق اطلس جدید.
+ * <p>
+ * تغییرات مهم نسبت به نسخه‌ی قبل:
+ * - DeathFall حذف شد (دیگه تو اطلس وجود نداره؛ با DeathLand یکی شده).
+ * - DeathLand الان یعنی «کل سقوط + فرود» با هم، یک‌بار قبل از ورود به حالت استان پخش می‌شه
+ * و دقیقاً همون انیمیشن هم برای جسد (getCorpse) استفاده می‌شه.
+ * - DeathHit دیگه بخشی از زنجیره‌ی سقوط نیست؛ الان state جدید STUN_HIT هست:
+ * یعنی وقتی باس تو حالت استانه (Body loop) و ضربه می‌خوره، یه‌بار DeathHit پخش می‌شه
+ * و بعدش یا برمی‌گرده به Body loop یا (اگه ضربه‌ی دوم بود) میره به StunRecover.
+ * - یک ضریب سرعت سراسری (speedMultiplier) اضافه شد که هم روی سرعت حرکت، هم سرعت
+ * پخش انیمیشن‌ها، هم فاصله‌ی تصمیم‌گیری AI اثر می‌ذاره؛ بعد از فاز دوم *2 می‌شه.
  */
 public class FalseKnight extends Enemy {
 
@@ -33,14 +41,13 @@ public class FalseKnight extends Enemy {
     private static TextureAtlas atlas;
     private final Random random = new Random();
 
-    // ===================== انیمیشن‌ها (طبق اسم دقیق ریجن‌ها در اطلس) =====================
+    // ===================== انیمیشن‌ها (طبق اسم دقیق ریجن‌ها در اطلس جدید) =====================
     private final Animation<TextureRegion> animAttackAntic;
     private final Animation<TextureRegion> animAttack;
     private final Animation<TextureRegion> animAttackRecover;
     private final Animation<TextureRegion> animBody;
-    private final Animation<TextureRegion> animDeathFall;
-    private final Animation<TextureRegion> animDeathHit;
-    private final Animation<TextureRegion> animDeathLand;
+    private final Animation<TextureRegion> animDeathHit;      // ☀️ الان فقط برای واکنش‌به‌ضربه در حالت استان استفاده می‌شه
+    private final Animation<TextureRegion> animDeathLand;     // ☀️ سقوط+فرود با هم (قبل از استان) + پوز جسد
     private final Animation<TextureRegion> animIdle;
     private final Animation<TextureRegion> animJumpAttackHit;
     private final Animation<TextureRegion> animJumpAttack;
@@ -59,19 +66,21 @@ public class FalseKnight extends Enemy {
         RUN_ANTIC, RUN,
         LEAP_AIR, LEAP_LAND,           // پرش هجومی / مگا اسلم (فاز۲)
         JUMP_BACK_AIR, JUMP_BACK_LAND, // پرش دفاعی
-        DEATH_FALL, DEATH_HIT, DEATH_LAND,
-        STUN_BODY, STUN_RECOVER,
+        DEATH_LAND,                    // ☀️ سقوط+فرود ادغام‌شده، فقط یک‌بار قبل از استان
+        STUN_BODY,                     // لوپ Body، منتظر ضربات پلیر
+        STUN_HIT,                      // ☀️ واکنش کوتاه (DeathHit) وقتی تو استان ضربه می‌خوره
+        STUN_RECOVER,
         DEAD
     }
 
-    private enum MoveType { SLAM, RUN_CHARGE, LEAP_OFFENSIVE, LEAP_DEFENSIVE, MEGA_SLAM }
+    private enum MoveType {SLAM, RUN_CHARGE, LEAP_OFFENSIVE, LEAP_DEFENSIVE, MEGA_SLAM}
 
     private FKState state = FKState.IDLE;
     private float stateTime = 0f;
 
     private int facing = 1;
-    final float mScale = 2.2f;   // ☀️ فرض: چون باندز بزرگ‌تر شده، اسپرایت هم بزرگ‌تر رسم می‌شود
-    private static final float SPRITE_Y_LIFT = 335f; // ☀️ عکس ۲۰۰ پیکسل بالاتر از مرکز باندز چاپ می‌شود
+    final float mScale = 2.2f;
+    private static final float SPRITE_Y_LIFT = 335f; // ☀️ حفظ شده طبق تنظیم شما
 
     // ===================== HP / فاز =====================
     private final int maxHp;
@@ -87,12 +96,14 @@ public class FalseKnight extends Enemy {
     private static final float RECENT_HIT_WINDOW_DURATION = 3f;
     private static final int RECENT_HIT_THRESHOLD = 2;
 
-    // ===================== مقیاس‌گذاری فاز دوم =====================
-    private float animSpeedMult = 1f;   // سرعت پخش انیمیشن‌ها
-    private float moveSpeedMult = 1f;   // سرعت حرکت افقی
-    private float aiCooldownMult = 1f;  // ضریب کوتاه شدن فاصله تصمیم‌گیری AI
+    // ☀️☀️☀️ ضریب سراسری سرعت ☀️☀️☀️
+    // همه‌ی سرعت‌های حرکتی (Run/Leap/MegaSlam/JumpBack/Shockwave) و سرعت پخش انیمیشن‌ها
+    // و حتی فاصله‌ی تصمیم‌گیری AI، همه بر اساس همین یک عدد مقیاس می‌خورن.
+    // فقط همینجا رو بالا/پایین کن تا کل باس سریع‌تر/کندتر بشه.
+    // بعد از پایان استان (ورود به فاز دوم) به‌صورت خودکار *2 می‌شه.
+    private float speedMultiplier = 1f;
 
-    // ===================== فاصله‌ها برای تصمیم‌گیری (متناسب با باندز ۸۰۰×۶۰۰) =====================
+    // ===================== فاصله‌ها برای تصمیم‌گیری =====================
     private static final float CLOSE_RANGE = 600f;
     private static final float MID_RANGE = 1400f;
 
@@ -102,19 +113,18 @@ public class FalseKnight extends Enemy {
     private static final float FALLBACK_ATTACK_RECOVER = 0.4f;
     private static final float FALLBACK_RUN_ANTIC = 0.25f;
     private static final float FALLBACK_TURN = 0.2f;
-    private static final float FALLBACK_DEATH_FALL = 0.4f;
     private static final float FALLBACK_DEATH_HIT = 0.3f;
-    private static final float FALLBACK_DEATH_LAND = 1.0f;
+    private static final float FALLBACK_DEATH_LAND = 1.2f;
     private static final float FALLBACK_STUN_RECOVER = 0.8f;
     private static final float FALLBACK_LEAP_LAND = 0.3f;
     private static final float FALLBACK_JUMP_BACK_LAND = 0.3f;
 
-    // ===================== سرعت‌ها (چند برابر شده تا با باندز بزرگ‌تر و مسافت پرش بیشتر هم‌خونی داشته باشد) =====================
+    // ===================== سرعت‌ها (طبق تنظیم شما با divider حفظ شده) =====================
     private static final float divider = 1.5f;
     private static final float RUN_SPEED = 1150f;
     private static final float LEAP_H_SPEED = 1300f / divider;
     private static final float LEAP_V_SPEED = 2700f / divider;
-    private static final float MEGA_SLAM_V_SPEED = 3800f / divider;   // پرش بلندتر عمودی برای مگا اسلم
+    private static final float MEGA_SLAM_V_SPEED = 3800f / divider;
     private static final float JUMP_BACK_H_SPEED = 1050f / divider;
     private static final float JUMP_BACK_V_SPEED = 2100f / divider;
 
@@ -129,16 +139,17 @@ public class FalseKnight extends Enemy {
     private static final int SLAM_DAMAGE = 1;
     private static final int MEGA_SLAM_DAMAGE = SLAM_DAMAGE * 2;
     private static final int LEAP_DAMAGE = 1;
-    private static final float SHOCKWAVE_SPEED = 2000f; // ☀️ تقریب سرعت ثابت به‌جای شتاب واقعی (کلاس Projectile سرعت ثابت دارد)
-    private static final float SHOCKWAVE_LIFETIME = 4f;   // ☀️ طبق درخواست: ۴ ثانیه عمر
+    private static final float SHOCKWAVE_SPEED = 2000f;
+    private static final float SHOCKWAVE_LIFETIME = 4f;
     private static final float HIT_LIFETIME = 0.2f;
-    private static final float DEATH_IMPACT_LIFETIME = 1f;
 
     private boolean isMegaSlamActive = false;
-    private boolean impactDamageDealt = false; // جلوگیری از چند بار دمیج زدن در یک حمله
+    private boolean impactDamageDealt = false;
 
     private static ShapeRenderer debugRenderer;
     private static ShapeRenderer fxRenderer;
+
+    private static final float HITBOX_Y_LIFT = 10f;
 
     // ===================== نوار جون =====================
     private static final float HP_BAR_WIDTH = 260f;
@@ -146,34 +157,31 @@ public class FalseKnight extends Enemy {
     private static final float HP_BAR_Y_OFFSET = 50f;
 
     public FalseKnight(float x, float y, Player player, int maxHp) {
-        // ☀️ باندز برخورد: عرض ۸۰۰، ارتفاع ۶۰۰
-        super(x, y, 800, 600, RUN_SPEED, 3200f, maxHp);
+        super(x, y, 800, 600, RUN_SPEED, 3200f, maxHp, -2500f);
         this.player = player;
         this.maxHp = maxHp;
         this.hasGravity = true;
 
         if (atlas == null) {
-            // ☀️ مسیر رو مطابق ساختار پروژه‌تون تنظیم کنید
             atlas = new TextureAtlas("bosses/FalseKnight/False_knight.atlas");
         }
 
-        animAttackAntic    = createAnimation("Attack Antic",      0.07f, Animation.PlayMode.NORMAL);
-        animAttack         = createAnimation("Attack",            0.08f, Animation.PlayMode.NORMAL);
-        animAttackRecover  = createAnimation("Attack Recover_00", 0.08f, Animation.PlayMode.NORMAL);
-        animBody           = createAnimation("Body",              0.2f,  Animation.PlayMode.LOOP);
-        animDeathFall      = createAnimation("DeathFall_00",      0.12f, Animation.PlayMode.NORMAL);
-        animDeathHit       = createAnimation("DeathHit_00",       0.1f,  Animation.PlayMode.NORMAL);
-        animDeathLand      = createAnimation("DeathLand_",        0.09f, Animation.PlayMode.NORMAL);
-        animIdle           = createAnimation("Idle",              0.15f, Animation.PlayMode.LOOP);
-        animJumpAttackHit  = createAnimation("Jump Attack Hit 3", 0.1f,  Animation.PlayMode.NORMAL);
-        animJumpAttack     = createAnimation("Jump Attack",       0.07f, Animation.PlayMode.LOOP);
-        animJump           = createAnimation("Jump",               0.08f, Animation.PlayMode.LOOP);
-        animLand           = createAnimation("Land",               0.08f, Animation.PlayMode.NORMAL);
-        animRunAntic       = createAnimation("Run Antic",          0.1f,  Animation.PlayMode.NORMAL);
-        animRun            = createAnimation("Run",                0.07f, Animation.PlayMode.LOOP);
-        animShockwave      = createAnimation("Shockwave",          0.05f, Animation.PlayMode.NORMAL);
-        animStunRecover    = createAnimation("Stun Recover_00",    0.12f, Animation.PlayMode.NORMAL);
-        animTurn           = createAnimation("Turn",               0.1f,  Animation.PlayMode.NORMAL);
+        animAttackAntic = createAnimation("Attack Antic", 0.07f, Animation.PlayMode.NORMAL);
+        animAttack = createAnimation("Attack", 0.08f, Animation.PlayMode.NORMAL);
+        animAttackRecover = createAnimation("Attack Recover", 0.08f, Animation.PlayMode.NORMAL);
+        animBody = createAnimation("Body", 0.2f, Animation.PlayMode.LOOP);
+        animDeathHit = createAnimation("DeathHit", 0.1f, Animation.PlayMode.NORMAL);
+        animDeathLand = createAnimation("DeathLand", 0.09f, Animation.PlayMode.NORMAL);
+        animIdle = createAnimation("Idle", 0.15f, Animation.PlayMode.LOOP);
+        animJumpAttackHit = createAnimation("Jump Attack Hit 3", 0.1f, Animation.PlayMode.NORMAL);
+        animJumpAttack = createAnimation("Jump Attack", 0.07f, Animation.PlayMode.LOOP);
+        animJump = createAnimation("Jump", 0.08f, Animation.PlayMode.LOOP);
+        animLand = createAnimation("Land", 0.08f, Animation.PlayMode.NORMAL);
+        animRunAntic = createAnimation("Run Antic", 0.1f, Animation.PlayMode.NORMAL);
+        animRun = createAnimation("Run", 0.07f, Animation.PlayMode.LOOP);
+        animShockwave = createAnimation("Shockwave", 0.05f, Animation.PlayMode.NORMAL);
+        animStunRecover = createAnimation("Stun Recover", 0.12f, Animation.PlayMode.NORMAL);
+        animTurn = createAnimation("Turn", 0.1f, Animation.PlayMode.NORMAL);
 
         if (debugRenderer == null) debugRenderer = new ShapeRenderer();
         if (fxRenderer == null) fxRenderer = new ShapeRenderer();
@@ -195,26 +203,54 @@ public class FalseKnight extends Enemy {
     protected void updateCustomLogic(float delta) {
         if (state == FKState.DEAD) return;
 
-        stateTime += delta * animSpeedMult;
+        stateTime += delta * speedMultiplier;
         updateRecentHitWindow(delta);
 
         switch (state) {
-            case IDLE:              updateIdle(delta); break;
-            case TURN:               updateTurn(); break;
-            case ATTACK_ANTIC:       updateAttackAntic(); break;
-            case ATTACK:             updateAttack(); break;
-            case ATTACK_RECOVER:     updateAttackRecover(); break;
-            case RUN_ANTIC:          updateRunAntic(); break;
-            case RUN:                updateRun(); break;
-            case LEAP_AIR:           updateLeapAir(); break;
-            case LEAP_LAND:          updateLeapLand(); break;
-            case JUMP_BACK_AIR:      updateJumpBackAir(); break;
-            case JUMP_BACK_LAND:     updateJumpBackLand(); break;
-            case DEATH_FALL:         updateDeathFall(); break;
-            case DEATH_HIT:          updateDeathHit(); break;
-            case DEATH_LAND:         updateDeathLand(); break;
-            case STUN_BODY:          /* منتظر ضربات پلیر، منطق در takeDamage */ break;
-            case STUN_RECOVER:       updateStunRecover(); break;
+            case IDLE:
+                updateIdle(delta);
+                break;
+            case TURN:
+                updateTurn();
+                break;
+            case ATTACK_ANTIC:
+                updateAttackAntic();
+                break;
+            case ATTACK:
+                updateAttack();
+                break;
+            case ATTACK_RECOVER:
+                updateAttackRecover();
+                break;
+            case RUN_ANTIC:
+                updateRunAntic();
+                break;
+            case RUN:
+                updateRun();
+                break;
+            case LEAP_AIR:
+                updateLeapAir();
+                break;
+            case LEAP_LAND:
+                updateLeapLand();
+                break;
+            case JUMP_BACK_AIR:
+                updateJumpBackAir();
+                break;
+            case JUMP_BACK_LAND:
+                updateJumpBackLand();
+                break;
+            case DEATH_LAND:
+                updateDeathLandCollapse();
+                break;
+            case STUN_BODY:         /* منتظر ضربات پلیر، منطق در takeDamage */
+                break;
+            case STUN_HIT:
+                updateStunHit();
+                break;
+            case STUN_RECOVER:
+                updateStunRecover();
+                break;
         }
     }
 
@@ -234,14 +270,12 @@ public class FalseKnight extends Enemy {
         velocity.x = 0;
         isMoving = false;
 
-        // ☀️ اگر پشت‌سرهم ضربه خورده، اول یه پرش دفاعی بزن (ری‌اکشن، مقدم بر انتخاب عادی)
         if (recentHitCount >= RECENT_HIT_THRESHOLD) {
             recentHitCount = 0;
             startLeapDefensive();
             return;
         }
 
-        // ☀️ اگر جهت باس با جهت پلیر همخوانی نداره، اول بچرخ (ترانزیشن تمیز از طریق انیمیشن Turn)
         boolean playerOnRight = player.getPosition().x > position.x;
         if ((playerOnRight && facing < 0) || (!playerOnRight && facing > 0)) {
             startTurn();
@@ -260,23 +294,27 @@ public class FalseKnight extends Enemy {
         float wSlam, wRun, wLeap, wMega = 0f;
 
         if (xDist < CLOSE_RANGE) {
-            wSlam = 70f; wLeap = 15f; wRun = 5f;
+            wSlam = 70f;
+            wLeap = 15f;
+            wRun = 5f;
             if (phaseTwo) wMega = 35f;
         } else if (xDist < MID_RANGE) {
-            wSlam = 20f; wLeap = 45f; wRun = 35f;
+            wSlam = 20f;
+            wLeap = 45f;
+            wRun = 35f;
             if (phaseTwo) wMega = 15f;
         } else {
-            wSlam = 5f; wLeap = 35f; wRun = 60f;
+            wSlam = 5f;
+            wLeap = 35f;
+            wRun = 60f;
             if (phaseTwo) wMega = 5f;
         }
 
-        // ☀️ فاکتور تصادفی پیوسته
         wSlam = Math.max(0f, wSlam + (random.nextFloat() * 30f - 15f));
-        wRun  = Math.max(0f, wRun  + (random.nextFloat() * 30f - 15f));
+        wRun = Math.max(0f, wRun + (random.nextFloat() * 30f - 15f));
         wLeap = Math.max(0f, wLeap + (random.nextFloat() * 30f - 15f));
         if (phaseTwo) wMega = Math.max(0f, wMega + (random.nextFloat() * 20f - 10f));
 
-        // ☀️ ضد اسپم: اگر یه حرکت دو بار متوالی تکرار شده، وزنش رو صفر کن
         if (isRepeatedTwice(MoveType.SLAM)) wSlam = 0f;
         if (isRepeatedTwice(MoveType.RUN_CHARGE)) wRun = 0f;
         if (isRepeatedTwice(MoveType.LEAP_OFFENSIVE)) wLeap = 0f;
@@ -285,7 +323,6 @@ public class FalseKnight extends Enemy {
         float total = wSlam + wRun + wLeap + wMega;
         MoveType chosen;
         if (total <= 0.001f) {
-            // ☀️ همه صفر شدن (حالت نادر)؛ یه پیش‌فرض امن انتخاب کن
             chosen = MoveType.SLAM;
         } else {
             float r = random.nextFloat() * total;
@@ -315,11 +352,21 @@ public class FalseKnight extends Enemy {
 
     private void executeMove(MoveType move) {
         switch (move) {
-            case SLAM:            startAttackAntic(); break;
-            case RUN_CHARGE:      startRunAntic(); break;
-            case LEAP_OFFENSIVE:  startLeapOffensive(); break;
-            case LEAP_DEFENSIVE:  startLeapDefensive(); break;
-            case MEGA_SLAM:       startMegaSlam(); break;
+            case SLAM:
+                startAttackAntic();
+                break;
+            case RUN_CHARGE:
+                startRunAntic();
+                break;
+            case LEAP_OFFENSIVE:
+                startLeapOffensive();
+                break;
+            case LEAP_DEFENSIVE:
+                startLeapDefensive();
+                break;
+            case MEGA_SLAM:
+                startMegaSlam();
+                break;
         }
     }
 
@@ -328,7 +375,8 @@ public class FalseKnight extends Enemy {
         stateTime = 0f;
         velocity.x = 0;
         isMoving = false;
-        decisionCooldown = (BASE_DECISION_COOLDOWN + random.nextFloat() * 0.4f) * aiCooldownMult;
+        // ☀️ فاصله‌ی تصمیم‌گیری هم با همون ضریب سراسری کوتاه‌تر می‌شه (سریع‌تر تصمیم می‌گیره)
+        decisionCooldown = (BASE_DECISION_COOLDOWN + random.nextFloat() * 0.4f) / speedMultiplier;
     }
 
     // =======================================================================
@@ -346,7 +394,6 @@ public class FalseKnight extends Enemy {
             facing = -facing;
             state = FKState.IDLE;
             stateTime = 0f;
-            // ☀️ توجه: decisionCooldown دست‌نخورده می‌مونه تا مستقیم تصمیم‌گیری ادامه پیدا کنه
         }
     }
 
@@ -370,7 +417,6 @@ public class FalseKnight extends Enemy {
     }
 
     private void updateAttack() {
-        // ☀️ نقطه‌ی برخورد گرز (تقریباً نیمه‌ی انیمیشن ضربه)
         float impactWindowStart = getAnimDuration(animAttack, FALLBACK_ATTACK) * 0.4f;
         if (!impactDamageDealt && stateTime >= impactWindowStart) {
             spawnMaceHitbox(SLAM_DAMAGE);
@@ -388,21 +434,17 @@ public class FalseKnight extends Enemy {
         }
     }
 
-    private static final float HITBOX_Y_LIFT = 10f;
-
     private void spawnMaceHitbox(int damage) {
-        float hitW = 320;
+        float hitW = 320f;
         float hitH = 200f;
         float hitX = (facing == 1) ? bounds.x + bounds.width : bounds.x - hitW;
         float hitY = bounds.y + HITBOX_Y_LIFT;
         Rectangle hitBounds = new Rectangle(hitX, hitY, hitW, hitH);
 
-        // ☀️ استفاده از Projectile به عنوان هیت‌باکس ثابت (سرعت صفر) طبق معماری موجود پروژه
         Animation<TextureRegion> visual = (animAttack != null) ? animAttack : animIdle;
-        Projectile hit = new Projectile(hitBounds, 0f, 0f, HIT_LIFETIME, visual, true, 0f, 0f);
+        Projectile hit = new Projectile(hitBounds, 0f, 0f, HIT_LIFETIME, null, true, 0f, 0f);
         AppStatus.getGameEngine().addProjectile(hit);
-        // توجه: damage در حال حاضر ثابت (۱ واحد استاندارد) اعمال می‌شود؛
-        // اگر Projectile فیلد damage نداشت، این مقدار را در سیستم برخورد مرکزی هندل کنید.
+        ((GameScreen) AppStatus.getScreen()).activeCameraShake();
     }
 
     // =======================================================================
@@ -424,7 +466,7 @@ public class FalseKnight extends Enemy {
     }
 
     private void updateRun() {
-        velocity.x = facing * RUN_SPEED * moveSpeedMult;
+        velocity.x = facing * RUN_SPEED * speedMultiplier;
         isMoving = true;
 
         float xDist = Math.abs(player.getPosition().x - position.x);
@@ -437,7 +479,6 @@ public class FalseKnight extends Enemy {
             startTurn();
             return;
         }
-        // ☀️ وقتی به فاصله‌ی نزدیک رسید، مستقیم زنجیره بشه به کوبیدن گرز (کمبوی طبیعی)
         if (xDist < CLOSE_RANGE) {
             startAttackAntic();
         }
@@ -453,8 +494,8 @@ public class FalseKnight extends Enemy {
         impactDamageDealt = false;
 
         facing = (player.getPosition().x > position.x) ? 1 : -1;
-        velocity.x = facing * LEAP_H_SPEED * moveSpeedMult;
-        velocity.y = LEAP_V_SPEED;
+        velocity.x = facing * LEAP_H_SPEED * speedMultiplier;
+        velocity.y = LEAP_V_SPEED * speedMultiplier;
         isMoving = true;
     }
 
@@ -465,15 +506,13 @@ public class FalseKnight extends Enemy {
         impactDamageDealt = false;
 
         facing = (player.getPosition().x > position.x) ? 1 : -1;
-        // ☀️ مگا اسلم بیشتر عمودیه؛ افقی فقط یه کورس کوچیک به سمت پلیر
-        velocity.x = facing * (LEAP_H_SPEED * 0.4f) * moveSpeedMult;
-        velocity.y = MEGA_SLAM_V_SPEED;
+        velocity.x = facing * (LEAP_H_SPEED * 0.4f) * speedMultiplier;
+        velocity.y = MEGA_SLAM_V_SPEED * speedMultiplier;
         isMoving = true;
     }
 
     private void updateLeapAir() {
         isMoving = true;
-        // ☀️ جاذبه توسط BaseCharacter.update به‌صورت خودکار روی velocity.y اعمال می‌شود
         if (isGrounded() && velocity.y <= 0f) {
             state = FKState.LEAP_LAND;
             stateTime = 0f;
@@ -494,8 +533,7 @@ public class FalseKnight extends Enemy {
             impactDamageDealt = true;
         }
 
-        Animation<TextureRegion> landAnim = animJumpAttackHit;
-        if (isAnimFinished(landAnim, FALLBACK_LEAP_LAND)) {
+        if (isAnimFinished(animJumpAttackHit, FALLBACK_LEAP_LAND)) {
             isMegaSlamActive = false;
             returnToIdleAndDecideLater();
         }
@@ -505,18 +543,20 @@ public class FalseKnight extends Enemy {
         Animation<TextureRegion> wave = (animShockwave != null) ? animShockwave : animIdle;
         if (wave == null) return;
 
-        // ☀️ عرض/ارتفاع موج دقیقاً از خود فریم آرت گرفته می‌شود، نه یه عدد دلخواه ثابت
         TextureRegion sampleFrame = wave.getKeyFrame(0f);
         float waveW = sampleFrame.getRegionWidth();
         float waveH = sampleFrame.getRegionHeight();
         float waveY = bounds.y + HITBOX_Y_LIFT;
+        float waveSpeed = SHOCKWAVE_SPEED * speedMultiplier;
 
         Rectangle rightBounds = new Rectangle(bounds.x + bounds.width, waveY, waveW, waveH);
-        Projectile waveRight = new Projectile(rightBounds, SHOCKWAVE_SPEED, 0f, SHOCKWAVE_LIFETIME, wave, true, 0f, 0f);
+        Projectile waveRight = new Projectile(rightBounds, waveSpeed, 0f, SHOCKWAVE_LIFETIME, wave, true, 0f, 0f);
         AppStatus.getGameEngine().addProjectile(waveRight);
 
+        // ☀️ فرض: Projectile یه overload ۹ پارامتری با فلگ flip داره (چون آرت پیش‌فرض رو به راسته).
+        // اگه این overload وجود نداره، بگو تا با ساخت یه Animation فلیپ‌شده جایگزینش کنم.
         Rectangle leftBounds = new Rectangle(bounds.x - waveW, waveY, waveW, waveH);
-        Projectile waveLeft = new Projectile(leftBounds, -SHOCKWAVE_SPEED, 0f, SHOCKWAVE_LIFETIME, wave, true, 0f, 0f, true);
+        Projectile waveLeft = new Projectile(leftBounds, -waveSpeed, 0f, SHOCKWAVE_LIFETIME, wave, true, 0f, 0f, true);
         AppStatus.getGameEngine().addProjectile(waveLeft);
     }
 
@@ -527,11 +567,10 @@ public class FalseKnight extends Enemy {
         state = FKState.JUMP_BACK_AIR;
         stateTime = 0f;
 
-        // ☀️ جهت مخالف پلیر (عقب‌نشینی)
         int awayDir = (player.getPosition().x > position.x) ? -1 : 1;
-        facing = -awayDir; // باس رو به پلیر می‌مونه ولی به عقب می‌پره
-        velocity.x = awayDir * JUMP_BACK_H_SPEED * moveSpeedMult;
-        velocity.y = JUMP_BACK_V_SPEED;
+        facing = -awayDir;
+        velocity.x = awayDir * JUMP_BACK_H_SPEED * speedMultiplier;
+        velocity.y = JUMP_BACK_V_SPEED * speedMultiplier;
         isMoving = true;
     }
 
@@ -558,21 +597,21 @@ public class FalseKnight extends Enemy {
     public void takeDamage(int damage) {
         if (!isAlive) return;
 
-        // ☀️ در حالت استان، ضربات hp را کم نمی‌کنند؛ فقط شمارش می‌شوند
+        // ☀️ در حالت لوپ استان (Body)، ضربه hp رو کم نمی‌کنه؛ می‌ره به واکنش DeathHit
         if (state == FKState.STUN_BODY) {
-            registerStunHit();
+            stunHitsTaken++;
+            state = FKState.STUN_HIT;
+            stateTime = 0f;
             return;
         }
 
-        // ☀️ در حین زنجیره‌ی سقوط (DeathFall/Hit/Land) آسیب‌پذیر نیست
-        if (state == FKState.DEATH_FALL || state == FKState.DEATH_HIT || state == FKState.DEATH_LAND
-            || state == FKState.STUN_RECOVER) {
+        // ☀️ در حین سقوط (DEATH_LAND)، واکنش (STUN_HIT) یا برخاستن (STUN_RECOVER) آسیب‌پذیر نیست
+        if (state == FKState.DEATH_LAND || state == FKState.STUN_HIT || state == FKState.STUN_RECOVER) {
             return;
         }
 
         hp -= damage;
 
-        // ☀️ ردیابی ضربات پیاپی برای تحریک پرش دفاعی
         recentHitCount++;
         recentHitWindow = RECENT_HIT_WINDOW_DURATION;
 
@@ -581,56 +620,23 @@ public class FalseKnight extends Enemy {
             return;
         }
 
-        // ☀️ رسیدن به ۵۰٪ فقط یک‌بار (در فاز اول) باعث شروع زنجیره‌ی استان می‌شود
         if (!phaseTwo && hp <= maxHp / 2) {
             startCollapseSequence();
         }
     }
 
     private void startCollapseSequence() {
-        state = FKState.DEATH_FALL;
+        state = FKState.DEATH_LAND;
         stateTime = 0f;
         velocity.x = 0;
         velocity.y = 0;
         isMoving = false;
     }
 
-    private void updateDeathFall() {
-        if (isAnimFinished(animDeathFall, FALLBACK_DEATH_FALL)) {
-            state = FKState.DEATH_HIT;
-            stateTime = 0f;
-        }
-    }
-
-    private void updateDeathHit() {
-        if (isAnimFinished(animDeathHit, FALLBACK_DEATH_HIT)) {
-            spawnDeathImpactEffect(); // ☀️ لحظه‌ای که ضربه کاملاً به زمین خورده: پرتابه‌ی ثابت جلوی باس
-            state = FKState.DEATH_LAND;
-            stateTime = 0f;
-        }
-    }
-
     /**
-     * ☀️ وقتی انیمیشن DeathHit کامل تموم شد (یعنی زره واقعاً به زمین خورده)،
-     * یه پرتابه‌ی ثابت (بدون حرکت) جلوی باس روی زمین ظاهر می‌شود.
+     * ☀️ سقوط+فرود ادغام‌شده؛ وقتی تموم شد می‌ره به لوپ Body (حالت استان)
      */
-    private void spawnDeathImpactEffect() {
-        Animation<TextureRegion> visual = (animDeathHit != null) ? animDeathHit : animIdle;
-        if (visual == null) return;
-
-        TextureRegion sampleFrame = visual.getKeyFrame(0f);
-        float impactW = sampleFrame.getRegionWidth();
-        float impactH = sampleFrame.getRegionHeight();
-
-        float impactX = (facing == 1) ? bounds.x + bounds.width : bounds.x - impactW;
-        float impactY = bounds.y + HITBOX_Y_LIFT;
-        Rectangle impactBounds = new Rectangle(impactX, impactY, impactW, impactH);
-
-//        Projectile impact = new Projectile(impactBounds, 0f, 0f, DEATH_IMPACT_LIFETIME, visual, true, 0f, 0f);
-//        AppStatus.getGameEngine().addProjectile(impact);
-    }
-
-    private void updateDeathLand() {
+    private void updateDeathLandCollapse() {
         if (isAnimFinished(animDeathLand, FALLBACK_DEATH_LAND)) {
             state = FKState.STUN_BODY;
             stateTime = 0f;
@@ -638,10 +644,16 @@ public class FalseKnight extends Enemy {
         }
     }
 
-    private void registerStunHit() {
-        stunHitsTaken++;
-        if (stunHitsTaken >= STUN_HITS_REQUIRED) {
-            state = FKState.STUN_RECOVER;
+    /**
+     * ☀️ واکنش کوتاه به ضربه در حالت استان؛ بعدش یا برمی‌گرده Body یا می‌ره StunRecover
+     */
+    private void updateStunHit() {
+        if (isAnimFinished(animDeathHit, FALLBACK_DEATH_HIT)) {
+            if (stunHitsTaken >= STUN_HITS_REQUIRED) {
+                state = FKState.STUN_RECOVER;
+            } else {
+                state = FKState.STUN_BODY;
+            }
             stateTime = 0f;
         }
     }
@@ -654,9 +666,8 @@ public class FalseKnight extends Enemy {
 
     private void beginPhaseTwo() {
         phaseTwo = true;
-        animSpeedMult = 1.4f;
-        moveSpeedMult = 1.35f;
-        aiCooldownMult = 0.6f;
+        // ☀️ طبق درخواست: بعد از استان، همه‌چیز (سرعت حرکت + سرعت انیمیشن + کول‌داون AI) دوبرابر می‌شه
+        speedMultiplier *= 2f;
 
         lastMoves[0] = null;
         lastMoves[1] = null;
@@ -720,8 +731,8 @@ public class FalseKnight extends Enemy {
         return new Corpse(new Rectangle(bounds),
             new Vector2(velocity),
             animDeathLand,
-            scale * mScale,
-            0f, -10f);
+            scale * mScale, mScale,
+            0f, -100f);
     }
 
     // =======================================================================
@@ -733,22 +744,51 @@ public class FalseKnight extends Enemy {
 
         Animation<TextureRegion> anim = null;
         switch (state) {
-            case IDLE:            anim = animIdle; break;
-            case TURN:            anim = animTurn; break;
-            case ATTACK_ANTIC:    anim = animAttackAntic; break;
-            case ATTACK:          anim = animAttack; break;
-            case ATTACK_RECOVER:  anim = animAttackRecover; break;
-            case RUN_ANTIC:       anim = animRunAntic; break;
-            case RUN:             anim = animRun; break;
-            case LEAP_AIR:        anim = animJumpAttack; break;
-            case LEAP_LAND:       anim = animJumpAttackHit; break;
-            case JUMP_BACK_AIR:   anim = animJump; break;
-            case JUMP_BACK_LAND:  anim = animLand; break;
-            case DEATH_FALL:      anim = animDeathFall; break;
-            case DEATH_HIT:       anim = animDeathHit; break;
-            case DEATH_LAND:      anim = animDeathLand; break;
-            case STUN_BODY:       anim = animBody; break;
-            case STUN_RECOVER:    anim = animStunRecover; break;
+            case IDLE:
+                anim = animIdle;
+                break;
+            case TURN:
+                anim = animTurn;
+                break;
+            case ATTACK_ANTIC:
+                anim = animAttackAntic;
+                break;
+            case ATTACK:
+                anim = animAttack;
+                break;
+            case ATTACK_RECOVER:
+                anim = animAttackRecover;
+                break;
+            case RUN_ANTIC:
+                anim = animRunAntic;
+                break;
+            case RUN:
+                anim = animRun;
+                break;
+            case LEAP_AIR:
+                anim = animJumpAttack;
+                break;
+            case LEAP_LAND:
+                anim = animJumpAttackHit;
+                break;
+            case JUMP_BACK_AIR:
+                anim = animJump;
+                break;
+            case JUMP_BACK_LAND:
+                anim = animLand;
+                break;
+            case DEATH_LAND:
+                anim = animDeathLand;
+                break;
+            case STUN_BODY:
+                anim = animBody;
+                break;
+            case STUN_HIT:
+                anim = animDeathHit;
+                break;
+            case STUN_RECOVER:
+                anim = animStunRecover;
+                break;
         }
         if (anim == null) anim = animIdle;
         if (anim == null) return;
@@ -760,7 +800,6 @@ public class FalseKnight extends Enemy {
         float finalW = w * mScale;
         float finalH = h * mScale;
 
-        // ☀️ سنتر کامل اسپرایت داخل باندز ۸۰۰×۶۰۰، بعلاوه‌ی ۲۰۰ پیکسل بالاتر طبق درخواست
         float drawX = bounds.x + (bounds.width - finalW) / 2f;
         float drawY = bounds.y + (bounds.height - finalH) / 2f + SPRITE_Y_LIFT;
 
@@ -777,22 +816,14 @@ public class FalseKnight extends Enemy {
         }
     }
 
-    /**
-     * ☀️ دیباگ کامل: باندز اصلی، رنج نزدیک/متوسط، سنسورهای دیوار و پرتگاه،
-     * پیش‌نمایش هیت‌باکس گرز، و جهت فیس فعلی.
-     * توجه: پرتابه‌ها (Projectile) خودشان مستقل و همیشه هیت‌باکس‌شان را رسم می‌کنند
-     * (در متد Projectile.draw)، پس اینجا فقط مربوط به خودِ باس است.
-     */
     private void drawDebug(Batch batch) {
         batch.end();
         debugRenderer.setProjectionMatrix(batch.getProjectionMatrix());
         debugRenderer.begin(ShapeRenderer.ShapeType.Line);
 
-        // باندز اصلی برخورد باس
         debugRenderer.setColor(Color.RED);
         debugRenderer.rect(bounds.x, bounds.y, bounds.width, bounds.height);
 
-        // مرکز واقعی + محل رسم اسپرایت (برای دیدن افست ۲۰۰ پیکسلی)
         debugRenderer.setColor(Color.MAGENTA);
         float centerX = bounds.x + bounds.width / 2f;
         float centerY = bounds.y + bounds.height / 2f;
@@ -800,7 +831,6 @@ public class FalseKnight extends Enemy {
         debugRenderer.line(centerX, centerY - 20, centerX, centerY + 20);
         debugRenderer.line(centerX, centerY, centerX, centerY + SPRITE_Y_LIFT);
 
-        // رنج نزدیک (زرد) و متوسط (نارنجی) در جهت فیس فعلی
         float rangeY = bounds.y;
         float rangeH = bounds.height;
         float closeX = (facing == 1) ? bounds.x + bounds.width : bounds.x - CLOSE_RANGE;
@@ -812,7 +842,6 @@ public class FalseKnight extends Enemy {
         debugRenderer.setColor(Color.ORANGE);
         debugRenderer.rect(midX, rangeY, midW, rangeH);
 
-        // سنسور دیوار (آبی) و سنسور پرتگاه (فیروزه‌ای)
         float wallSensorX = (facing == 1) ? bounds.x + bounds.width : bounds.x - 2f;
         debugRenderer.setColor(Color.BLUE);
         debugRenderer.rect(wallSensorX, bounds.y + 2f, 2f, bounds.height - 4f);
@@ -821,14 +850,12 @@ public class FalseKnight extends Enemy {
         debugRenderer.setColor(Color.CYAN);
         debugRenderer.rect(ledgeSensorX, bounds.y - 4f, 4f, 4f);
 
-        // پیش‌نمایش هیت‌باکس گرز (سبز) — همون محلی که spawnMaceHitbox توش پرتابه می‌سازه
         float hitW = 320f, hitH = 200f;
         float hitX = (facing == 1) ? bounds.x + bounds.width : bounds.x - hitW;
         float hitY = bounds.y + HITBOX_Y_LIFT;
         debugRenderer.setColor(Color.GREEN);
         debugRenderer.rect(hitX, hitY, hitW, hitH);
 
-        // جهت فیس فعلی (خط بلند سفید)
         debugRenderer.setColor(Color.WHITE);
         float facingLineEndX = centerX + facing * 80f;
         debugRenderer.line(centerX, centerY, facingLineEndX, centerY);
@@ -837,12 +864,6 @@ public class FalseKnight extends Enemy {
         batch.begin();
     }
 
-    /**
-     * ☀️ نوار جون بالای سر — کاملاً تناسبی.
-     * عرض پر شده = HP_BAR_WIDTH * (hp / maxHp)
-     * تعداد خط‌های تفکیک هم بر اساس maxHp دوباره محاسبه می‌شود،
-     * پس با تغییر maxHp (مثلاً از ۱۲ به ۲۰) هیچ‌چیزی نمی‌شکند یا اسکیل غلط نمی‌گیرد.
-     */
     private void drawHealthBar(Batch batch) {
         float barX = bounds.x + bounds.width / 2f - HP_BAR_WIDTH / 2f;
         float barY = bounds.y + bounds.height + HP_BAR_Y_OFFSET;
@@ -856,26 +877,22 @@ public class FalseKnight extends Enemy {
 
         fxRenderer.setProjectionMatrix(batch.getProjectionMatrix());
 
-        // پس‌زمینه (تیره)
         fxRenderer.begin(ShapeRenderer.ShapeType.Filled);
         fxRenderer.setColor(0.1f, 0.1f, 0.1f, 0.8f);
         fxRenderer.rect(barX, barY, HP_BAR_WIDTH, HP_BAR_HEIGHT);
 
-        // پرشدگی (رنگ بر اساس فاز)
         if (phaseTwo) {
-            fxRenderer.setColor(1f, 0.35f, 0.2f, 0.95f); // قرمز/نارنجی برای فاز دوم
+            fxRenderer.setColor(1f, 0.35f, 0.2f, 0.95f);
         } else {
-            fxRenderer.setColor(0.6f, 0.95f, 0.4f, 0.95f); // سبز برای فاز اول
+            fxRenderer.setColor(0.6f, 0.95f, 0.4f, 0.95f);
         }
         fxRenderer.rect(barX, barY, fillWidth, HP_BAR_HEIGHT);
         fxRenderer.end();
 
-        // خط دور
         fxRenderer.begin(ShapeRenderer.ShapeType.Line);
         fxRenderer.setColor(Color.WHITE);
         fxRenderer.rect(barX, barY, HP_BAR_WIDTH, HP_BAR_HEIGHT);
 
-        // ☀️ خط‌های تفکیک تناسبی — تعدادشون از maxHp میاد، پس همیشه درست چیده می‌شن
         fxRenderer.setColor(1f, 1f, 1f, 0.5f);
         for (int i = 1; i < maxHp; i++) {
             float segX = barX + (HP_BAR_WIDTH / (float) maxHp) * i;

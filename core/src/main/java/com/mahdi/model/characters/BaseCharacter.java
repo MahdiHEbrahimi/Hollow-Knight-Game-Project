@@ -10,8 +10,8 @@ public abstract class BaseCharacter {
     // =======================================================
     // 🌟 ثوابت فیزیکی جهانی و غیرقابل تغییر مپ (Global Constants)
     // =======================================================
-    protected static final float GRAVITY = -2800f; // شتاب جاذبه زمین
-    protected static final float TERMINAL_VELOCITY_Y = -1000f; // حداکثر سرعت سقوط مجاز
+    protected final float GRAVITY = -2800f; // شتاب جاذبه زمین
+    protected float TERMINAL_VELOCITY_Y = -1000f; // حداکثر سرعت سقوط مجاز
     protected static float FRICTION = 0.85f; // اصطکاک افقی (کاهش سرعت در زمان توقف)
 
     // ویژگی‌های فیزیکی نمونه
@@ -37,6 +37,12 @@ public abstract class BaseCharacter {
     // جهت حرکت فعلی: 1 = راست، 1- = چپ، 0 = بدون حرکت دستی
     protected float totalTime = 0f;   // زمان سپری‌شده از شروع بازی (یا منطق شخصیت)
     protected float lastAttackTime = -1f;
+
+    public BaseCharacter(float x, float y, float width, float height, float maxXSpeed, float acceleration, int hp, float terminalVelocity) {
+        this(x, y, width, height, maxXSpeed, acceleration, hp);
+        this.TERMINAL_VELOCITY_Y = terminalVelocity;
+
+    }
 
     public BaseCharacter(float x, float y, float width, float height, float maxXSpeed, float acceleration, int hp) {
         this.position = new Vector2(x, y);

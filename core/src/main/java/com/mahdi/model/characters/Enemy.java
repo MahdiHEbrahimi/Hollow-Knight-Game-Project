@@ -6,6 +6,10 @@ import com.mahdi.model.status.AppStatus;
 
 public abstract class Enemy extends BaseCharacter {
 
+    protected Enemy(float x, float y, float width, float height, float maxXSpeed, float acceleration, int hp, float terminal_Velocity) {
+        super(x, y, width, height, maxXSpeed, acceleration, hp, terminal_Velocity);
+    }
+
     protected Enemy(float x, float y, float width, float height, float maxXSpeed, float acceleration, int hp) {
         super(x, y, width, height, maxXSpeed, acceleration, hp);
     }

@@ -21,6 +21,7 @@ import com.mahdi.model.enums.GameAction;
 import com.mahdi.model.characters.enums.State;
 import com.mahdi.model.game.RisingParticle;
 import com.mahdi.model.status.AppStatus;
+import com.mahdi.screen.GameScreen;
 import com.mahdi.screen.manager.SoundManager;
 
 import javax.swing.*;
@@ -537,6 +538,7 @@ public class Player extends BaseCharacter {
         if (!isAlive || lastTimeKnightGotDamaged < 2.0f) return;
         lastTimeKnightGotDamaged = 0;
         hp--;
+        ((GameScreen)AppStatus.getScreen()).activeCameraShake();
         setThrown(new Vector2(0f , 4.5f * THROW_SPEED));
         if (hp <= 0) {
             die();
@@ -546,6 +548,7 @@ public class Player extends BaseCharacter {
     public void takeDamage(int damage, Enemy enemy) {
         if (!isAlive || lastTimeKnightGotDamaged < 2.0f) return;
         hp -= damage;
+        ((GameScreen)AppStatus.getScreen()).activeCameraShake();
         lastTimeKnightGotDamaged = 0;
 
         if (enemy != null){
@@ -906,7 +909,7 @@ public class Player extends BaseCharacter {
         }
 
     // ========== Getter & Setter ==========
-    private final float EYE_SIGHT = 300f;
+    private final float EYE_SIGHT = 450f;
 
     public Vector2 getEyeSight() {
         float x = this.position.x;

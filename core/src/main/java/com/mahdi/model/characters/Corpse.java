@@ -18,6 +18,7 @@ public class Corpse extends BaseCharacter {
     // ☀️ افست‌های دلخواه برای تنظیم موقعیت اسپرایت (هر دشمن مقدار خود را می‌دهد)
     private final float offsetX;
     private final float offsetY;
+    private float flipScaleY = 1f;
 
     /**
      * @param enemyBounds  مستطیل فیزیکی دشمن در لحظهٔ مرگ
@@ -27,6 +28,14 @@ public class Corpse extends BaseCharacter {
      * @param offsetX      جابجایی افقی (پیکسل) – مثبت به راست
      * @param offsetY      جابجایی عمودی (پیکسل) – مثبت به بالا
      */
+
+    public Corpse(Rectangle enemyBounds, Vector2 initialVel, Animation<TextureRegion> deathAnim,
+                  float flipScale,float flipScaleY, float offsetX, float offsetY){
+        this( enemyBounds,  initialVel,  deathAnim,
+         flipScale,  offsetX,  offsetY);
+        this.flipScaleY = flipScaleY;
+    }
+
     public Corpse(Rectangle enemyBounds, Vector2 initialVel, Animation<TextureRegion> deathAnim,
                   float flipScale, float offsetX, float offsetY) {
         super(enemyBounds.x, enemyBounds.y, enemyBounds.width, enemyBounds.height,
@@ -74,7 +83,7 @@ public class Corpse extends BaseCharacter {
         float originX = w / 2f;
         float originY = 0f;
 
-        batch.draw(frame, drawX, drawY, originX, originY, w, h, flipScale, 1f, 0);
+        batch.draw(frame, drawX, drawY, originX, originY, w, h, flipScale, flipScaleY, 0);
         if (AppStatus.DEBUG){
             batch.end();
             if (debugRenderer == null) {
