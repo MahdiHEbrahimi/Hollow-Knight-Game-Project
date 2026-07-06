@@ -8,8 +8,15 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Group;
+import com.mahdi.model.enums.Achievement;
 import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.manager.FontManager;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 public class GameHud extends Group {
 
@@ -45,7 +52,23 @@ public class GameHud extends Group {
 
     // متغیرهای کمکی برای تشخیص تغییرات HP در فریم قبلی
     private int previousHp = -1;
+    private int previousMaxHp = -1;
     private boolean isInitialized = false;
+
+    // ---- اعلان‌های دستاورد ----
+    private static final float NOTIFICATION_DURATION = 5.0f;
+    private static final float FADE_DURATION = 2.0f;
+    private static class Notification {
+        String name;
+        float timer;
+
+        Notification(String name, float timer) {
+            this.name = name;
+            this.timer = timer;
+        }
+    }
+    private final List<Notification> notifications = new ArrayList<>();
+    private final Set<Achievement> notifiedAchievements = new HashSet<>();
 
     public GameHud() {
         this.font = FontManager.getInstance().getEnglishMenuFont();
@@ -69,84 +92,133 @@ public class GameHud extends Group {
 
     @Override
     public void act(float delta) {
-        super.act(delta);
-        hudStateTime += delta;
-        shineStateTime += delta;
+        try {
+            super.act(delta);
+            hudStateTime += delta;
+            shineStateTime += delta;
 
-        if (AppStatus.getGameEngine().getPlayer() == null) return;
+            if (AppStatus.getGameEngine().getPlayer() == null) return;
 
-        // کپی اطلاعات از پلیر
-        this.currentHp = AppStatus.getGameEngine().getPlayer().getHp();
-        this.currentGeo = AppStatus.getGameEngine().getPlayer().getGeo();
-        this.currentSoul = AppStatus.getGameEngine().getPlayer().getSoul();
-        this.maxHP = AppStatus.getGameEngine().getPlayer().getMaxHp();
+            // کپی اطلاعات از پلیر
+            this.maxHP = AppStatus.getGameEngine().getPlayer().getMaxHp();
+            this.currentHp = AppStatus.getGameEngine().getPlayer().getHp();
+            this.currentGeo = AppStatus.getGameEngine().getPlayer().getGeo();
+            this.currentSoul = AppStatus.getGameEngine().getPlayer().getSoul();
 
-        // مقداردهی اولیه برای آرایه قلب‌ها در اولین فریم بازی
-        if (!isInitialized && maxHP > 0) {
-            heartStateTimes = new float[maxHP];
-            heartVisualStates = new int[maxHP];
-            for (int i = 0; i < maxHP; i++) {
-                heartVisualStates[i] = (i < currentHp) ? 3 : 0; // اگر پر بود برود روی شاین، وگرنه خالی ثابت
-            }
-            previousHp = currentHp;
-            isInitialized = true;
-        }
-
-        // آپدیت زمان داخلی انیمیشن هر قلب
-        if (isInitialized) {
-            for (int i = 0; i < maxHP; i++) {
-                heartStateTimes[i] += delta;
+            // اگر maxHP تغییر کرده باشد (مثلاً با فعال شدن گاد مود)، آرایه‌ها را دوباره مقداردهی کن
+            if (maxHP != previousMaxHp) {
+                resizeHeartArrays(maxHP);
+                previousMaxHp = maxHP;
+                previousHp = currentHp;
+                isInitialized = true;
             }
 
-            // 🎯 الگوریتم هوشمند تشخیص صدمه (Damage) یا شفا (Heal)
-            if (currentHp != previousHp) {
-                if (currentHp < previousHp) {
-                    // پلیر آسیب دیده -> قلب‌هایی که از دست رفته‌اند انیمیشن Break بگیرند
-                    for (int i = currentHp; i < previousHp; i++) {
-                        if (i >= 0 && i < maxHP) {
-                            heartVisualStates[i] = 1; // وضعیت شکستن
-                            heartStateTimes[i] = 0f;  // ریست تایمر انیمیشن قلب
-                        }
-                    }
-                } else {
-                    // پلیر شفا یافته -> قلب‌های جدید انیمیشن Refill بگیرند
-                    for (int i = previousHp; i < currentHp; i++) {
-                        if (i >= 0 && i < maxHP) {
-                            heartVisualStates[i] = 2; // وضعیت پر شدن
-                            heartStateTimes[i] = 0f;  // ریست تایمر انیمیشن قلب
-                        }
-                    }
+            // مقداردهی اولیه برای آرایه قلب‌ها در اولین فریم بازی
+            if (!isInitialized && maxHP > 0) {
+                heartStateTimes = new float[maxHP];
+                heartVisualStates = new int[maxHP];
+                for (int i = 0; i < maxHP; i++) {
+                    heartVisualStates[i] = (i < currentHp) ? 3 : 0;
                 }
                 previousHp = currentHp;
+                previousMaxHp = maxHP;
+                isInitialized = true;
             }
 
-            // چک کردن به پایان رسیدن انیمیشن‌های موقت (Break و Refill)
-            for (int i = 0; i < maxHP; i++) {
-                if (heartVisualStates[i] == 1 && heartBreakAnim.isAnimationFinished(heartStateTimes[i])) {
-                    heartVisualStates[i] = 0; // تبدیل به خالی ثابت پس از پایان انیمیشن شکستن
+            // آپدیت زمان داخلی انیمیشن هر قلب
+            if (isInitialized) {
+                for (int i = 0; i < maxHP; i++) {
+                    heartStateTimes[i] += delta;
                 }
-                if (heartVisualStates[i] == 2 && heartRefillAnim.isAnimationFinished(heartStateTimes[i])) {
-                    heartVisualStates[i] = 3; // تبدیل به پر ثابت/شاین پس از پایان انیمیشن پر شدن
+
+                // الگوریتم هوشمند تشخیص صدمه (Damage) یا شفا (Heal)
+                if (currentHp != previousHp) {
+                    if (currentHp < previousHp) {
+                        for (int i = currentHp; i < previousHp; i++) {
+                            if (i >= 0 && i < maxHP) {
+                                heartVisualStates[i] = 1;
+                                heartStateTimes[i] = 0f;
+                            }
+                        }
+                    } else {
+                        for (int i = previousHp; i < currentHp; i++) {
+                            if (i >= 0 && i < maxHP) {
+                                heartVisualStates[i] = 2;
+                                heartStateTimes[i] = 0f;
+                            }
+                        }
+                    }
+                    previousHp = currentHp;
+                }
+
+                for (int i = 0; i < maxHP; i++) {
+                    if (heartVisualStates[i] == 1 && heartBreakAnim.isAnimationFinished(heartStateTimes[i])) {
+                        heartVisualStates[i] = 0;
+                    }
+                    if (heartVisualStates[i] == 2 && heartRefillAnim.isAnimationFinished(heartStateTimes[i])) {
+                        heartVisualStates[i] = 3;
+                    }
                 }
             }
+
+            // ---- اعلان‌های دستاورد ----
+            for (Achievement a : Achievement.values()) {
+                if (a.isActive() && !notifiedAchievements.contains(a)) {
+                    notifications.add(new Notification(a.getDisplayName(), NOTIFICATION_DURATION));
+                    notifiedAchievements.add(a);
+                }
+            }
+
+            Iterator<Notification> it = notifications.iterator();
+            while (it.hasNext()) {
+                Notification n = it.next();
+                n.timer -= delta;
+                if (n.timer <= 0) {
+                    it.remove();
+                }
+            }
+
+        } catch (Exception e) {
+            // نادیده گرفتن خطاهای احتمالی
         }
+    }
+
+    private void resizeHeartArrays(int newSize) {
+        if (newSize <= 0) {
+            isInitialized = false;
+            return;
+        }
+
+        float[] newTimes = new float[newSize];
+        int[] newStates = new int[newSize];
+
+        for (int i = 0; i < newSize; i++) {
+            if (i < currentHp) {
+                newStates[i] = 3;   // پر ثابت/شاین
+            } else {
+                newStates[i] = 0;   // خالی
+            }
+            newTimes[i] = 0f;
+        }
+
+        heartStateTimes = newTimes;
+        heartVisualStates = newStates;
     }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
         super.draw(batch, parentAlpha);
 
-        // 🌟 آفست عمودی برای پایین آوردن کل HUD
-        float yOffset = -60f; // هر چقدر نیاز داری تغییر بده
+        float yOffset = -60f;
 
-        // ۱. نوار اصلی سلامت (health bar intro)
+        // ۱. نوار اصلی سلامت
         TextureRegion currentBarFrame = healthBarIntroAnim.getKeyFrame(hudStateTime, false);
         batch.draw(currentBarFrame, 40, 1300 + yOffset);
 
-        // ۲. قلب‌ها (داینامیک بر اساس maxHP)
+        // ۲. قلب‌ها
         if (isInitialized) {
             float startHeartX = 180f;
-            float heartY = 1320f + yOffset;   // پایین‌تر
+            float heartY = 1320f + yOffset;
             float spacingX = 65f;
 
             for (int i = 0; i < maxHP; i++) {
@@ -154,24 +226,14 @@ public class GameHud extends Group {
                 TextureRegion heartRegionToDraw = emptyHeartFrame;
 
                 switch (heartVisualStates[i]) {
-                    case 0: // خالی
-                        heartRegionToDraw = emptyHeartFrame;
-                        break;
-                    case 1: // در حال شکستن (آسیب)
-                        heartRegionToDraw = heartBreakAnim.getKeyFrame(heartStateTimes[i], false);
-                        break;
-                    case 2: // در حال پر شدن (شفا)
-                        heartRegionToDraw = heartRefillAnim.getKeyFrame(heartStateTimes[i], false);
-                        break;
-                    case 3: // پر ثابت
-                        heartRegionToDraw = filledHeartFrame;
-                        break;
+                    case 0: heartRegionToDraw = emptyHeartFrame; break;
+                    case 1: heartRegionToDraw = heartBreakAnim.getKeyFrame(heartStateTimes[i], false); break;
+                    case 2: heartRegionToDraw = heartRefillAnim.getKeyFrame(heartStateTimes[i], false); break;
+                    case 3: heartRegionToDraw = filledHeartFrame; break;
                 }
 
-                // رسم قلب اصلی
                 batch.draw(heartRegionToDraw, currentHeartX, heartY);
 
-                // اگر قلب پر است، درخشش اضافی رندر شود
                 if (heartVisualStates[i] == 3) {
                     TextureRegion shineFrame = heartShineAnim.getKeyFrame(shineStateTime, true);
                     batch.draw(shineFrame, currentHeartX, heartY);
@@ -187,9 +249,23 @@ public class GameHud extends Group {
         font.setColor(Color.WHITE);
         font.draw(batch, "" + currentGeo, 130, 1255 + yOffset);
         font.draw(batch, "SOUL: " + (int) currentSoul + "%", 60, 1170 + yOffset);
+
+        // ۵. اعلان‌های دستاورد
+        // ۵. اعلان‌های دستاورد
+        float soulTextY = 1170 + yOffset;               // Y متن Soul
+        float lineHeight = 85f;                         // فاصله‌ی بین دو اعلان (همان فاصله‌ی Geo تا Soul)
+        float notificationBaseY = soulTextY - lineHeight; // قدیمی‌ترین اعلان اینجا قرار می‌گیرد
+
+        int count = notifications.size();
+// قدیمی‌ترین (index 0) را در baseY می‌گذاریم، جدیدترین‌ها پایین‌تر می‌روند
+        for (int i = 0; i < count; i++) {
+            Notification n = notifications.get(i);
+            float y = notificationBaseY - i * lineHeight;   // i=0 قدیمی → بالا، i=1 جدید → پایین‌تر
+
+            float alpha = (n.timer > FADE_DURATION) ? 1f : n.timer / FADE_DURATION;
+            font.setColor(1f, 1f, 1f, alpha);
+            font.draw(batch, "Achievement Unlocked: " + n.name, 60, y);
+        }
+        font.setColor(Color.WHITE);
     }
-//    @Override
-//    public void dispose() {
-//        if (hudAtlas != null) hudAtlas.dispose();
-//    }
 }

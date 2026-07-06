@@ -17,6 +17,7 @@ import com.badlogic.gdx.utils.IntArray;                     // ☀️
 import com.mahdi.model.characters.*;
 import com.mahdi.model.characters.enemies.Crawled;
 import com.mahdi.model.characters.enemies.FalseKnight;
+import com.mahdi.model.enums.Achievement;
 import com.mahdi.model.map.SolidBlock;
 import com.mahdi.model.map.TiledMapHelper;
 import com.mahdi.model.status.AppStatus;
@@ -208,6 +209,8 @@ public class GameEngine {
         } catch (Exception e) {
 
         }
+        if (enemies.isEmpty())
+            Achievement.HUNTER.setActive(true);
     }
 
     // ☀️ متد اصلی مدیریت سکه‌ها

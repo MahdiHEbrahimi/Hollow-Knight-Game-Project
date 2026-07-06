@@ -15,7 +15,7 @@ public class ScreenManager {
 
     private HollowKnightGame game;
     // 🌟 تغییر از آبجکت مستقیم به کارخانه/تامین‌کننده اسکرین بعدی
-    private Supplier<BaseScreen> pendingScreenSupplier; 
+    private Supplier<BaseScreen> pendingScreenSupplier;
     private final SpriteBatch batch;
     private final Texture blackOverlay;
 
@@ -56,9 +56,9 @@ public class ScreenManager {
         if (state != TransitionState.NONE) return;
 
         this.pendingScreenSupplier = screenSupplier;
-        this.currentDuration = 1.5f; 
+        this.currentDuration = 5f;
         this.state = TransitionState.FADE_OUT;
-        this.blackScreenAlpha = 0f;
+        this.blackScreenAlpha = 1f;
     }
 
     public void updateAndRender(float delta) {
@@ -80,7 +80,7 @@ public class ScreenManager {
                     game.setScreen(nextScreen);
                     pendingScreenSupplier = null; // پاک کردن رفرنس برای مدیریت حافظه
                 }
-                
+
                 state = TransitionState.FADE_IN;
             }
         } else if (state == TransitionState.FADE_IN) {

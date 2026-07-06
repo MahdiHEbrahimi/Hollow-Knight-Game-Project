@@ -22,7 +22,7 @@ public class MusicManager {
 
     private float fadeTimer = 0f;
     private float fadeInDuration = 3.0f; // 3 seconds for clean start
-    private float crossFadeDuration = 1.5f; // 1.5 seconds for transitioning tracks
+    private float crossFadeDuration = 3.0f; // 1.5 seconds for transitioning tracks
     private float prevMusicVolumeStart = 0f;
 
     private MusicManager() {

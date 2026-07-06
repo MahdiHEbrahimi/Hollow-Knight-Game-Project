@@ -17,6 +17,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.mahdi.model.enums.CheatCode;
 import com.mahdi.model.enums.GameAction;
 import com.mahdi.model.characters.enums.State;
 import com.mahdi.model.game.RisingParticle;
@@ -30,10 +31,10 @@ import java.util.HashMap;
 public class Player extends BaseCharacter {
 
     // ========== ویژگی‌های بازیکن ==========
-    private int maxHp = 20;
+    private int maxHp = 5;
     private int geo = 20;
     private float soul = 67;
-    private float maxSoul = 100;
+    private float maxSoul = 99;
 
     private State currentState;
     private State previousState = State.IDLE; // برای تشخیص پایان انیمیشن‌های یک‌باره
@@ -108,7 +109,7 @@ public class Player extends BaseCharacter {
     private boolean fireballSpawned = false;
 
     public Player(float x, float y) {
-        super(x, y, 80, 120, 700f, 2000f, 20);
+        super(x, y, 80, 120, 700f, 2000f, 5);
 
         this.currentState = State.IDLE;
         this.debugRenderer = new ShapeRenderer();
@@ -230,6 +231,7 @@ public class Player extends BaseCharacter {
         stateTime += delta;                     // پیشبرد تایمر انیمیشن
         lastTimeKnightGotDamaged += delta;
 
+        handleCheats();
         handleFixedAnimation();                 // بررسی پایان انیمیشن‌های قفل‌شده
 
         // ☀️ فوکوس نباید وسط یه دش شروع بشه، وگرنه فیزیک/تایمر دش هنگ می‌کنه
@@ -269,6 +271,40 @@ public class Player extends BaseCharacter {
 
 // ======================= زیرمتدهای خصوصی =========================
 
+
+    private void handleCheats(){
+        if (CheatCode.EMERGENCY_HEAL.isActive()) {
+            increaseHP(1);
+            CheatCode.EMERGENCY_HEAL.setFalse();
+        }
+        if (CheatCode.GOD_MODE.isActive()) {
+            if (maxHp == 5){
+                maxHp = 20;
+                hp = maxHp;
+                CheatCode.GOD_MODE.setFalse();
+            } else {
+                maxHp = 5;
+                hp = maxHp;
+                CheatCode.GOD_MODE.setFalse();
+            }
+        }
+        if (CheatCode.SOUL_REFILL.isActive()){
+            soul = maxSoul;
+            CheatCode.SOUL_REFILL.setFalse();
+        }
+        if (CheatCode.NO_LIMIT.isActive()){
+            airDashCount = 0;
+            hasDoubleJump = true;
+        }
+
+        if (CheatCode.ANTIGRAVITY.isActive()) {
+            this.hasGravity = false;
+            if (GameAction.MOVE_UP.isPressed())
+                this.velocity.y = 1000f;
+            if (GameAction.MOVE_DOWN.isPressed())
+                this.velocity.y = -1000;
+        } else this.hasGravity = true;
+    }
     /**
      * بررسی می‌کند که آیا انیمیشن قفل‌شده (یک‌باره) به پایان رسیده یا خیر.
      * در صورت پایان، قفل را برمی‌دارد و رویداد onFixAnimationFinished را صدا می‌زند.

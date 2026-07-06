@@ -1,0 +1,41 @@
+
+Achievements.png
+size: 1024, 512
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+cheater
+  rotate: false
+  xy: 2, 166
+  size: 268, 268
+  orig: 268, 268
+  offset: 0, 0
+  index: -1
+completion
+  rotate: false
+  xy: 2, 84
+  size: 80, 80
+  orig: 80, 80
+  offset: 0, 0
+  index: -1
+false_knight
+  rotate: false
+  xy: 272, 166
+  size: 268, 268
+  orig: 268, 268
+  offset: 0, 0
+  index: -1
+hunter
+  rotate: false
+  xy: 542, 354
+  size: 80, 80
+  orig: 80, 80
+  offset: 0, 0
+  index: -1
+speedrun
+  rotate: false
+  xy: 2, 2
+  size: 80, 80
+  orig: 80, 80
+  offset: 0, 0
+  index: -1

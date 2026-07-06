@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.mahdi.model.game.CheatManager;
 import com.mahdi.model.game.GameHud;
 import com.mahdi.model.game.GameEngine;
 import com.mahdi.model.status.AppStatus;
@@ -53,6 +54,7 @@ public class GameScreen extends BaseScreen {
         // رسم دنیای بازی با دوربین خودش
         gameBatch.setProjectionMatrix(camera.combined);
         gameEngine.draw(camera, gameBatch);
+        CheatManager.update();
     }
 
     // بعد از رسم دنیا و استیج اصلی، HUD ثابت را رسم می‌کنیم

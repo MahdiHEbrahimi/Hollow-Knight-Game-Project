@@ -17,6 +17,7 @@ import com.mahdi.model.characters.Corpse;
 import com.mahdi.model.characters.Enemy;
 import com.mahdi.model.characters.Player;
 import com.mahdi.model.characters.Projectile;
+import com.mahdi.model.enums.Achievement;
 import com.mahdi.model.map.SolidBlock;
 import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.GameScreen;
@@ -723,6 +724,8 @@ public class FalseKnight extends Enemy {
         if (!isAlive) return;
         super.die();
         state = FKState.DEAD;
+        Achievement.FALSE_KNIGHT.setActive(true);
+        Achievement.COMPLETION.setActive(true);
     }
 
     @Override
