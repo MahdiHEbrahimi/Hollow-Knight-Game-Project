@@ -300,7 +300,7 @@ public class HornheadHusk extends Enemy {
         return new Corpse(new Rectangle(bounds),
             new Vector2(velocity),
             animDeathLand,
-            scale * mScale * 1.2f,
+            scale * mScale * 1.2f,mScale,
             0f, -10f);
     }
 

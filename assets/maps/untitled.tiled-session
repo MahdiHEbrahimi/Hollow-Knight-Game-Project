@@ -1,8 +1,8 @@
 {
     "activeFile": "untitled.tmx",
     "expandedProjectPaths": [
-        ".",
         "map 1",
+        ".",
         "assets"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
@@ -134,7 +134,7 @@
             "scale": 0.125,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 13996,
+                "x": 12172,
                 "y": 3236
             }
         },

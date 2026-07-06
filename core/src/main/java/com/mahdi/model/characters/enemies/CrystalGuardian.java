@@ -38,6 +38,7 @@ public class CrystalGuardian extends Enemy {
         LASER_CIRCLE, SHOOT,
         DEAD
     }
+
     private GuardianState state = GuardianState.PATROL_IDLE;
     private float stateTime = 0f;
 
@@ -77,14 +78,14 @@ public class CrystalGuardian extends Enemy {
             atlas = new TextureAtlas("enemies/CrystalGuardian/CrystalGuardian.atlas");
         }
 
-        animIdle        = createAnimation("Idle",          0.15f, Animation.PlayMode.LOOP);
-        animTurn        = createAnimation("Turn",          0.1f,  Animation.PlayMode.NORMAL);
-        animLaserCircle = createAnimation("LaserCircle",   0.08f, Animation.PlayMode.LOOP);
-        animShoot       = createAnimation("Shoot",         0.06f, Animation.PlayMode.NORMAL);
-        animRun         = createAnimation("Run",           0.08f, Animation.PlayMode.LOOP);
-        animEvade       = createAnimation("Evade",         0.06f, Animation.PlayMode.NORMAL);
-        animDeathLand   = createAnimation("Death Land",    0.1f,  Animation.PlayMode.NORMAL);
-        animLaserBeam   = createAnimation("CrystalLaser",  0.05f, Animation.PlayMode.LOOP);
+        animIdle = createAnimation("Idle", 0.15f, Animation.PlayMode.LOOP);
+        animTurn = createAnimation("Turn", 0.1f, Animation.PlayMode.NORMAL);
+        animLaserCircle = createAnimation("LaserCircle", 0.08f, Animation.PlayMode.LOOP);
+        animShoot = createAnimation("Shoot", 0.06f, Animation.PlayMode.NORMAL);
+        animRun = createAnimation("Run", 0.08f, Animation.PlayMode.LOOP);
+        animEvade = createAnimation("Evade", 0.06f, Animation.PlayMode.NORMAL);
+        animDeathLand = createAnimation("Death Land", 0.1f, Animation.PlayMode.NORMAL);
+        animLaserBeam = createAnimation("CrystalLaser", 0.05f, Animation.PlayMode.LOOP);
 
         if (debugRenderer == null) {
             debugRenderer = new ShapeRenderer();
@@ -230,7 +231,7 @@ public class CrystalGuardian extends Enemy {
         float beamH = firstFrame.getRegionHeight();
 
         // مستطیل برخورد دقیقاً به اندازه انیمیشن و در مرکز نقطه شلیک
-        Rectangle laserHitbox = new Rectangle(shootX - beamW/2f, shootY - beamH/2f, beamW, beamH);
+        Rectangle laserHitbox = new Rectangle(shootX - beamW / 2f, shootY - beamH / 2f, beamW, beamH);
 
         // پرتابه ثابت (سرعت صفر) بدون افست اضافی
         Projectile laser = new Projectile(laserHitbox, 0f, 0f, LASER_LIFETIME, animLaserBeam, true, 0f, 0f);
@@ -288,7 +289,7 @@ public class CrystalGuardian extends Enemy {
         return new Corpse(new Rectangle(bounds),
             new Vector2(velocity),
             animDeathLand,
-            scale * mScale,
+            scale * mScale, mScale,
             -30f * mScale, 0);
     }
 
@@ -297,12 +298,23 @@ public class CrystalGuardian extends Enemy {
     public void draw(Batch batch) {
         Animation<TextureRegion> anim = null;
         switch (state) {
-            case PATROL_WALK:   anim = animRun; break;
-            case PATROL_IDLE:   anim = animIdle; break;
-            case TURN:          anim = animTurn; break;
-            case LASER_CIRCLE:  anim = animEvade; break;
-            case SHOOT:         anim = animShoot; break;
-            case DEAD:          return;
+            case PATROL_WALK:
+                anim = animRun;
+                break;
+            case PATROL_IDLE:
+                anim = animIdle;
+                break;
+            case TURN:
+                anim = animTurn;
+                break;
+            case LASER_CIRCLE:
+                anim = animEvade;
+                break;
+            case SHOOT:
+                anim = animShoot;
+                break;
+            case DEAD:
+                return;
         }
         if (anim == null) {
             anim = animIdle;
