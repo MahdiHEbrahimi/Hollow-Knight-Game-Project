@@ -16,7 +16,9 @@ public enum GameAction {
     FOCUS(Keys.F),
 
     PAUSE(Keys.ESCAPE),
-    INVENTORY(Keys.I);
+    INVENTORY(Keys.I),
+    SPELL_UP(Keys.L),
+    SPELL_FORWARD(Keys.O);
 
     private final int defaultKey;
 

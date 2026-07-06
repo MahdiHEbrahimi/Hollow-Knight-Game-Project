@@ -95,6 +95,7 @@ public class HornheadHusk extends Enemy {
     @Override
     protected void updateCustomLogic(float delta) {
         if (state == HuskState.DEAD) return;
+        shieldTime += delta;
         stateTime += delta;
 
         switch (state) {

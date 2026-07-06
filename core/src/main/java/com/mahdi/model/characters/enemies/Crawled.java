@@ -66,6 +66,7 @@ public class Crawled extends Enemy {
     @Override
     public void updateCustomLogic(float delta) {
         if (state == EnemyState.DEAD) return;
+        shieldTime += delta;
         stateTime += delta;
 
         switch (state) {

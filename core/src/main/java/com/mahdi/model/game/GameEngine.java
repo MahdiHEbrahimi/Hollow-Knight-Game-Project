@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;                     // ☀️
 import com.mahdi.model.characters.*;
 import com.mahdi.model.characters.enemies.Crawled;
+import com.mahdi.model.characters.enemies.FalseKnight;
 import com.mahdi.model.map.SolidBlock;
 import com.mahdi.model.map.TiledMapHelper;
 import com.mahdi.model.status.AppStatus;
@@ -130,10 +131,17 @@ public class GameEngine {
         try {
             for (Projectile p : projectiles) {
                 p.update(delta);
-                if (p.getBounds().overlaps(player.getBounds()))
-                    player.takeDamage(1, null);
-                if (!p.isActive())
-                    projectiles.remove(p);
+                if (p.damagesPlayer()){
+                    if (p.getBounds().overlaps(player.getBounds()))
+                        player.takeDamage(1, null);
+                    if (!p.isActive())
+                        projectiles.remove(p);
+                } else {
+                    for (Enemy e : enemies) {
+                        if (p.getBounds().overlaps(e.getBounds()) && !(e instanceof FalseKnight))
+                            e.takeDamage(3);
+                    }
+                }
             }
         } catch (Exception e) {
         }

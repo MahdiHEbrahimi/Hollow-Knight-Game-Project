@@ -107,6 +107,7 @@ public class CrystalGuardian extends Enemy {
     @Override
     protected void updateCustomLogic(float delta) {
         if (state == GuardianState.DEAD) return;
+        shieldTime += delta;
         stateTime += delta;
         cooldownTimer -= delta;
 
@@ -290,7 +291,7 @@ public class CrystalGuardian extends Enemy {
             new Vector2(velocity),
             animDeathLand,
             scale * mScale, mScale,
-            -30f * mScale, 0);
+            -10 * mScale, 0);
     }
 
     // ===================== رسم =====================

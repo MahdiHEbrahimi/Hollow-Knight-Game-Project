@@ -159,7 +159,7 @@
         "assets/town_well_top.tsx"
     ],
     "project": "untitled.tiled-project",
-    "property.type": "string",
+    "property.type": "int",
     "recentFiles": [
         "assets/town_well_top.tsx",
         "assets/well_extension_0000_2.tsx",

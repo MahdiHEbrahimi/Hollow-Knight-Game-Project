@@ -76,6 +76,7 @@ public class Mosquito extends Enemy {
 
     @Override
     protected void updateCustomLogic(float delta) {
+        shieldTime += delta;
         if (state == MosquitoState.DEAD) return;
         stateTime += delta;
 

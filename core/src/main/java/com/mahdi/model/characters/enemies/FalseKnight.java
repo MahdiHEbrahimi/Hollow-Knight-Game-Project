@@ -203,6 +203,7 @@ public class FalseKnight extends Enemy {
     protected void updateCustomLogic(float delta) {
         if (state == FKState.DEAD) return;
 
+        shieldTime += delta;
         stateTime += delta * speedMultiplier;
         updateRecentHitWindow(delta);
 

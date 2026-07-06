@@ -24,14 +24,12 @@ import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.GameScreen;
 import com.mahdi.screen.manager.SoundManager;
 
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Player extends BaseCharacter {
 
     // ========== ویژگی‌های بازیکن ==========
-    ;
     private int maxHp = 20;
     private int geo = 20;
     private float soul = 67;
@@ -67,6 +65,16 @@ public class Player extends BaseCharacter {
     private boolean isDashing = false;
     private float focusActiveTime = 0f;
 
+    // ===================== دش هوایی (سقف تعداد) =====================
+    // ☀️ طبق درخواست: بیشتر از این تعداد، بدون برخورد با زمین نمی‌شه دش زد
+    private static final int MAX_AIR_DASHES = 2;
+    private int airDashCount = 0;
+
+    // ===================== دیوار (پنجه‌ی مانتیس: Wall Slide / Wall Jump) =====================
+    private static final float WALL_SLIDE_MAX_FALL_SPEED = -200f; // ☀️ سرعت خیلی کم سر خوردن روی دیوار
+    private static final float WALL_JUMP_PUSH_SPEED = 400f;
+    private static final float WALL_JUMP_UP_FORCE = JUMP_FORCE * 0.8f;
+
     // ========== حسگرهای محیطی (توسط GameStatus پر می‌شوند) ==========
     private boolean touchingWallLeft = false;
     private boolean touchingWallRight = false;
@@ -82,9 +90,22 @@ public class Player extends BaseCharacter {
     Sound attackSound = Gdx.audio.newSound(Gdx.files.internal("SFX/hero_damage.mp3"));
     Sound healSound = Gdx.audio.newSound(Gdx.files.internal("SFX/focus_health_heal.wav"));
 
+    private Rectangle attackHitbox = null;  // مستطیل هیت‌باکس موقت (برای دیباگ + برخورد)
 
+    // ===================== ابیلیتی‌ها (اسپل‌ها) =====================
+    // ☀️ فرض: این دو تا باید به enum GameAction اضافه بشن (مثل ATTACK/DASH/FOCUS)
+    //   SPELL_UP      -> انفجار جادویی رو به بالا (۳ ضربه‌ی سریع)
+    //   SPELL_FORWARD -> پرتابه‌ی جادویی افقی (پیرسینگ)
+    private static final float UPWARD_BLAST_TOTAL_DURATION = 0.6f; // ☀️ با طول انیمیشن Scream هماهنگش کن
+    private static final int UPWARD_BLAST_HIT_COUNT = 3;
+    private static final float UPWARD_BLAST_PULSE_WIDTH = 0.06f;   // هر پنجره‌ی هیت‌باکس چقدر باز بمونه
+    private float abilityElapsed = 0f;
+    private int abilityHitsFired = 0;
 
-    private Rectangle attackHitbox = null;  // مستطیل هیت‌باکس موقت (برای دیباگ)
+    private static final float FIREBALL_SPEED = 900f;
+    private static final float FIREBALL_LIFETIME = 2.5f;
+    private static final float FIREBALL_SPAWN_WINDOW = 0.3f; // ☀️ نسبت به شروع کست؛ با طول Fireball Cast هماهنگش کن
+    private boolean fireballSpawned = false;
 
     public Player(float x, float y) {
         super(x, y, 80, 120, 700f, 2000f, 20);
@@ -148,7 +169,7 @@ public class Player extends BaseCharacter {
             vfxAtlas = new TextureAtlas("Knight_Animations/vfx.atlas");
         vfxAnimations = new HashMap<>();
 
-// انفجارها
+        // انفجارها
         loadVfxAnimation("Blast", "Blast", 0.08f, Animation.PlayMode.NORMAL);
         loadVfxAnimation("Dash Effect", "Dash Effect", 0.03f, Animation.PlayMode.NORMAL);
         loadVfxAnimation("SlashEffect", "SlashEffect", 0.04f, Animation.PlayMode.NORMAL);
@@ -161,6 +182,8 @@ public class Player extends BaseCharacter {
         loadVfxAnimation("Shockwave Spurt", "Shockwave Spurt", 0.05f, Animation.PlayMode.NORMAL);
         loadVfxAnimation("SoulScream", "SoulScream", 0.07f, Animation.PlayMode.NORMAL);
         loadVfxAnimation("ShadowScream", "ShadowScream", 0.07f, Animation.PlayMode.NORMAL);
+        loadVfxAnimation("SoulBall", "SoulBall", 0.2f, Animation.PlayMode.NORMAL);
+
 
     }
 
@@ -199,23 +222,40 @@ public class Player extends BaseCharacter {
         return touchingWallRight;
     }
 
+    // =======================================================================
+    // 🌟 حلقه اصلی منطق
+    // =======================================================================
     @Override
     protected void updateCustomLogic(float delta) {
         stateTime += delta;                     // پیشبرد تایمر انیمیشن
         lastTimeKnightGotDamaged += delta;
 
         handleFixedAnimation();                 // بررسی پایان انیمیشن‌های قفل‌شده
+
+        // ☀️ فوکوس نباید وسط یه دش شروع بشه، وگرنه فیزیک/تایمر دش هنگ می‌کنه
+        if (!isDashing && handleFocus(delta)) return;
+
         int direction = 0;
 
-        if (handleFocus(delta)) return;              // اگر فوکوس شروع/پایان یافت، بقیه را اجرا نکن
-        if (!isFocusActive()) {
-            if (handleDash(delta)) return;          // اگر دش فعال شد، برگرد
-            if (handleAttack()) return;             // اگر حمله شروع شد، برگرد
-            handleJump();                           // مدیریت پرش (می‌تواند بدون return ادامه دهد)
+        // ☀️ موقع فوکوس یا حین یه ابیلیتی (SCREAM/FIREBALL_CAST)، همه‌چیز باید قفل باشه
+        boolean inputBlocked = isFocusActive() || isFullyLockedByAbility();
 
-            handleVariableJump();                   // کاهش سرعت پرش با رها کردن دکمه
-            direction = handleMovementInput(delta);
-        }  // دریافت جهت از ورودی و اعمال move
+        if (!inputBlocked) {
+            boolean dashing = handleDash(delta); // ☀️ حالا برای کل مدت دش true برمی‌گردونه، نه فقط فریم اول
+            if (!dashing) {
+                if (!handleAbilityInput()) {         // ☀️ جدید: شروع اسپل‌ها
+                    if (!handleAttack()) {           // اگر حمله شروع شد، بقیه این فریم اجرا نشه
+                        handleJump();                // مدیریت پرش
+                        handleVariableJump();        // کاهش سرعت پرش با رها کردن دکمه
+                        direction = handleMovementInput(delta);
+                    }
+                }
+            }
+        } else if (isDashing) {
+            // ☀️ احتیاطی: اگه هم‌زمان قفل (مثلاً فوکوس نگه داشته شده) و در حال دش بودیم،
+            // فیزیک/تایمر دش باید همچنان تا آخر پیش بره وگرنه isDashing برای همیشه true می‌مونه
+            handleDash(delta);
+        }
 
         boolean isTouchingWall = (touchingWallLeft && direction == -1) || (touchingWallRight && direction == 1);
         boolean isFallingDown = velocity.y < 0 && !isGrounded();
@@ -224,6 +264,7 @@ public class Player extends BaseCharacter {
 
         updateSmokeParticles(delta);            // به‌روزرسانی و تولید ذرات دود
         updateVFX(delta);                       // به‌روزرسانی افکت‌های بصری
+        updateAbilities(delta);                 // ☀️ منطق زمان‌بندی ابیلیتی‌ها (۳ ضربه بالای سر / لحظه‌ی شلیک فایربال)
     }
 
 // ======================= زیرمتدهای خصوصی =========================
@@ -240,6 +281,11 @@ public class Player extends BaseCharacter {
             isFixAnimationActive = false;
             onFixAnimationFinished();
         }
+    }
+
+    /** ☀️ حین کست ابیلیتی‌ها (SCREAM / FIREBALL_CAST)، هیچ ورودی دیگه‌ای پردازش نشه */
+    private boolean isFullyLockedByAbility() {
+        return isFixAnimationActive && (currentState == State.SCREAM || currentState == State.FIREBALL_CAST);
     }
 
     /**
@@ -276,26 +322,32 @@ public class Player extends BaseCharacter {
 
     /**
      * مدیریت دش (Dash):
-     * - اگر دکمه دش تازه فشرده شود، startDash را صدا می‌زند.
-     * - اگر در حالت isDashing باشیم (حرکت مستقل دش)، جابه‌جایی و تایمر را به‌روز می‌کند.
+     * - اگر دکمه دش تازه فشرده شود (و سقف دش هوایی رد نشده)، startDash را صدا می‌زند.
+     * - در تمام مدتی که isDashing فعاله، جابه‌جایی/تایمر را به‌روز می‌کند و true برمی‌گرداند
+     *   تا هیچ اکشن دیگری (حمله/پرش/حرکت) وسط دش اجرا نشود.
      *
-     * @return true اگر دش تازه شروع شد (برای return از متد اصلی)
+     * @return true اگر در حال حاضر در حال دش هستیم (برای مسدود کردن بقیه‌ی ورودی‌ها)
      */
     private boolean handleDash(float delta) {
-        if (GameAction.DASH.isJustPressed()) {
+        if (GameAction.DASH.isJustPressed() && !isDashing && canDash()) {
             startDash();
-            return true;
         }
 
         if (isDashing) {
             this.position.x += ((facingRight ? 1 : -1) * DASH_SPEED) * delta;
             applyNoGravity(delta);
             dashTimer -= delta;
-            if (dashTimer < 0) {
+            if (dashTimer <= 0f) {
                 isDashing = false;
             }
+            return true;
         }
         return false;
+    }
+
+    /** ☀️ سقف تعداد دش بدون برخورد با زمین */
+    private boolean canDash() {
+        return isGrounded() || airDashCount < MAX_AIR_DASHES;
     }
 
     /**
@@ -320,10 +372,31 @@ public class Player extends BaseCharacter {
     }
 
     /**
+     * ☀️ مدیریت ابیلیتی‌ها (اسپل‌ها):
+     * - SPELL_UP      -> انفجار جادویی رو به بالا (۳ ضربه)
+     * - SPELL_FORWARD -> پرتابه‌ی جادویی افقی
+     *
+     * @return true اگر یکی از ابیلیتی‌ها شروع شد
+     */
+    private boolean handleAbilityInput() {
+        if (isFixAnimationActive) return false; // نباید یه انیمیشن قفل‌شده‌ی دیگه رو کنسل کنه
+
+        if (GameAction.SPELL_UP.isJustPressed()) {
+            startUpwardBlast();
+            return true;
+        }
+        if (GameAction.SPELL_FORWARD.isJustPressed()) {
+            startForwardFireball();
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * مدیریت پرش (Jump):
      * - پرش از زمین
      * - پرش دوبل در هوا
-     * - پرش از دیوار
+     * - پرش از دیوار (جهت بر اساس سمتی که به دیوار چسبیده، نه facingRight)
      */
     private void handleJump() {
         if (!GameAction.JUMP.isJustPressed()) return;
@@ -340,9 +413,11 @@ public class Player extends BaseCharacter {
             stateTime = 0f;
             isFixAnimationActive = true;
         } else if (currentState == State.WALL_SLIDE && !isGrounded()) {
-            float wallJumpX = (facingRight ? -1 : 1) * 400f;
-            velocity.x = wallJumpX;
-            velocity.y = JUMP_FORCE * 0.8f;
+            // ☀️ باگ قبلی: جهت از facingRight می‌اومد؛ الان دقیقاً بر اساس سمت دیواره
+            int pushDir = touchingWallLeft ? 1 : (touchingWallRight ? -1 : (facingRight ? -1 : 1));
+            velocity.x = pushDir * WALL_JUMP_PUSH_SPEED;
+            velocity.y = WALL_JUMP_UP_FORCE;
+            facingRight = pushDir > 0; // بعد از پرش، رو به همون طرفی نگاه کنه که پرتاب شده
             setGrounded(false);
             currentState = State.WALL_JUMP;
             stateTime = 0f;
@@ -388,16 +463,19 @@ public class Player extends BaseCharacter {
 
         if (!isGrounded()) {
             // در هوا
-            if (isTouchingWall && isFallingDown && !GameAction.DASH.isPressed()) {
+            if (isTouchingWall && isFallingDown && !isDashing) {
                 currentState = State.WALL_SLIDE;
-                velocity.y = Math.max(velocity.y, -200f); // محدود کردن سرعت سقوط روی دیوار
+                velocity.y = Math.max(velocity.y, WALL_SLIDE_MAX_FALL_SPEED); // سر خوردن با سرعت خیلی کم
                 hasDoubleJump = true; // شارژ پرش دوبل
-            } else if (currentState != State.WALL_SLIDE && currentState != State.LANDING) {
+            } else if (currentState != State.LANDING) {
+                // ☀️ باگ قبلی: اینجا "currentState != State.WALL_SLIDE" هم شرط بود که باعث می‌شد
+                // یه‌بار وارد WALL_SLIDE که می‌شدیم، رها کردن دکمه یا برگشتن جهت هیچ‌وقت ازش خارجمون نکنه.
                 currentState = (velocity.y > 0) ? State.JUMPING : State.FALLING;
             }
         } else {
             // روی زمین
             hasDoubleJump = true; // شارژ پرش دوبل
+            airDashCount = 0;     // ☀️ لمس زمین، شمارنده‌ی دش هوایی رو ریست می‌کنه
             if (previousState == State.FALLING || previousState == State.WALL_SLIDE) {
                 currentState = State.LANDING;
                 stateTime = 0f;
@@ -462,6 +540,41 @@ public class Player extends BaseCharacter {
                 effectActive = false;
                 currentEffect = null;
             }
+        }
+    }
+
+    /**
+     * ☀️ زمان‌بندی داخلیِ ابیلیتی‌ها:
+     * - SCREAM: هیت‌باکس رو در ۳ پنجره‌ی کوتاه، پخش‌شده در طول UPWARD_BLAST_TOTAL_DURATION، پالس می‌زنه.
+     * - FIREBALL_CAST: دقیقاً یه‌بار، در لحظه‌ی FIREBALL_SPAWN_WINDOW، پرتابه رو می‌سازه.
+     */
+    private void updateAbilities(float delta) {
+        if (currentState == State.SCREAM && isFixAnimationActive) {
+            updateUpwardBlastTicks(delta);
+        } else if (currentState == State.FIREBALL_CAST && isFixAnimationActive) {
+            updateFireballCast();
+        }
+    }
+
+    private void updateUpwardBlastTicks(float delta) {
+        abilityElapsed += delta;
+
+        float tickInterval = UPWARD_BLAST_TOTAL_DURATION / UPWARD_BLAST_HIT_COUNT;
+        int shouldHaveFired = Math.min(UPWARD_BLAST_HIT_COUNT, 1 + (int) (abilityElapsed / tickInterval));
+
+        if (shouldHaveFired > abilityHitsFired) {
+            abilityHitsFired = shouldHaveFired;
+            pulseUpwardBlastHitbox();
+        } else if (attackHitbox != null && (abilityElapsed % tickInterval) > UPWARD_BLAST_PULSE_WIDTH) {
+            // ☀️ بین دو ضربه، هیت‌باکس خاموش بشه که یه ضربه چند بار حساب نشه
+            clearAttackHitBox();
+        }
+    }
+
+    private void updateFireballCast() {
+        if (!fireballSpawned && stateTime >= FIREBALL_SPAWN_WINDOW) {
+            spawnFireballProjectile();
+            fireballSpawned = true;
         }
     }
 
@@ -531,7 +644,6 @@ public class Player extends BaseCharacter {
     }
 
 
-
     private  float lastTimeKnightGotDamaged = 0;
 
     public void takeDamageFormGround(){
@@ -578,15 +690,18 @@ public class Player extends BaseCharacter {
 
     // ========== رویدادهای شروع/پایان انیمیشن‌های قفل‌شده ==========
     private void startDash() {
-        com.mahdi.screen.manager.SoundManager.getInstance().playSound(dashSound);
+        SoundManager.getInstance().playSound(dashSound);
         currentState = State.DASH;
         stateTime = 0f;
         isFixAnimationActive = true;
         isDashing = true;
-        dashTimer = 2f;
+        dashTimer = DASH_DURATION; // ☀️ باگ قبلی: اینجا 2f (دو ثانیه!) هاردکد شده بود
         velocity.y = 0; // در هنگام دش جاذبه تعلیق می‌شود (اختیاری)
         // سرعت افقی را تنظیم کن
         velocity.x = (facingRight ? 1 : -1) * DASH_SPEED;
+        if (!isGrounded()) {
+            airDashCount++;
+        }
         triggerEffect("Dash Effect", facingRight);
     }
 
@@ -646,6 +761,10 @@ public class Player extends BaseCharacter {
                     enemy.setThrown(new Vector2(-THROW_SPEED, 0));
                 }
                 break;
+            case SCREAM:
+                // ☀️ ضربه‌ی بالای سر: یه پرتاب کوچیک رو به بالا
+                enemy.setThrown(new Vector2(0, THROW_SPEED * 0.5f));
+                break;
         }
 
         enemy.takeDamage(1);
@@ -696,6 +815,62 @@ public class Player extends BaseCharacter {
         return attackHitbox;
     }
 
+    // =======================================================================
+    // 🌟 ابیلیتی ۱: انفجار جادویی رو به بالا (۳ ضربه‌ی سریع)
+    // =======================================================================
+    private void startUpwardBlast() {
+        currentState = State.SCREAM;
+        stateTime = 0f;
+        isFixAnimationActive = true;
+        velocity.x = 0;
+        triggerEffect("SoulScream", facingRight);
+
+        abilityElapsed = 0f;
+        abilityHitsFired = 0;
+        pulseUpwardBlastHitbox(); // اولین ضربه بلافاصله فعال بشه
+    }
+
+    /** ☀️ یه پنجره‌ی هیت کوتاه دقیقاً بالای سر بازیکن باز می‌کنه؛ از همون قرارداد attackHitbox/attackWasSuccessful استفاده می‌کنه */
+    private void pulseUpwardBlastHitbox() {
+        float hitW = bounds.width * 2f;
+        float hitH = 220f;
+        attackHitbox = new Rectangle(
+            bounds.x + (bounds.width - hitW) / 2f,
+            bounds.y + bounds.height,
+            hitW,
+            hitH
+        );
+    }
+
+    // =======================================================================
+    // 🌟 ابیلیتی ۲: پرتابه‌ی جادویی افقی (پیرسینگ)
+    // =======================================================================
+    private void startForwardFireball() {
+        currentState = State.FIREBALL_CAST;
+        stateTime = 0f;
+        isFixAnimationActive = true;
+        velocity.x = 0;
+        fireballSpawned = false;
+        triggerEffect("Blast", facingRight);
+    }
+
+    private void spawnFireballProjectile() {
+        Animation<TextureRegion> visual = vfxAnimations.get("SoulBall");
+        if (visual == null) return;
+
+        float projW = 70f, projH = 50f;
+        float px = facingRight ? (bounds.x + bounds.width) : (bounds.x - projW);
+        float py = bounds.y + bounds.height * 0.5f - projH / 2f;
+        Rectangle projBounds = new Rectangle(px, py, projW, projH);
+
+        float vx = facingRight ? FIREBALL_SPEED : -FIREBALL_SPEED;
+
+        // ☀️ فرض: damagesPlayer=false یعنی این پرتابه به دشمن‌ها آسیب می‌زنه
+        // (متقارن با پرتابه‌های دشمن که damagesPlayer=true هستن). حتماً با GameEngine چک کنید.
+        Projectile fireball = new Projectile(projBounds, vx, 0f, FIREBALL_LIFETIME, visual, false, 0f, 0f, !facingRight);
+        AppStatus.getGameEngine().addProjectile(fireball);
+    }
+
     private void startFocus() {
         focusSFX.play();
         if (currentState != State.FOCUS_START && currentState != State.FOCUS) {
@@ -722,7 +897,7 @@ public class Player extends BaseCharacter {
      * پس از پایان یک انیمیشن یک‌باره (NORMAL) صدا زده می‌شود.
      */
     private void onFixAnimationFinished() {
-        attackHitbox = null;   // هیت‌باکس دیباگ حذف بشه
+        attackHitbox = null;   // هیت‌باکس دیباگ/برخورد حذف بشه
         switch (currentState) {
             case LANDING:
                 currentState = State.IDLE;
@@ -773,8 +948,8 @@ public class Player extends BaseCharacter {
 
         drawGlow(batch);
         drawBlackParticles(batch);
-        drawKnight(batch, frame);
         drawVFX(batch);
+        drawKnight(batch, frame);
         drawDebug(batch);
     }
 
@@ -867,9 +1042,14 @@ public class Player extends BaseCharacter {
                 offsetY = 30f;
                 scaleFactorY = scaleFactorX = 2.0f;
                 break;
+            case "SoulScream":
+            case "ShadowScream":
+                offsetY = bounds.height + 40f; // ☀️ دقیقاً بالای سر
+                scaleFactorY = scaleFactorX = 2.0f;
+                break;
             case "Blast":
             default:
-                // بدون آفست اضافه
+                offsetX = 120f * (facingRight ? 1 : -1);
                 break;
         }
 
@@ -900,13 +1080,13 @@ public class Player extends BaseCharacter {
         batch.begin();
     }
 
-        public void die() {
-            // todo
-            this.isAlive = false;
-            this.hasGravity = true;
-            this.velocity.x = 0;
-            this.isMoving = false;
-        }
+    public void die() {
+        // todo
+        this.isAlive = false;
+        this.hasGravity = true;
+        this.velocity.x = 0;
+        this.isMoving = false;
+    }
 
     // ========== Getter & Setter ==========
     private final float EYE_SIGHT = 450f;

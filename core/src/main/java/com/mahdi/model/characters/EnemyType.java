@@ -36,7 +36,7 @@ public enum EnemyType {
     FALSE_KNIGHT ("false knight"){
         @Override
         public Enemy getInstance(float x, float y, Player player) {
-            return new FalseKnight(x, y, player, 12);
+            return new FalseKnight(x, y, player, 40);
         }
     };
 

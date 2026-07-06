@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.mahdi.model.status.AppStatus;
 
 public abstract class Enemy extends BaseCharacter {
+    protected float shieldTime = 0f;
 
     protected Enemy(float x, float y, float width, float height, float maxXSpeed, float acceleration, int hp, float terminal_Velocity) {
         super(x, y, width, height, maxXSpeed, acceleration, hp, terminal_Velocity);
@@ -26,8 +27,9 @@ public abstract class Enemy extends BaseCharacter {
     public abstract Corpse getCorpse();
 
     public void takeDamage(int damage) {
-        if (!isAlive) return;
+        if (!isAlive || shieldTime < 0.2f) return;
         hp -= damage;
+        shieldTime = 0f;
         if (hp <= 0) {
             AppStatus.getGameEngine().enemyIsDead(this);
         }
