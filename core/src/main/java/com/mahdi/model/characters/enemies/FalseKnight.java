@@ -667,8 +667,7 @@ public class FalseKnight extends Enemy {
 
     private void beginPhaseTwo() {
         phaseTwo = true;
-        // ☀️ طبق درخواست: بعد از استان، همه‌چیز (سرعت حرکت + سرعت انیمیشن + کول‌داون AI) دوبرابر می‌شه
-        speedMultiplier *= 2f;
+        speedMultiplier *= 1.4f;
 
         lastMoves[0] = null;
         lastMoves[1] = null;

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="800" height="250" tilewidth="32" tileheight="32" infinite="0" nextlayerid="23" nextobjectid="105">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="800" height="250" tilewidth="32" tileheight="32" infinite="0" nextlayerid="23" nextobjectid="110">
  <tileset firstgid="1" source="assets/collapser_long.tsx"/>
  <tileset firstgid="71" source="assets/roll_rock_03.tsx"/>
  <tileset firstgid="83" name="roll_rock_04" tilewidth="32" tileheight="32" tilecount="12" columns="4">
@@ -1301,10 +1301,11 @@
   <object id="6" x="4108" y="3035.15" width="7672.85" height="236.848">
    <properties>
     <property name="deadly" type="bool" value="true"/>
+    <property name="respawn" type="int" value="1"/>
    </properties>
   </object>
   <object id="9" x="4116" y="3104.3" width="7688" height="115.636"/>
-  <object id="10" name="crawled" x="2984" y="2272">
+  <object id="10" name="crawled" x="1928" y="2280">
    <point/>
   </object>
   <object id="12" x="966.667" y="1287.88" width="207.879" height="1235.77">
@@ -1465,16 +1466,19 @@
    <point/>
   </object>
   <object id="78" x="15209.3" y="2512" width="3166" height="1210"/>
-  <object id="100" name="CrystalGuardian" x="3768" y="2248">
+  <object id="100" name="CrystalGuardian" x="2712" y="2256">
    <point/>
   </object>
   <object id="101" name="false knight" x="16784" y="1768">
    <point/>
   </object>
-  <object id="103" name="HornheadHusk" x="2744" y="1656">
+  <object id="103" name="HornheadHusk" x="1688" y="1664">
    <point/>
   </object>
   <object id="104" name="SpawnPlayer" x="12248" y="2160">
+   <point/>
+  </object>
+  <object id="105" name="respawn1" x="3768" y="2280">
    <point/>
   </object>
  </objectgroup>

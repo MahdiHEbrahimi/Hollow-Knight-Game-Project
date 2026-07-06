@@ -19,28 +19,31 @@ public class TiledMapHelper {
     public Array<SolidBlock> getSolidRectangles() {
         Array<SolidBlock> solidBlocks = new Array<>();
 
-            MapLayer layer = tiledMap.getLayers().get("logical");
+        MapLayer layer = tiledMap.getLayers().get("logical");
 
-            for (MapObject object : layer.getObjects()) {
+        for (MapObject object : layer.getObjects()) {
 
-                if (object instanceof RectangleMapObject) {
+            if (object instanceof RectangleMapObject) {
 
-                    Rectangle rect = ((RectangleMapObject) object).getRectangle();
+                Rectangle rect = ((RectangleMapObject) object).getRectangle();
 
-                    boolean isDeadly = false;
-                    if (object.getProperties().containsKey("deadly")) {
-                        isDeadly = object.getProperties().get("deadly", Boolean.class);
-                    }
-
-                    String type = "wall";
-
-                    if (object.getProperties().containsKey("type")) {
-                        type = object.getProperties().get("type", String.class);
-                    }
-
-                    solidBlocks.add(new SolidBlock(rect.x, rect.y, rect.width, rect.height, isDeadly, type));
+                boolean isDeadly = false;
+                if (object.getProperties().containsKey("deadly")) {
+                    isDeadly = object.getProperties().get("deadly", Boolean.class);
                 }
+
+                String type = "wall";
+
+                if (object.getProperties().containsKey("type")) {
+                    type = object.getProperties().get("type", String.class);
+                }
+                int respawnId = -1;
+                if (object.getProperties().containsKey("respawn")) {
+                    respawnId = object.getProperties().get("respawn", Integer.class);
+                }
+                solidBlocks.add(new SolidBlock(rect.x, rect.y, rect.width, rect.height, isDeadly, type, respawnId));
             }
+        }
 
         return solidBlocks;
     }

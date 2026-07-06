@@ -119,6 +119,29 @@ public class GameEngine {
         }
     }
 
+    private void respawnPlayer(int id) {
+        MapLayer layer = tiledMap.getLayers().get("logical");
+        if (layer == null) return;
+
+        int mapHeightTiles = tiledMap.getProperties().get("height", Integer.class);
+        int tileHeight = tiledMap.getProperties().get("tileheight", Integer.class);
+        float mapTotalHeight = mapHeightTiles * tileHeight;
+
+        for (MapObject obj : layer.getObjects()) {
+            if (("respawn" + id).equals(obj.getName()) && obj instanceof PointMapObject) {
+                PointMapObject point = (PointMapObject) obj;
+                float x = point.getPoint().x;
+                float y = point.getPoint().y;   // تبدیل Y
+
+                player.getPosition().set(x, y);
+                player.getBounds().setPosition(x, y);
+                player.getVelocity().set(0, 0);
+
+                break;
+            }
+        }
+    }
+
     public void update(float delta) {
         player.update(delta);
         handleMapCollisions(player);
@@ -138,8 +161,14 @@ public class GameEngine {
                         projectiles.remove(p);
                 } else {
                     for (Enemy e : enemies) {
-                        if (p.getBounds().overlaps(e.getBounds()) && !(e instanceof FalseKnight))
-                            e.takeDamage(3);
+                        if (p.getBounds().overlaps(e.getBounds())) {
+                            if (!(e instanceof FalseKnight)) {
+                                e.takeDamage(3);
+                            } else {
+                                e.takeDamage(3);
+                                projectiles.remove(p);
+                            }
+                        }
                     }
                 }
             }
@@ -267,6 +296,9 @@ public class GameEngine {
                 if (character instanceof Player) {
                     if (((Player) character).getAttackHitbox() != null && ((Player) character).getAttackHitbox().overlaps(block.bounds)) character.setThrown(new Vector2(0f, 5000f));
                     else ((Player) character).takeDamageFormGround();
+                    if (block.respawnId >= 0) {
+                        respawnPlayer(block.respawnId);
+                    }
                 } else if (character instanceof Enemy) {
                     if (character.isAlive())
                         ((Enemy) character).takeDamage(1);
@@ -321,6 +353,7 @@ public class GameEngine {
         Corpse corpse = enemy.getCorpse();
         enemy.die();
         enemies.remove(enemy);
+        corpse.setThrown(new Vector2(0f, 800f));
         corpses.add(corpse);
         player.increaseSoul(11f);
         for (int i = 0; i < 3; i++) {

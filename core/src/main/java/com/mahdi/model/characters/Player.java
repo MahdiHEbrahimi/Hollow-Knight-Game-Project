@@ -824,6 +824,7 @@ public class Player extends BaseCharacter {
         isFixAnimationActive = true;
         velocity.x = 0;
         triggerEffect("SoulScream", facingRight);
+       ((GameScreen)AppStatus.getScreen()).activeCameraShake();
 
         abilityElapsed = 0f;
         abilityHitsFired = 0;
@@ -852,6 +853,7 @@ public class Player extends BaseCharacter {
         velocity.x = 0;
         fireballSpawned = false;
         triggerEffect("Blast", facingRight);
+        ((GameScreen)AppStatus.getScreen()).activeCameraShake();
     }
 
     private void spawnFireballProjectile() {
