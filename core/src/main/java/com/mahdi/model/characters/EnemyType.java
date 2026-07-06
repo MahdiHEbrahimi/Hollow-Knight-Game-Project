@@ -1,7 +1,6 @@
 package com.mahdi.model.characters;
 
 import com.mahdi.model.characters.enemies.*;
-import com.mahdi.model.status.AppStatus;
 
 public enum EnemyType {
 

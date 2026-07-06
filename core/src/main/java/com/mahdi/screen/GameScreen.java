@@ -4,11 +4,18 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.mahdi.model.enums.CheatCode;
+import com.mahdi.model.enums.GameAction;
 import com.mahdi.model.game.CheatManager;
 import com.mahdi.model.game.GameHud;
 import com.mahdi.model.game.GameEngine;
 import com.mahdi.model.status.AppStatus;
+import com.mahdi.screen.manager.BrightnessController;
 import com.mahdi.screen.manager.MusicManager;
+import com.mahdi.screen.manager.PanelManager;
+import com.mahdi.screen.panels.MainMenuPanel;
+import com.mahdi.screen.panels.PausePanel;
+
 import java.util.Random;
 
 public class GameScreen extends BaseScreen {
@@ -40,27 +47,42 @@ public class GameScreen extends BaseScreen {
         // ساخت Stage مستقل برای HUD با یک Viewport که همیشه ثابت می‌ماند
         hudStage = new Stage(new ExtendViewport(2560, 1440));
         gameHud = new GameHud();
+        multiplexer.addProcessor(hudStage);
         hudStage.addActor(gameHud);
+        hudStage.addActor(BrightnessController.getInstance());
     }
 
+    public boolean isPaused = false;
     @Override
     protected void renderScreen(float delta) {
-        GameEngine gameEngine = AppStatus.getGameEngine();
-        gameEngine.update(Math.min(delta, 1 / 30f));
+        CheatManager.update();
+        if (isPaused && GameAction.PAUSE.isJustPressed()) {
+            isPaused = false;
+            PanelManager.getInstance().dispose();
+        } else {
+            if (GameAction.PAUSE.isJustPressed()) {
+                isPaused = true;
+                PanelManager.getInstance().initialize(hudStage);
+                PanelManager.getInstance().performPanelTransition(new PausePanel(this));
+            }
+        }
+        if (!isPaused){
+            GameEngine gameEngine = AppStatus.getGameEngine();
+            gameEngine.update(Math.min(delta, 1 / 30f));
+
+        }
 
         // دوربین نرم دنبال‌کننده
         updateCamera(gameEngine);
-
         // رسم دنیای بازی با دوربین خودش
         gameBatch.setProjectionMatrix(camera.combined);
         gameEngine.draw(camera, gameBatch);
-        CheatManager.update();
     }
 
-    // بعد از رسم دنیا و استیج اصلی، HUD ثابت را رسم می‌کنیم
+    // بعد از م دنیا و استیج اصلی، HUD ثابت را رسم می‌کنیم
     @Override
     public void render(float delta) {
-        super.render(delta);   // همه چیز را طبق BaseScreen اجرا می‌کند (renderScreen + stage.draw)
+        super.render(delta);
 
         // حالا HUD همیشه بالای همه چیز، ثابت روی صفحه
         if (hudStage != null) {
@@ -141,6 +163,13 @@ public class GameScreen extends BaseScreen {
     private void updateCamera(GameEngine gameEngine) {
         if (gameEngine.getPlayer() == null) return;
 
+        if (isPaused) {
+            com.badlogic.gdx.math.Vector2 position = gameEngine.getPlayer().getPosition();
+            camera.position.set((float) position.x,position.y, 0f);
+            camera.update();
+            return;
+        }
+
         com.badlogic.gdx.math.Vector2 eyeSight = gameEngine.getPlayer().getEyeSight();
 
         // ☀️ اولین فراخوانی: مستقیم روی بازیکن اسنپ کن که یه پرش اولیه‌ی زشت نداشته باشیم
@@ -169,7 +198,7 @@ public class GameScreen extends BaseScreen {
 
     @Override
     public void hide() {
-        dispose();
+        Gdx.input.setInputProcessor(null);
     }
 
     @Override

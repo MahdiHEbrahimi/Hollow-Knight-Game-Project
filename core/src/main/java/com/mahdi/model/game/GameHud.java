@@ -163,7 +163,8 @@ public class GameHud extends Group {
 
             // ---- اعلان‌های دستاورد ----
             for (Achievement a : Achievement.values()) {
-                if (a.isActive() && !notifiedAchievements.contains(a)) {
+                if (a.isActive() && !notifiedAchievements.contains(a) && !a.seen()) {
+                    a.setSeen(true);
                     notifications.add(new Notification(a.getDisplayName(), NOTIFICATION_DURATION));
                     notifiedAchievements.add(a);
                 }

@@ -9,12 +9,20 @@ import com.mahdi.model.enums.CheatCode;
 import com.mahdi.model.enums.GameAction;
 import com.mahdi.model.enums.MenuType;
 import com.mahdi.model.status.AppStatus;
+import com.mahdi.screen.GameScreen;
 import com.mahdi.screen.manager.FontManager;
+import com.mahdi.screen.manager.PanelManager;
 import com.mahdi.screen.ui.MenuButton;
 
 public class GuidePanel extends BasePanel {
 
     private final BitmapFont font;
+    private boolean toPauseMenu = false;
+
+    public GuidePanel(boolean toPauseMenu) {
+        this();
+        this.toPauseMenu = toPauseMenu;
+    }
 
     public GuidePanel() {
         this.font = FontManager.getInstance().getEnglishMenuFont();
@@ -99,7 +107,8 @@ public class GuidePanel extends BasePanel {
 
         // --- دکمه بازگشت ---
         MenuButton backBtn = new MenuButton("BACK", font, () -> {
-            AppStatus.ChangeMenuAndPanel(MenuType.MAIN_MENU);
+            if (!toPauseMenu)AppStatus.ChangeMenuAndPanel(MenuType.MAIN_MENU);
+            else PanelManager.getInstance().performPanelTransition(new PausePanel((GameScreen) AppStatus.getScreen()));
         });
         add(backBtn).padBottom(30f).row();
     }

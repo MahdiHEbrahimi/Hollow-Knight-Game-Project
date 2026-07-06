@@ -25,6 +25,7 @@ public enum Achievement {
     private final String displayName;
     private final String description;
     private boolean active;
+    private boolean seen = false;
 
     Achievement(String displayName, String description) {
         this.displayName = displayName;
@@ -46,5 +47,13 @@ public enum Achievement {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public void setSeen(boolean seen) {
+        this.seen = seen;
+    }
+
+    public boolean seen() {
+        return seen;
     }
 }

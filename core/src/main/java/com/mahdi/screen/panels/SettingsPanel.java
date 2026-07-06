@@ -6,7 +6,9 @@ import com.badlogic.gdx.utils.Align;
 import com.mahdi.HollowKnightGame;
 import com.mahdi.model.enums.MenuType;
 import com.mahdi.model.status.AppStatus;
+import com.mahdi.screen.GameScreen;
 import com.mahdi.screen.manager.FontManager;
+import com.mahdi.screen.manager.PanelManager;
 import com.mahdi.screen.ui.MenuButton;
 import com.mahdi.screen.ui.MenuSlider;
 import com.mahdi.screen.ui.SliderBinding;
@@ -14,6 +16,8 @@ import com.mahdi.screen.ui.ToggleBinding;
 import com.mahdi.view.CommandSender;
 import com.mahdi.view.InputDTOs.settingMenuInputDTOs.QualityChangeInputDTO;
 import com.mahdi.view.InputDTOs.settingMenuInputDTOs.ResetVolumeInputDTO;
+
+import java.util.jar.Manifest;
 
 public class SettingsPanel extends BasePanel {
 
@@ -25,6 +29,12 @@ public class SettingsPanel extends BasePanel {
     private final MenuSlider brightnessSlider;
 
     private final MenuButton qualityButton;
+    private boolean toPauseMenu = false;
+
+    public SettingsPanel(boolean toPauseMenu) {
+        this();
+        this.toPauseMenu = toPauseMenu;
+    }
 
     public SettingsPanel() {
         this.setFillParent(true);
@@ -44,68 +54,68 @@ public class SettingsPanel extends BasePanel {
         // ۱. اسلایدر حجم موسیقی (Music Volume)
         // ==========================================
         musicSlider = new MenuSlider("Music Volume",
-                FontManager.getInstance().getEnglishMenuFont(),
-                null, null, null,
-                new Texture("global/button_marker.png"),
-                true, // 🌟 hasIcon = true
-                soundOnTex,
-                soundOffTex,
-                new SliderBinding() {
-                    @Override
-                    public int get() {
-                        return AppStatus.getMusicVolume();
-                    }
+            FontManager.getInstance().getEnglishMenuFont(),
+            null, null, null,
+            new Texture("global/button_marker.png"),
+            true, // 🌟 hasIcon = true
+            soundOnTex,
+            soundOffTex,
+            new SliderBinding() {
+                @Override
+                public int get() {
+                    return AppStatus.getMusicVolume();
+                }
 
-                    @Override
-                    public void set(int value) {
-                        AppStatus.setMusicVolume(value);
-                    }
-                },
-                new ToggleBinding() {
-                    @Override
-                    public boolean get() {
-                        return AppStatus.getMuteMusic();
-                    }
+                @Override
+                public void set(int value) {
+                    AppStatus.setMusicVolume(value);
+                }
+            },
+            new ToggleBinding() {
+                @Override
+                public boolean get() {
+                    return AppStatus.getMuteMusic();
+                }
 
-                    @Override
-                    public void set(boolean value) {
-                        AppStatus.setMutedMusic(value);
-                    }
-                });
+                @Override
+                public void set(boolean value) {
+                    AppStatus.setMutedMusic(value);
+                }
+            });
         this.add(musicSlider).padBottom(spacing - 20f).row();
 
         // ==========================================
         // ۲. اسلایدر حجم افکت‌ها (SFX Volume)
         // ==========================================
         sfxSlider = new MenuSlider("SFX Volume",
-                FontManager.getInstance().getEnglishMenuFont(),
-                null, null, null,
-                new Texture("global/button_marker.png"),
-                true, // 🌟 hasIcon = true
-                soundOnTex,
-                soundOffTex,
-                new SliderBinding() {
-                    @Override
-                    public int get() {
-                        return AppStatus.getSFXVolume();
-                    }
+            FontManager.getInstance().getEnglishMenuFont(),
+            null, null, null,
+            new Texture("global/button_marker.png"),
+            true, // 🌟 hasIcon = true
+            soundOnTex,
+            soundOffTex,
+            new SliderBinding() {
+                @Override
+                public int get() {
+                    return AppStatus.getSFXVolume();
+                }
 
-                    @Override
-                    public void set(int value) {
-                        AppStatus.setSFXVolume(value);
-                    }
-                },
-                new ToggleBinding() {
-                    @Override
-                    public boolean get() {
-                        return AppStatus.getMuteSFX();
-                    }
+                @Override
+                public void set(int value) {
+                    AppStatus.setSFXVolume(value);
+                }
+            },
+            new ToggleBinding() {
+                @Override
+                public boolean get() {
+                    return AppStatus.getMuteSFX();
+                }
 
-                    @Override
-                    public void set(boolean value) {
-                        AppStatus.setMutedSFX(value);
-                    }
-                });
+                @Override
+                public void set(boolean value) {
+                    AppStatus.setMutedSFX(value);
+                }
+            });
 
         this.add(sfxSlider).padBottom(spacing - 20f).row();
 
@@ -114,24 +124,24 @@ public class SettingsPanel extends BasePanel {
         // ==========================================
 
         brightnessSlider = new MenuSlider("Brightness",
-                FontManager.getInstance().getEnglishMenuFont(),
-                null, null, null,
-                new Texture("global/button_marker.png"),
-                false, // 🌟 hasIcon = false (دکمه را مخفی کن)
-                null,
-                null,
-                new SliderBinding() {
-                    @Override
-                    public int get() {
-                        return AppStatus.getBrightness();
-                    }
+            FontManager.getInstance().getEnglishMenuFont(),
+            null, null, null,
+            new Texture("global/button_marker.png"),
+            false, // 🌟 hasIcon = false (دکمه را مخفی کن)
+            null,
+            null,
+            new SliderBinding() {
+                @Override
+                public int get() {
+                    return AppStatus.getBrightness();
+                }
 
-                    @Override
-                    public void set(int value) {
-                        AppStatus.setBrightness(value);
-                    }
-                },
-                null // 🌟 نیازی به ToggleBinding نیست
+                @Override
+                public void set(int value) {
+                    AppStatus.setBrightness(value);
+                }
+            },
+            null // 🌟 نیازی به ToggleBinding نیست
         );
 
         this.add(brightnessSlider).padBottom(spacing - 20f).row();
@@ -140,32 +150,29 @@ public class SettingsPanel extends BasePanel {
         // ۴. دکمه‌های تنظیمات
         // ==========================================
         qualityButton = new MenuButton(
-                "Quality: " + ((HollowKnightGame) Gdx.app.getApplicationListener()).getCurrentQuality().name(),
-                FontManager.getInstance().getEnglishMenuFont(),
-                this::onQualityChange);
+            "Quality: " + ((HollowKnightGame) Gdx.app.getApplicationListener()).getCurrentQuality().name(),
+            FontManager.getInstance().getEnglishMenuFont(),
+            this::onQualityChange);
 
         this.add(qualityButton).padBottom(spacing).row();
 
         this.add(new MenuButton("RESET SOUNDS",
-                FontManager.getInstance().getEnglishMenuFont(),
-                this::onResetSounds)).padBottom(spacing).row();
+            FontManager.getInstance().getEnglishMenuFont(),
+            this::onResetSounds)).padBottom(spacing).row();
 
         this.add(new MenuButton("KEYBOARD",
-                FontManager.getInstance().getEnglishMenuFont(),
-                this::onKeyboard)).padBottom(spacing).row();
+            FontManager.getInstance().getEnglishMenuFont(),
+            this::onKeyboard)).padBottom(spacing).row();
 
-        // this.add(new MenuButton("RESET CONTROLS",
-        // FontManager.getInstance().getEnglishMenuFont(),
-        // this::onResetControls)).padBottom(spacing).row();
 
         this.add(new MenuButton("LANGUAGE",
-                FontManager.getInstance().getEnglishMenuFont(),
-                this::onLanguage)).padBottom(spacing).row();
+            FontManager.getInstance().getEnglishMenuFont(),
+            this::onLanguage)).padBottom(spacing).row();
 
         // بازگشت
         this.add(new MenuButton("BACK",
-                FontManager.getInstance().getEnglishMenuFont(),
-                this::onBack)).row();
+            FontManager.getInstance().getEnglishMenuFont(),
+            this::onBack)).row();
     }
 
     private void onQualityChange() {
@@ -177,7 +184,8 @@ public class SettingsPanel extends BasePanel {
     }
 
     private void onKeyboard() {
-        AppStatus.ChangeMenuAndPanel(MenuType.KEYBOARD);
+        AppStatus.setCurreMenu(MenuType.KEYBOARD);
+        PanelManager.getInstance().performPanelTransition(new KeyboardPanel(true));
     }
 
     private void onLanguage() {
@@ -185,7 +193,8 @@ public class SettingsPanel extends BasePanel {
     }
 
     private void onBack() {
-        AppStatus.ChangeMenuAndPanel(MenuType.MAIN_MENU);
+        if (!toPauseMenu) AppStatus.ChangeMenuAndPanel(MenuType.MAIN_MENU);
+        else PanelManager.getInstance().performPanelTransition(new PausePanel((GameScreen) AppStatus.getScreen()));
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.mahdi.model.enums.GameAction;
 import com.mahdi.model.enums.MenuType;
 import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.manager.FontManager;
+import com.mahdi.screen.manager.PanelManager;
 import com.mahdi.screen.ui.MenuButton;
 
 import java.util.HashMap;
@@ -18,6 +19,13 @@ public class KeyboardPanel extends BasePanel {
     private final HashMap<GameAction, MenuButton> keyButtons = new HashMap<>();
 
     private GameAction listeningAction = null;
+    private boolean toPauseMenu = false;
+
+    public KeyboardPanel(boolean toPauseMenu) {
+        BitmapFont font = FontManager.getInstance().getEnglishMenuFont();
+        this(font);
+        this.toPauseMenu = toPauseMenu;
+    }
 
     public KeyboardPanel(BitmapFont font) {
         this.font = font;
@@ -72,6 +80,7 @@ public class KeyboardPanel extends BasePanel {
 
     private void onBack() {
         AppStatus.ChangeMenuAndPanel(MenuType.SETTINGS);
+        PanelManager.getInstance().performPanelTransition(new SettingsPanel(toPauseMenu));
     }
 
     @Override
@@ -98,7 +107,7 @@ public class KeyboardPanel extends BasePanel {
             }
         }
     }
-    
+
     private void updateKeyText(GameAction action) {
         MenuButton btn = keyButtons.get(action);
         if (btn != null) {

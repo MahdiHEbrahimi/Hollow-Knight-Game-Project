@@ -43,6 +43,10 @@ public class AppStatus {
         hollowKnightGame.updateGraphics(quality);
     }
 
+    public static void setCurreMenu(MenuType curreMenu) {
+        AppStatus.curreMenu = curreMenu;
+    }
+
     public static void ChangeMenuAndPanel(MenuType target) {
         curreMenu = target;
         PanelManager.getInstance().performPanelTransition(target.getNewPanel());
