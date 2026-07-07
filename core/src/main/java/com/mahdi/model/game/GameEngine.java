@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.PointMapObject;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
@@ -27,6 +28,7 @@ public class GameEngine {
 
     private Player player;
     private final ArrayList<Enemy> enemies;
+    private final ArrayList<BaseCharacter> NPCs = new ArrayList<>();
     private final ArrayList<Projectile> projectiles = new ArrayList<>();
     private final ArrayList<Corpse> corpses;
     private final ArrayList<Geo> geos;
@@ -70,6 +72,7 @@ public class GameEngine {
 
         spawnPlayerFromMap();
         spawnEnemiesFromMap();
+        spawnNPCs();
     }
 
     private void spawnPlayerFromMap() {
@@ -120,6 +123,33 @@ public class GameEngine {
         }
     }
 
+    private void spawnNPCs() {
+        float finalSpawnX = 0;
+        float finalSpawnY = 0;
+
+        MapLayer layer = tiledMap.getLayers().get("logical");
+        if (layer != null) {
+            for (MapObject object : layer.getObjects()) {
+                BaseCharacter npc = null;
+
+                if (object instanceof PointMapObject point) {
+                    finalSpawnX = point.getPoint().x;
+                    finalSpawnY = point.getPoint().y;
+                }
+
+                for (NPCtype npcType : NPCtype.values()) {
+                    if (npcType.getName().equals(object.getName())) {
+                        npc = npcType.getInstance(finalSpawnX, finalSpawnY, player);
+                        break;
+                    }
+                }
+
+                if (npc != null)
+                    NPCs.add(npc);
+            }
+        }
+    }
+
     private void respawnPlayer(int id) {
         MapLayer layer = tiledMap.getLayers().get("logical");
         if (layer == null) return;
@@ -151,6 +181,11 @@ public class GameEngine {
 
         for (Corpse c : corpses)
             c.update(delta);
+
+        for (BaseCharacter npc : NPCs) {
+            npc.update(delta);
+            handleMapCollisions(npc);
+        }
 
         try {
             for (Projectile p : projectiles) {
@@ -211,6 +246,7 @@ public class GameEngine {
         }
         if (enemies.isEmpty())
             Achievement.HUNTER.setActive(true);
+
     }
 
     // ☀️ متد اصلی مدیریت سکه‌ها
@@ -273,6 +309,7 @@ public class GameEngine {
         for (Enemy e : enemies) if (e.isAlive()) e.draw(batch);
         for (Geo g : geos) g.draw(batch);
         for (Projectile p : projectiles) p.draw(batch);
+        for (BaseCharacter npc : NPCs) npc.draw(batch);
         player.draw(batch);
         batch.end();
 

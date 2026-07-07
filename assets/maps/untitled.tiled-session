@@ -1,9 +1,9 @@
 {
     "activeFile": "untitled.tmx",
     "expandedProjectPaths": [
-        "map 1",
         ".",
-        "assets"
+        "assets",
+        "map 1"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -131,11 +131,11 @@
             "scaleInEditor": 1
         },
         "untitled.tmx": {
-            "scale": 0.125,
+            "scale": 0.015625,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 12172,
-                "y": 3236
+                "x": 5088,
+                "y": -12192
             }
         },
         "untitled.tmx#mine_break_wall": {

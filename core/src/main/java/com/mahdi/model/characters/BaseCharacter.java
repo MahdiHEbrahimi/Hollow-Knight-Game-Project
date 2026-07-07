@@ -155,7 +155,7 @@ public abstract class BaseCharacter {
 
     }
 
-    abstract void die();
+    protected abstract void die();
 
 //    public void die() {
 //        // todo

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="800" height="250" tilewidth="32" tileheight="32" infinite="0" nextlayerid="23" nextobjectid="110">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="800" height="250" tilewidth="32" tileheight="32" infinite="0" nextlayerid="23" nextobjectid="112">
  <tileset firstgid="1" source="assets/collapser_long.tsx"/>
  <tileset firstgid="71" source="assets/roll_rock_03.tsx"/>
  <tileset firstgid="83" name="roll_rock_04" tilewidth="32" tileheight="32" tilecount="12" columns="4">
@@ -1469,16 +1469,19 @@
   <object id="100" name="CrystalGuardian" x="2712" y="2256">
    <point/>
   </object>
-  <object id="101" name="false knight" x="16784" y="1768">
-   <point/>
-  </object>
   <object id="103" name="HornheadHusk" x="1688" y="1664">
    <point/>
   </object>
-  <object id="104" name="SpawnPlayer" x="12248" y="2160">
+  <object id="104" name="SpawnPlayer" x="12144" y="1584">
    <point/>
   </object>
   <object id="105" name="respawn1" x="3768" y="2280">
+   <point/>
+  </object>
+  <object id="110" name="zote" x="12384" y="1616">
+   <point/>
+  </object>
+  <object id="111" name="false knight" x="3568" y="1688">
    <point/>
   </object>
  </objectgroup>
