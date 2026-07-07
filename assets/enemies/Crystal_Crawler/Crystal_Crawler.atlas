@@ -1,0 +1,83 @@
+
+Crystal_Crawler.png
+size: 1024, 512
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+Death
+  rotate: false
+  xy: 0, 180
+  size: 155, 180
+  orig: 155, 180
+  offset: 0, 0
+  index: 0
+Death
+  rotate: false
+  xy: 0, 0
+  size: 155, 180
+  orig: 155, 180
+  offset: 0, 0
+  index: 1
+Death
+  rotate: false
+  xy: 155, 180
+  size: 155, 180
+  orig: 155, 180
+  offset: 0, 0
+  index: 2
+Death
+  rotate: false
+  xy: 155, 0
+  size: 155, 180
+  orig: 155, 180
+  offset: 0, 0
+  index: 3
+Death
+  rotate: false
+  xy: 310, 180
+  size: 155, 180
+  orig: 155, 180
+  offset: 0, 0
+  index: 4
+Turn
+  rotate: false
+  xy: 310, 0
+  size: 155, 180
+  orig: 155, 180
+  offset: 0, 0
+  index: 0
+Turn
+  rotate: false
+  xy: 465, 180
+  size: 155, 180
+  orig: 155, 180
+  offset: 0, 0
+  index: 1
+Walk
+  rotate: false
+  xy: 465, 0
+  size: 155, 180
+  orig: 155, 180
+  offset: 0, 0
+  index: 0
+Walk
+  rotate: false
+  xy: 620, 180
+  size: 155, 180
+  orig: 155, 180
+  offset: 0, 0
+  index: 1
+Walk
+  rotate: false
+  xy: 620, 0
+  size: 155, 180
+  orig: 155, 180
+  offset: 0, 0
+  index: 2
+Walk
+  rotate: false
+  xy: 775, 180
+  size: 155, 180
+  orig: 155, 180
+  offset: 0, 0
+  index: 3

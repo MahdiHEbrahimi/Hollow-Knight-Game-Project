@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.mahdi.model.enums.CheatCode;
 import com.mahdi.model.enums.GameAction;
 import com.mahdi.model.game.CheatManager;
 import com.mahdi.model.game.GameHud;
@@ -13,8 +12,8 @@ import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.manager.BrightnessController;
 import com.mahdi.screen.manager.MusicManager;
 import com.mahdi.screen.manager.PanelManager;
-import com.mahdi.screen.panels.MainMenuPanel;
 import com.mahdi.screen.panels.PausePanel;
+import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 
 import java.util.Random;
 
@@ -66,10 +65,14 @@ public class GameScreen extends BaseScreen {
                 PanelManager.getInstance().performPanelTransition(new PausePanel(this));
             }
         }
+
         if (!isPaused){
             GameEngine gameEngine = AppStatus.getGameEngine();
-            gameEngine.update(Math.min(delta, 1 / 30f));
 
+            // 👇 خط زیر رو دقیقاً همین‌جا اضافه کن
+            AnimatedTiledMapTile.updateAnimationBaseTime();
+
+            gameEngine.update(Math.min(delta, 1 / 30f));
         }
 
         // دوربین نرم دنبال‌کننده
@@ -175,7 +178,7 @@ public class GameScreen extends BaseScreen {
         // ☀️ اولین فراخوانی: مستقیم روی بازیکن اسنپ کن که یه پرش اولیه‌ی زشت نداشته باشیم
         if (!cameraInitialized) {
             smoothCamX = eyeSight.x;
-            smoothCamY = eyeSight.y;
+            smoothCamY = eyeSight.y ;
             cameraInitialized = true;
         }
 

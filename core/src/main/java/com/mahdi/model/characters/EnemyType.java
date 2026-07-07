@@ -7,7 +7,14 @@ public enum EnemyType {
     CRAWLED("crawled") {
         @Override
         public Enemy getInstance(float x, float y, Player player) {
-            return new Crawled(x, y, player);
+            return new Crawled(x, y, player, false);
+        }
+    },
+
+    CRYSTAL_CRAWLER("CrystalCrawler") {
+        @Override
+        public Enemy getInstance(float x, float y, Player player) {
+            return new Crawled(x, y, player, true);
         }
     },
 

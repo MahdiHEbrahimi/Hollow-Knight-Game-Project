@@ -19,7 +19,9 @@ public class Crawled extends Enemy {
 
     private final Player player;
 
+    // ☀️ دو اطلس جدا و استاتیک: یکی برای Crawled معمولی، یکی برای Crystal_Crawler
     private static TextureAtlas atlas;
+    private static TextureAtlas crystalAtlas;
 
     private final Animation<TextureRegion> animWalk;
     private final Animation<TextureRegion> animTurn;
@@ -36,26 +38,40 @@ public class Crawled extends Enemy {
 
     private static ShapeRenderer debugRenderer;
 
-    public Crawled(float x, float y, Player player) {
+    /**
+     * @param isCrystalCrawler ☀️ اگر true باشد، از اطلس Crystal_Crawler/Crystal_Crawler.atlas
+     *                         استفاده می‌شود (اسامی ریجن‌ها بین دو اطلس یکسانند)؛ در غیر این صورت
+     *                         همون اطلس پیش‌فرض Crawled بارگذاری می‌شود.
+     */
+    public Crawled(float x, float y, Player player, boolean isCrystalCrawler) {
         super(x, y, 120, 80, 200f, 460f, 3);
         this.player = player;
         this.spawnX = x;   // ☀️ ذخیره‌سازی نقطهٔ اسپاون
 
-        if (atlas == null) {
-            atlas = new TextureAtlas("enemies/Crawled/Crawled.atlas");
+        TextureAtlas usedAtlas;
+        if (isCrystalCrawler) {
+            if (crystalAtlas == null) {
+                crystalAtlas = new TextureAtlas("enemies/Crystal_Crawler/Crystal_Crawler.atlas");
+            }
+            usedAtlas = crystalAtlas;
+        } else {
+            if (atlas == null) {
+                atlas = new TextureAtlas("enemies/Crawled/Crawled.atlas");
+            }
+            usedAtlas = atlas;
         }
 
-        animWalk = createAnimation("Walk",  0.1f, Animation.PlayMode.LOOP);
-        animTurn = createAnimation("turn",  0.08f, Animation.PlayMode.NORMAL);
-        Death    = createAnimation("Death", 0.1f, Animation.PlayMode.NORMAL);
+        animWalk = createAnimation(usedAtlas, "Walk",  0.1f, Animation.PlayMode.LOOP);
+        animTurn = createAnimation(usedAtlas, "turn",  0.08f, Animation.PlayMode.NORMAL);
+        Death    = createAnimation(usedAtlas, "Death", 0.1f, Animation.PlayMode.NORMAL);
 
         if (debugRenderer == null) {
             debugRenderer = new ShapeRenderer();
         }
     }
 
-    private Animation<TextureRegion> createAnimation(String regionName, float frameDuration, Animation.PlayMode mode) {
-        com.badlogic.gdx.utils.Array<TextureAtlas.AtlasRegion> regions = atlas.findRegions(regionName);
+    private Animation<TextureRegion> createAnimation(TextureAtlas sourceAtlas, String regionName, float frameDuration, Animation.PlayMode mode) {
+        Array<TextureAtlas.AtlasRegion> regions = sourceAtlas.findRegions(regionName);
         if (regions.size == 0) {
             System.err.println("WARNING: Animation " + regionName + " not found in Crawled atlas!");
             return null;
@@ -189,6 +205,10 @@ public class Crawled extends Enemy {
         if (atlas != null) {
             atlas.dispose();
             atlas = null;
+        }
+        if (crystalAtlas != null) {
+            crystalAtlas.dispose();
+            crystalAtlas = null;
         }
     }
 }
