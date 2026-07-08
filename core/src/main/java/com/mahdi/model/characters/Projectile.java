@@ -62,9 +62,7 @@ public class Projectile {
         // مرکز پرتابه را در وسط مستطیل قرار می‌دهیم
         this.position = new Vector2(bounds.x + bounds.width / 2f, bounds.y + bounds.height / 2f);
 
-        // ☀️ ابعاد واقعی فریم اول (برای رسم) — فقط اگر انیمیشن داده شده باشد.
-        // اگر anim نال باشد، اصلاً به آن دست نمی‌زنیم (نه getKeyFrame، نه هیچ‌چیز دیگر)
-        // و ابعاد رو صفر می‌ذاریم؛ چون draw() هم در این حالت هیچی از انیمیشن رسم نمی‌کند.
+
         if (anim != null) {
             TextureRegion firstFrame = anim.getKeyFrame(0);
             this.animWidth = firstFrame.getRegionWidth();
@@ -144,6 +142,10 @@ public class Projectile {
 
     public Vector2 getPosition() {
         return position;
+    }
+
+    public float getLifetime() {
+        return lifetime;
     }
 
     // پاک‌سازی

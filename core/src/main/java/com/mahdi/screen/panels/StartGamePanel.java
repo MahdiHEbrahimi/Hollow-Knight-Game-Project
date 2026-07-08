@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
+import com.mahdi.model.characters.Player;
 import com.mahdi.model.enums.MenuType;
 import com.mahdi.model.save.SaveManager;
 import com.mahdi.model.status.AppStatus;
@@ -109,6 +110,7 @@ public class StartGamePanel extends BasePanel {
     }
 
     private void onStart() {
+        Player.init();
         ScreenManager.getInstance().performTransition(() -> new GameScreen("maps/untitled.tmx", "music/Crossroads.ogg"));
     }
 

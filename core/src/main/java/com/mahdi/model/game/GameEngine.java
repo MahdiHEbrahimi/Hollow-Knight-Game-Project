@@ -1,14 +1,13 @@
 package com.mahdi.model.game;
 
 import java.util.ArrayList;
-import java.util.PrimitiveIterator;
+
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.PointMapObject;
-import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
@@ -29,6 +28,8 @@ import com.mahdi.screen.manager.SoundManager;
 public class GameEngine {
 
     private Player player;
+    private float spawnX;
+    private float spawnY;
     private final ArrayList<Enemy> enemies;
     private final ArrayList<BaseCharacter> NPCs = new ArrayList<>();
     private final ArrayList<Projectile> projectiles = new ArrayList<>();
@@ -94,6 +95,8 @@ public class GameEngine {
                         finalSpawnY = point.getPoint().y;
                     }
                     System.out.println("[GameEngine] Smart Spawn Point Found! X=" + finalSpawnX + " Y=" + finalSpawnY);
+                    spawnX = finalSpawnX;
+                    spawnY = finalSpawnY;
                     break;
                 }
             }
@@ -156,6 +159,10 @@ public class GameEngine {
         }
     }
 
+    public void respawnPlayer() {
+        player = new Player(spawnX, spawnY);
+    }
+
     private void respawnPlayer(int id) {
         MapLayer layer = tiledMap.getLayers().get("logical");
         if (layer == null) return;
@@ -210,6 +217,7 @@ public class GameEngine {
                                 player.increaseSoul(11f);
                             } else {
                                 e.takeDamage(3);
+
                                 player.increaseSoul(11f);
                                 projectiles.remove(p);
                             }
@@ -256,6 +264,7 @@ public class GameEngine {
         if (enemies.isEmpty())
             Achievement.HUNTER.setActive(true);
 
+        projectiles.removeIf(p -> !p.isActive());
     }
 
     // ☀️ متد اصلی مدیریت سکه‌ها
@@ -406,22 +415,8 @@ public class GameEngine {
                 }
             }
 
-            // ☀️ باگ اصلیِ «آسانسوری» + انیمیشن دیرهنگام wall-slide اینجا بود:
-            // این چک قبلاً برای همه‌ی type ها (از جمله wall) اجرا می‌شد. چون footSensor
-            // عرض کامل کاراکتره (نه فقط زیر پاش)، وقتی کاراکتر کنار یه دیوار بلند
-            // ایستاده/سر می‌خوره، همون دیوار (که کناریشه نه زیرش) با این نوار همپوشانی
-            // پیدا می‌کرد و grounded غلط true می‌شد -> hasDoubleJump/airDashCount مدام
-            // شارژ می‌شدن (باگ آسانسوری) و isGrounded() هیچ‌وقت false نمی‌موند که
-            // WALL_SLIDE واقعاً فعال بشه (فقط لحظه‌ی آخر که کاراکتر از محدوده‌ی
-            // دیوار خارج می‌شد، درست می‌شد). حالت «ایستادن روی بالای دیوار» از قبل
-            // با منطق اختصاصی همون بالا (charBounds.top > block.top) پوشش داده شده،
-            // پس حذف wall از این چک عمومی هیچ رفتار درستی رو از بین نمی‌بره.
-//            if (footSensor.overlaps(block.bounds) && !block.isDeadly && !"wall".equals(block.type)) {
-//                character.setGrounded(true);
-//            }
             if (footSensor.overlaps(block.bounds) && !block.isDeadly) {
                 if ("wall".equals(block.type)) {
-                    // فقط در صورتی که کاراکتر روی دیوار ایستاده باشد (پایین بدن ≥ بالای دیوار)
                     if (character.getBounds().y >= block.bounds.y + block.bounds.height - 0.5f) {
                         character.setGrounded(true);
                     }

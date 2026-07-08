@@ -1,0 +1,132 @@
+
+SoulTank.png
+size: 256, 512
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+33
+  rotate: false
+  xy: 2, 387
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 0
+33
+  rotate: false
+  xy: 2, 310
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 1
+33
+  rotate: false
+  xy: 73, 387
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 2
+33
+  rotate: false
+  xy: 2, 233
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 3
+66
+  rotate: false
+  xy: 73, 310
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 0
+66
+  rotate: false
+  xy: 144, 387
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 1
+66
+  rotate: false
+  xy: 2, 156
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 2
+66
+  rotate: false
+  xy: 73, 233
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 3
+99
+  rotate: false
+  xy: 144, 310
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 0
+99
+  rotate: false
+  xy: 2, 79
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 1
+99
+  rotate: false
+  xy: 73, 156
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 2
+99
+  rotate: false
+  xy: 144, 233
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 3
+empty
+  rotate: false
+  xy: 2, 2
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: -1
+fillto33
+  rotate: false
+  xy: 73, 79
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: -1
+fillto66
+  rotate: false
+  xy: 144, 156
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 0
+fillto66
+  rotate: false
+  xy: 73, 2
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 1
+fillto99
+  rotate: false
+  xy: 144, 79
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 0
+fillto99
+  rotate: false
+  xy: 144, 2
+  size: 69, 75
+  orig: 69, 75
+  offset: 0, 0
+  index: 1

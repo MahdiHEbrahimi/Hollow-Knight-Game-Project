@@ -36,9 +36,10 @@ public class Player extends BaseCharacter {
     private static float FOCUS_DURATION = 1.5f;
     // ========== ویژگی‌های بازیکن ==========
     private int maxHp = 5;
-    private int geo = 20;
-    private float soul = 67;
+    private static int geo = 0;
+    private static float soul = 0;
     private float maxSoul = 99;
+    private static int numberOfDeath = 0;
 
     private State currentState;
     private State previousState = State.IDLE; // برای تشخیص پایان انیمیشن‌های یک‌باره
@@ -105,6 +106,7 @@ public class Player extends BaseCharacter {
     Sound dashSound = Gdx.audio.newSound(Gdx.files.internal("SFX/hero_dash.wav"));
     Sound attackSound = Gdx.audio.newSound(Gdx.files.internal("SFX/hero_damage.mp3"));
     Sound healSound = Gdx.audio.newSound(Gdx.files.internal("SFX/focus_health_heal.wav"));
+    Sound soundPickUp = Gdx.audio.newSound(Gdx.files.internal("SFX/soul_totem_awake.wav"));
 
     private Rectangle attackHitbox = null;  // مستطیل هیت‌باکس موقت (برای دیباگ + برخورد)
 
@@ -327,7 +329,7 @@ public class Player extends BaseCharacter {
         }
         if (CheatCode.SOUL_REFILL.isActive()){
             soul = maxSoul;
-            CheatCode.SOUL_REFILL.setFalse();
+//            CheatCode.SOUL_REFILL.setFalse();
         }
         if (CheatCode.NO_LIMIT.isActive()){
             airDashCount = 0;
@@ -419,11 +421,13 @@ public class Player extends BaseCharacter {
     private boolean handleAbilityInput() {
         if (isFixAnimationActive) return false;
 
-        if (GameAction.SPELL_UP.isJustPressed()) {
+        if (GameAction.SPELL_UP.isJustPressed() && soul > 33f) {
+            reduceSoul(33f);
             startUpwardBlast();
             return true;
         }
-        if (GameAction.SPELL_FORWARD.isJustPressed()) {
+        if (GameAction.SPELL_FORWARD.isJustPressed() && soul > 33) {
+            reduceSoul(33f);
             startForwardFireball();
             return true;
         }
@@ -896,6 +900,10 @@ public class Player extends BaseCharacter {
     private void onFixAnimationFinished() {
         attackHitbox = null;
         switch (currentState) {
+            case DEATH:
+                isAlive = false;                      // حالا واقعاً بمیر
+                AppStatus.getGameEngine().respawnPlayer();   // درخواست ری‌اسپاون
+                break;
             case LANDING:
                 currentState = State.IDLE;
                 break;
@@ -1073,8 +1081,20 @@ public class Player extends BaseCharacter {
         batch.begin();
     }
 
+    public static void init(){
+        geo = 0;
+        numberOfDeath = 0;
+        soul = 0;
+    }
+
+
     public void die() {
-        this.isAlive = false;
+        if (!isAlive) return;   // اگر قبلاً مرده، هیچ کاری نکن
+        currentState = State.DEATH;
+        numberOfDeath ++;
+        Player.init();
+        stateTime = 0f;
+        isFixAnimationActive = true;
         this.hasGravity = true;
         this.velocity.x = 0;
         this.isMoving = false;
@@ -1121,6 +1141,7 @@ public class Player extends BaseCharacter {
     }
 
     public void increaseSoul(float amount) {
+        SoundManager.getInstance().playSound(soundPickUp);
         soul += amount;
         if (soul > 99) soul = 99;
     }
