@@ -22,6 +22,9 @@ import com.mahdi.model.enums.Achievement;
 import com.mahdi.model.map.SolidBlock;
 import com.mahdi.model.map.TiledMapHelper;
 import com.mahdi.model.status.AppStatus;
+import com.mahdi.screen.GameScreen;
+import com.mahdi.screen.manager.MusicManager;
+import com.mahdi.screen.manager.ScreenManager;
 import com.mahdi.screen.manager.SoundManager;
 
 public class GameEngine {
@@ -41,6 +44,8 @@ public class GameEngine {
     private final int[] bgLayers;
     private final int[] fgLayers;
     private final int mainIdx;
+    private float engineTime = 0f;          // زمان سپری‌شدهٔ کلی
+    private float lastTriggerTime = -2f;    // آخرین زمان فعال‌سازی یک تریگر
 
     public GameEngine(String mapPath) {
         AppStatus.setGameStatus(this);
@@ -174,6 +179,7 @@ public class GameEngine {
     }
 
     public void update(float delta) {
+        engineTime += delta;
         player.update(delta);
         handleMapCollisions(player);
 
@@ -330,21 +336,38 @@ public class GameEngine {
         );
 
         for (SolidBlock block : solidBlocks) {
-            // ☀️ برخورد با بلوک‌های مرگبار: پرتاب به بالا + آسیب (برای بازیکن)
-            if (block.isDeadly && charBounds.overlaps(block.bounds)) {
-                // پرتاب به بالا
-                if (character instanceof Player) {
-                    if (((Player) character).getAttackHitbox() != null && ((Player) character).getAttackHitbox().overlaps(block.bounds)) character.setThrown(new Vector2(0f, 5000f));
-                    else ((Player) character).takeDamageFormGround();
-                    if (block.respawnId >= 0) {
-                        respawnPlayer(block.respawnId);
+
+            // ───── بلوک‌های تریگر (غیر فیزیکی) ─────
+            if ("musicChange".equals(block.type) || "screenChange".equals(block.type)) {
+                // فقط برای بازیکن فعال شوند
+                if (character instanceof Player && charBounds.overlaps(block.bounds)) {
+                    if (engineTime - lastTriggerTime >= 2.0f) {
+                        lastTriggerTime = engineTime;
+                        if ("musicChange".equals(block.type)) {
+                            onMusicTrigger(block.musicPath);      // TODO
+                        } else {
+                            onScreenTrigger(block.mapPath, block.musicPath); // TODO
+                        }
                     }
+                }
+                continue;   // ← بدون هیچ‌گونه برخورد فیزیکی، مستقیماً ادامه بده
+            }
+
+            // ═══════════ بلوک‌های فیزیکی (بدون تغییر) ═══════════
+            if (block.isDeadly && charBounds.overlaps(block.bounds)) {
+                if (character instanceof Player) {
+                    if (((Player) character).getAttackHitbox() != null
+                        && ((Player) character).getAttackHitbox().overlaps(block.bounds))
+                        character.setThrown(new Vector2(0f, 5000f));
+                    else
+                        ((Player) character).takeDamageFormGround();
+
+                    if (block.respawnId >= 0)
+                        respawnPlayer(block.respawnId);
                 } else if (character instanceof Enemy) {
                     if (character.isAlive())
                         ((Enemy) character).takeDamage(1);
                 }
-                // توجه: continue باعث می‌شود این بلوک مانند سکوی جامد عمل نکند
-//                continue;
             }
 
             if ("wall".equals(block.type)) {
@@ -385,6 +408,15 @@ public class GameEngine {
         }
 
         character.getBounds().setPosition(character.getPosition().x, character.getPosition().y);
+    }
+
+    private void onMusicTrigger(String musicPath) {
+        MusicManager.getInstance().playMusic(musicPath);
+        System.out.println(musicPath);
+    }
+
+    private void onScreenTrigger(String mapPath, String musicPath) {
+        ScreenManager.getInstance().performTransition(() -> new GameScreen(mapPath,musicPath));
     }
 
     public void enemyIsDead(Enemy enemy) {

@@ -6,12 +6,17 @@ public class SolidBlock {
     public Rectangle bounds;
     public boolean isDeadly;
     public String type;
-    public int respawnId = -1;   // ☀️ شماره ری‌اسپاون (پیش‌فرض -۱ یعنی ندارد)
+    public int respawnId = -1;
+    public String musicPath;   // برای تغییر آهنگ
+    public String mapPath;     // برای تغییر صفحه (همراه با musicPath)
 
-    public SolidBlock(float x, float y, float width, float height, boolean isDeadly, String type, int respawnId) {
+    public SolidBlock(float x, float y, float width, float height, boolean isDeadly, String type,
+                      int respawnId, String musicPath, String mapPath) {
         this.bounds = new Rectangle(x, y, width, height);
         this.isDeadly = isDeadly;
         this.type = type;
         this.respawnId = respawnId;
+        this.musicPath = musicPath;
+        this.mapPath = mapPath;
     }
 }
