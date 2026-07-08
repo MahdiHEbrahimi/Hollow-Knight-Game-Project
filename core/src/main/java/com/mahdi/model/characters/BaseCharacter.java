@@ -3,7 +3,6 @@ package com.mahdi.model.characters;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.mahdi.model.status.AppStatus;
 
 public abstract class BaseCharacter {
 
@@ -25,7 +24,8 @@ public abstract class BaseCharacter {
     protected boolean isMoving; // 🌟 پرچم نشان‌دهنده اینکه کاراکتر در این فریم قصد حرکت دارد یا نه
     protected float throwTimeRemaining = 0f;
     protected Vector2 throwVelocity;
-    protected static final float THROW_SPEED = 1400f;   // سرعت پرتاب (پیکسل در ثانیه)
+    protected static float THROW_SPEED = 1400f;
+    protected static float PLAYERTHROWN_SPEED = 1400f;
 
     // =======================================================
     // 🌟 ویژگی‌های فیزیکی قابل تنظیم از طریق کانتراکتور فرزند

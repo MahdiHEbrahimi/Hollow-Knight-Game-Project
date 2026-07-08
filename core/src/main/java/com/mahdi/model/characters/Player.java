@@ -17,6 +17,8 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.mahdi.model.characters.enemies.FalseKnight;
+import com.mahdi.model.enums.Charm;
 import com.mahdi.model.enums.CheatCode;
 import com.mahdi.model.enums.GameAction;
 import com.mahdi.model.characters.enums.State;
@@ -31,6 +33,7 @@ import java.util.HashMap;
 
 public class Player extends BaseCharacter {
 
+    private static float FOCUS_DURATION = 1.5f;
     // ========== ویژگی‌های بازیکن ==========
     private int maxHp = 5;
     private int geo = 20;
@@ -45,6 +48,8 @@ public class Player extends BaseCharacter {
     private static final float JUMP_RELEASE_DAMPING = 0.4f;
     private static final float DASH_SPEED = 1400f;
     private static final float DASH_DURATION = 0.3f;
+    private static float SOUL_GETAMOUNT = 11f;
+    private static int DAMAGE_DEAL = 1;
 
     // ========== انیمیشن ==========
     private static TextureAtlas atlas;
@@ -68,7 +73,7 @@ public class Player extends BaseCharacter {
     private float focusActiveTime = 0f;
 
     // ===================== دش هوایی (سقف تعداد) =====================
-    private static final int MAX_AIR_DASHES = 2;
+    private static int MAX_AIR_DASHES = 2;
     private int airDashCount = 0;
 
     // ===================== دیوار (پنجه‌ی مانتیس: Wall Slide / Wall Jump) =====================
@@ -149,7 +154,6 @@ public class Player extends BaseCharacter {
         loadAnimation(State.DOWN_SLASH, "DownSlash", 0.04f, Animation.PlayMode.NORMAL);
         loadAnimation(State.DASH, "Dash", 0.03f, Animation.PlayMode.NORMAL);
         loadAnimation(State.WALL_SLIDE, "Wall Slide", 0.10f, Animation.PlayMode.LOOP);
-        // ☀️ باگ قبلی: اینجا "Walljump" بود، ولی اسم واقعی ریجن تو اطلس "WallJump" (J بزرگ) هست
         loadAnimation(State.WALL_JUMP, "Walljump", 0.10f, Animation.PlayMode.NORMAL);
         loadAnimation(State.FOCUS_START, "Focus Start", 0.08f, Animation.PlayMode.NORMAL);
         loadAnimation(State.FOCUS, "Focus", 0.10f, Animation.PlayMode.LOOP_PINGPONG);
@@ -252,7 +256,8 @@ public class Player extends BaseCharacter {
     // =======================================================================
     @Override
     protected void updateCustomLogic(float delta) {
-        stateTime += delta;                     // پیشبرد تایمر انیمیشن
+        stateTime += delta;
+        updateCharms(delta);
         lastTimeKnightGotDamaged += delta;
         if (wallStickLockout > 0f) wallStickLockout -= delta;
 
@@ -292,6 +297,14 @@ public class Player extends BaseCharacter {
         updateSmokeParticles(delta);            // به‌روزرسانی و تولید ذرات دود
         updateVFX(delta);                       // به‌روزرسانی افکت‌های بصری
         updateAbilities(delta);                 // ☀️ منطق زمان‌بندی ابیلیتی‌ها
+    }
+
+    private void updateCharms(float delta) {
+        MAX_AIR_DASHES   = Charm.DASHMASTER.isActive()   ? 4    : 2;
+        FOCUS_DURATION   = Charm.QUICK_FOCUS.isActive()  ? 0.4f : 1.5f;
+        DAMAGE_DEAL      = Charm.UNBREAKABLE.isActive()  ? 2    : 1;
+        SOUL_GETAMOUNT   = Charm.SOUL_CATCHER.isActive() ? 16f  : 11f;
+        THROW_SPEED      = Charm.HEAVY_BLOW.isActive()   ? 1400f : 2500f;
     }
 
 // ======================= زیرمتدهای خصوصی =========================
@@ -348,7 +361,7 @@ public class Player extends BaseCharacter {
         if (isFocusActive()) {
             this.velocity.x = 0;
             focusActiveTime += delta;
-            if (focusActiveTime > 1.5f && soul >= 33 && hp < maxHp) {
+            if (focusActiveTime > FOCUS_DURATION && soul >= 33 && hp < maxHp) {
                 focusActiveTime = 0;
                 reduceSoul(33f);
                 increaseHP(1);
@@ -647,7 +660,7 @@ public class Player extends BaseCharacter {
         lastTimeKnightGotDamaged = 0;
         hp--;
         ((GameScreen)AppStatus.getScreen()).activeCameraShake();
-        setThrown(new Vector2(0f , 4.5f * THROW_SPEED));
+        setThrown(new Vector2(0f , 4.5f * PLAYERTHROWN_SPEED));
         if (hp <= 0) {
             die();
         }
@@ -659,12 +672,12 @@ public class Player extends BaseCharacter {
         ((GameScreen)AppStatus.getScreen()).activeCameraShake();
         lastTimeKnightGotDamaged = 0;
 
-        if (enemy != null){
+        if (enemy != null && !(enemy instanceof FalseKnight)){
             if (enemy.getPosition().x + enemy.getBounds().width / 2f < this.getPosition().x + this.getBounds().width / 2f) {
-                this.setThrown(new Vector2(THROW_SPEED, 0f));
+                this.setThrown(new Vector2(PLAYERTHROWN_SPEED, 0f));
                 enemy.setThrown(new Vector2(-THROW_SPEED, 0f));
             } else {
-                this.setThrown(new Vector2(-THROW_SPEED, 0f));
+                this.setThrown(new Vector2(-PLAYERTHROWN_SPEED, 0f));
                 enemy.setThrown(new Vector2(THROW_SPEED, 0f));
             }
         }
@@ -735,7 +748,7 @@ public class Player extends BaseCharacter {
     public void attackWasSuccessful(Enemy enemy) {
         switch (currentState) {
             case DOWN_SLASH:
-                setThrown(new Vector2(0, 4 * THROW_SPEED));
+                setThrown(new Vector2(0, 4 * PLAYERTHROWN_SPEED));
                 break;
             case UP_SLASH:
                 enemy.setThrown(new Vector2(0, THROW_SPEED));
@@ -743,11 +756,11 @@ public class Player extends BaseCharacter {
             case SLASH:
             case SLASH_ALT:
                 if (facingRight) {
-                    setThrown(new Vector2(-THROW_SPEED, 0));
+                    setThrown(new Vector2(-PLAYERTHROWN_SPEED, 0));
                     enemy.setThrown(new Vector2(THROW_SPEED, 0));
                 }
                 else {
-                    setThrown(new Vector2(THROW_SPEED, 0));
+                    setThrown(new Vector2(PLAYERTHROWN_SPEED, 0));
                     enemy.setThrown(new Vector2(-THROW_SPEED, 0));
                 }
                 break;
@@ -756,7 +769,10 @@ public class Player extends BaseCharacter {
                 break;
         }
 
-        enemy.takeDamage(1);
+        enemy.takeDamage(DAMAGE_DEAL);
+        float amount = 11f;
+
+        increaseSoul(SOUL_GETAMOUNT);
     }
 
     public void clearAttackHitBox(){

@@ -50,7 +50,7 @@ public class TiledMapHelper {
 
                 // پراپرتی‌های جدید
                 String musicPath = null;
-                if (object.getProperties().containsKey("musicPath")) {
+                    if (object.getProperties().containsKey("musicPath")) {
                     musicPath = object.getProperties().get("musicPath", String.class);
                 }
 

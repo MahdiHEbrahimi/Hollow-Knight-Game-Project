@@ -1,11 +1,10 @@
 {
-    "activeFile": "CrystalPeak.tmx",
+    "activeFile": "FalseKnightRoom.tmx",
     "expandedProjectPaths": [
-        "assets",
-        "grasses",
-        ".",
         "Crystal Peak",
-        "map 1"
+        "map 1",
+        "FalseKnightRoom",
+        "."
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -15,6 +14,18 @@
         "C:/Users/mahdi/Desktop/hallow knight/sss/sss/assets/maps/assets/roll_rock_03.tsx": {
             "dynamicWrapping": true,
             "scaleInDock": 1
+        },
+        "Crystal Peak/GG_scenery_0004_17.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Crystal Peak/GG_scenery_0004_17_white_02.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Crystal Peak/GG_statues_zote_gold.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "Crystal Peak/fung_new_0080_Layer-273.tsx": {
             "scaleInDock": 1,
@@ -43,6 +54,7 @@
             "scaleInEditor": 1
         },
         "Crystal Peak/lake_water0006.tsx": {
+            "dynamicWrapping": false,
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
@@ -50,7 +62,15 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "Crystal Peak/mine_strut_02 #32833.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "Crystal Peak/mines_additions_02_0005_a.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Crystal Peak/mines_additions_02_0006_a.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
@@ -77,10 +97,10 @@
                 2
             ],
             "scale": 0.25,
-            "selectedLayer": 0,
+            "selectedLayer": 10,
             "viewCenter": {
-                "x": 16056,
-                "y": 3486
+                "x": 16000,
+                "y": 3202
             }
         },
         "CrystalPeak.tmx#fung_new_0080_Layer-273": {
@@ -89,6 +109,41 @@
         "CrystalPeak.tmx#grass_anims": {
             "dynamicWrapping": true,
             "scaleInDock": 1
+        },
+        "FalseKnightRoom.tmx": {
+            "expandedObjectLayers": [
+                3
+            ],
+            "scale": 0.0625,
+            "selectedLayer": 7,
+            "viewCenter": {
+                "x": 13024,
+                "y": 4328
+            }
+        },
+        "FalseKnightRoom/Believer_shrine_pieces_0004_plaque_01.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "FalseKnightRoom/Believer_shrine_thin_plaque__0002_1.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "FalseKnightRoom/Zote_BG_statue.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "FalseKnightRoom/fungd_vase_03.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "FalseKnightRoom/gg_mantis_cage_0001_2.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "FalseKnightRoom/hive_scenery_0038_h.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "assets/2163-1@2x.tsx": {
             "scaleInDock": 1,
@@ -215,11 +270,11 @@
             "expandedObjectLayers": [
                 4
             ],
-            "scale": 0.25,
+            "scale": 0.125,
             "selectedLayer": 5,
             "viewCenter": {
                 "x": 12800,
-                "y": 4002
+                "y": 4004
             }
         },
         "untitled.tmx#mine_break_wall": {
@@ -232,29 +287,31 @@
     },
     "frame.defaultDuration": 100,
     "last.externalTilesetPath": "C:/Users/mahdi/Desktop/hallow knight/sss/assets/maps/assets",
-    "last.imagePath": "C:/Users/mahdi/Desktop/hallow knight/sss/assets/maps/Crystal Peak",
+    "last.imagePath": "C:/Users/mahdi/Desktop/hallow knight/sss/assets/maps/FalseKnightRoom",
     "map.height": 200,
     "map.lastUsedFormat": "tmx",
     "map.width": 800,
     "openFiles": [
+        "FalseKnightRoom.tmx",
         "CrystalPeak.tmx",
+        "FalseKnightRoom/fungd_vase_03.tsx",
         "untitled.tmx"
     ],
     "project": "untitled.tiled-project",
     "property.type": "string",
     "recentFiles": [
         "untitled.tmx",
+        "FalseKnightRoom/fungd_vase_03.tsx",
         "CrystalPeak.tmx",
-        "Crystal Peak/fung_new_0117_Layer-265.tsx",
-        "Crystal Peak/fung_new_0128_01.tsx",
-        "Crystal Peak/fung_new_0127_02.tsx",
-        "Crystal Peak/fung_new_0133_Layer-236.tsx",
-        "Crystal Peak/fung_new_0080_Layer-273.tsx",
-        "Crystal Peak/mines_metal_thin_floors_0002_a.tsx",
-        "Crystal Peak/fung_new_0129_Layer-240.tsx",
-        "grasses/grass_anims.tsx",
-        "Crystal Peak/mines_metal_thin_floors_0001_a.tsx",
-        "Crystal Peak/lake_water0006.tsx"
+        "FalseKnightRoom.tmx",
+        "FalseKnightRoom/hive_scenery_0038_h.tsx",
+        "FalseKnightRoom/gg_mantis_cage_0001_2.tsx",
+        "FalseKnightRoom/Believer_shrine_thin_plaque__0002_1.tsx",
+        "FalseKnightRoom/Believer_shrine_pieces_0004_plaque_01.tsx",
+        "Crystal Peak/GG_statues_zote_gold.tsx",
+        "FalseKnightRoom/Zote_BG_statue.tsx",
+        "Crystal Peak/GG_scenery_0004_17.tsx",
+        "Crystal Peak/GG_scenery_0004_17_white_02.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

@@ -14,9 +14,8 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.IntArray;                     // ☀️
+import com.badlogic.gdx.utils.IntArray;
 import com.mahdi.model.characters.*;
-import com.mahdi.model.characters.enemies.Crawled;
 import com.mahdi.model.characters.enemies.FalseKnight;
 import com.mahdi.model.enums.Achievement;
 import com.mahdi.model.map.SolidBlock;
@@ -46,6 +45,7 @@ public class GameEngine {
     private final int mainIdx;
     private float engineTime = 0f;          // زمان سپری‌شدهٔ کلی
     private float lastTriggerTime = -2f;    // آخرین زمان فعال‌سازی یک تریگر
+    private String mapPath;
 
     public GameEngine(String mapPath) {
         AppStatus.setGameStatus(this);
@@ -56,6 +56,7 @@ public class GameEngine {
         this.enemies = new ArrayList<>();
         this.corpses = new ArrayList<>();
         this.geos = new ArrayList<>();
+        this.mapPath = mapPath;
 
         // ☀️ جمع‌آوری خودکار لایه‌های پس‌زمینه (bg_1 تا bg_10)
         IntArray bgIndices = new IntArray();
@@ -206,8 +207,10 @@ public class GameEngine {
                         if (p.getBounds().overlaps(e.getBounds())) {
                             if (!(e instanceof FalseKnight)) {
                                 e.takeDamage(3);
+                                player.increaseSoul(11f);
                             } else {
                                 e.takeDamage(3);
+                                player.increaseSoul(11f);
                                 projectiles.remove(p);
                             }
                         }
@@ -341,12 +344,12 @@ public class GameEngine {
             if ("musicChange".equals(block.type) || "screenChange".equals(block.type)) {
                 // فقط برای بازیکن فعال شوند
                 if (character instanceof Player && charBounds.overlaps(block.bounds)) {
-                    if (engineTime - lastTriggerTime >= 2.0f) {
+                    if (engineTime - lastTriggerTime >= 0.001f) {
                         lastTriggerTime = engineTime;
                         if ("musicChange".equals(block.type)) {
-                            onMusicTrigger(block.musicPath);      // TODO
+                            onMusicTrigger(block.musicPath);
                         } else {
-                            onScreenTrigger(block.mapPath, block.musicPath); // TODO
+                            onScreenTrigger(block.mapPath, block.musicPath);
                         }
                     }
                 }
@@ -367,6 +370,7 @@ public class GameEngine {
                 } else if (character instanceof Enemy) {
                     if (character.isAlive())
                         ((Enemy) character).takeDamage(1);
+                    player.increaseSoul(11f);
                 }
             }
 
@@ -402,8 +406,28 @@ public class GameEngine {
                 }
             }
 
+            // ☀️ باگ اصلیِ «آسانسوری» + انیمیشن دیرهنگام wall-slide اینجا بود:
+            // این چک قبلاً برای همه‌ی type ها (از جمله wall) اجرا می‌شد. چون footSensor
+            // عرض کامل کاراکتره (نه فقط زیر پاش)، وقتی کاراکتر کنار یه دیوار بلند
+            // ایستاده/سر می‌خوره، همون دیوار (که کناریشه نه زیرش) با این نوار همپوشانی
+            // پیدا می‌کرد و grounded غلط true می‌شد -> hasDoubleJump/airDashCount مدام
+            // شارژ می‌شدن (باگ آسانسوری) و isGrounded() هیچ‌وقت false نمی‌موند که
+            // WALL_SLIDE واقعاً فعال بشه (فقط لحظه‌ی آخر که کاراکتر از محدوده‌ی
+            // دیوار خارج می‌شد، درست می‌شد). حالت «ایستادن روی بالای دیوار» از قبل
+            // با منطق اختصاصی همون بالا (charBounds.top > block.top) پوشش داده شده،
+            // پس حذف wall از این چک عمومی هیچ رفتار درستی رو از بین نمی‌بره.
+//            if (footSensor.overlaps(block.bounds) && !block.isDeadly && !"wall".equals(block.type)) {
+//                character.setGrounded(true);
+//            }
             if (footSensor.overlaps(block.bounds) && !block.isDeadly) {
-                character.setGrounded(true);
+                if ("wall".equals(block.type)) {
+                    // فقط در صورتی که کاراکتر روی دیوار ایستاده باشد (پایین بدن ≥ بالای دیوار)
+                    if (character.getBounds().y >= block.bounds.y + block.bounds.height - 0.5f) {
+                        character.setGrounded(true);
+                    }
+                } else {
+                    character.setGrounded(true);
+                }
             }
         }
 
@@ -412,7 +436,6 @@ public class GameEngine {
 
     private void onMusicTrigger(String musicPath) {
         MusicManager.getInstance().playMusic(musicPath);
-        System.out.println(musicPath);
     }
 
     private void onScreenTrigger(String mapPath, String musicPath) {
@@ -427,7 +450,6 @@ public class GameEngine {
         enemies.remove(enemy);
         corpse.setThrown(new Vector2(0f, 800f));
         corpses.add(corpse);
-        player.increaseSoul(11f);
         for (int i = 0; i < 3; i++) {
             geos.add(new Geo(position.x, position.y));
         }
@@ -439,6 +461,10 @@ public class GameEngine {
 
     public ArrayList<Projectile> getProjectiles() {
         return projectiles;
+    }
+
+    public String getMapPath() {
+        return mapPath;
     }
 
     public void addProjectile (Projectile projectile){

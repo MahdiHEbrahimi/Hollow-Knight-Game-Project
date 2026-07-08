@@ -1,0 +1,62 @@
+
+charms.png
+size: 512, 512
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+Dashmaster
+  rotate: false
+  xy: 276, 275
+  size: 132, 133
+  orig: 132, 133
+  offset: 0, 0
+  index: -1
+HeavyBlow
+  rotate: false
+  xy: 2, 277
+  size: 137, 131
+  orig: 137, 131
+  offset: 0, 0
+  index: -1
+QuickFocus
+  rotate: false
+  xy: 2, 139
+  size: 131, 136
+  orig: 131, 136
+  offset: 0, 0
+  index: -1
+QuickSlash
+  rotate: false
+  xy: 136, 2
+  size: 127, 136
+  orig: 127, 136
+  offset: 0, 0
+  index: -1
+SharpShadow
+  rotate: false
+  xy: 2, 3
+  size: 132, 134
+  orig: 132, 134
+  offset: 0, 0
+  index: -1
+SoulCatcher
+  rotate: false
+  xy: 264, 143
+  size: 128, 130
+  orig: 128, 130
+  offset: 0, 0
+  index: -1
+Unbreakable
+  rotate: false
+  xy: 135, 140
+  size: 127, 134
+  orig: 127, 134
+  offset: 0, 0
+  index: -1
+VoidHeart
+  rotate: false
+  xy: 141, 276
+  size: 133, 132
+  orig: 133, 132
+  offset: 0, 0
+  index: -1
