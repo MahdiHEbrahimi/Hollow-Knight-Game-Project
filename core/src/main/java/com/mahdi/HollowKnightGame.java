@@ -19,8 +19,8 @@ public class HollowKnightGame extends Game {
 
         CursorManager.getInstance();
 
-//       com.mahdi.screen.manager.ScreenManager.getInstance().startWithFadeIn(new MainMenuScreen());
-        com.mahdi.screen.manager.ScreenManager.getInstance().startWithFadeIn(new GameScreen("maps/CrystalPeak.tmx", "music/Crystal Peak.ogg"));
+       com.mahdi.screen.manager.ScreenManager.getInstance().startWithFadeIn(new MainMenuScreen());
+//        com.mahdi.screen.manager.ScreenManager.getInstance().startWithFadeIn(new GameScreen("maps/CrystalPeak.tmx", "music/Crystal Peak.ogg"));
 
     }
 

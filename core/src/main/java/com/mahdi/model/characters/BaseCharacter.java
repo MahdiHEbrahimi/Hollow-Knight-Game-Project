@@ -35,7 +35,7 @@ public abstract class BaseCharacter {
     protected int hp;
 
     // جهت حرکت فعلی: 1 = راست، 1- = چپ، 0 = بدون حرکت دستی
-    protected float totalTime = 0f;   // زمان سپری‌شده از شروع بازی (یا منطق شخصیت)
+    protected static float totalTime = 0f;   // زمان سپری‌شده از شروع بازی (یا منطق شخصیت)
     protected float lastAttackTime = -1f;
 
     public BaseCharacter(float x, float y, float width, float height, float maxXSpeed, float acceleration, int hp, float terminalVelocity) {

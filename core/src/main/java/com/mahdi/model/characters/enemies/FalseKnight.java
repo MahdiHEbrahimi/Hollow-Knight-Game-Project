@@ -726,6 +726,7 @@ public class FalseKnight extends Enemy {
         state = FKState.DEAD;
         Achievement.FALSE_KNIGHT.setActive(true);
         Achievement.COMPLETION.setActive(true);
+        ((GameScreen)AppStatus.getScreen()).endOfGame();
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.mahdi.model.status.AppStatus;
 
 public class Projectile {
 
@@ -97,16 +98,18 @@ public class Projectile {
         if (!active) return;
 
         // رسم مستطیل دیباگ (بدون تغییر)
-        if (debugRenderer == null) {
-            debugRenderer = new ShapeRenderer();
+        if (AppStatus.DEBUG) {
+            if (debugRenderer == null) {
+                debugRenderer = new ShapeRenderer();
+            }
+            batch.end();
+            debugRenderer.setProjectionMatrix(batch.getProjectionMatrix());
+            debugRenderer.begin(ShapeRenderer.ShapeType.Line);
+            debugRenderer.setColor(Color.CYAN);
+            debugRenderer.rect(bounds.x, bounds.y, bounds.width, bounds.height);
+            debugRenderer.end();
+            batch.begin();
         }
-        batch.end();
-        debugRenderer.setProjectionMatrix(batch.getProjectionMatrix());
-        debugRenderer.begin(ShapeRenderer.ShapeType.Line);
-        debugRenderer.setColor(Color.CYAN);
-        debugRenderer.rect(bounds.x, bounds.y, bounds.width, bounds.height);
-        debugRenderer.end();
-        batch.begin();
 
         // ☀️ اگر انیمیشنی داده نشده (null)، دقیقاً طبق درخواست هیچ عکسی رسم نمی‌شود
         if (animation == null) return;

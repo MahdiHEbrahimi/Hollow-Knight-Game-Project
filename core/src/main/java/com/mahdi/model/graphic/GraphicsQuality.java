@@ -1,6 +1,5 @@
 package com.mahdi.model.graphic;
 
-    // Global enum defining preset graphic qualities
     public enum GraphicsQuality {
         LOW(800, 450, false),
         MEDIUM(1280, 720, true),

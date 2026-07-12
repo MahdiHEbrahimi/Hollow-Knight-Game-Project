@@ -40,6 +40,7 @@ public class Player extends BaseCharacter {
     private static float soul = 0;
     private float maxSoul = 99;
     private static int numberOfDeath = 0;
+    private static int kills = 0;
 
     private State currentState;
     private State previousState = State.IDLE; // برای تشخیص پایان انیمیشن‌های یک‌باره
@@ -259,11 +260,10 @@ public class Player extends BaseCharacter {
     @Override
     protected void updateCustomLogic(float delta) {
         stateTime += delta;
-        updateCharms(delta);
+        updateCharms();
         lastTimeKnightGotDamaged += delta;
         if (wallStickLockout > 0f) wallStickLockout -= delta;
 
-        handleCheats();
         handleFixedAnimation();                 // بررسی پایان انیمیشن‌های قفل‌شده
 
         // ☀️ فوکوس نباید وسط یه دش شروع بشه، وگرنه فیزیک/تایمر دش هنگ می‌کنه
@@ -298,40 +298,41 @@ public class Player extends BaseCharacter {
 
         updateSmokeParticles(delta);            // به‌روزرسانی و تولید ذرات دود
         updateVFX(delta);                       // به‌روزرسانی افکت‌های بصری
-        updateAbilities(delta);                 // ☀️ منطق زمان‌بندی ابیلیتی‌ها
+        updateAbilities(delta);
+        handleCheats();
+
     }
 
-    private void updateCharms(float delta) {
-        MAX_AIR_DASHES   = Charm.DASHMASTER.isActive()   ? 4    : 2;
-        FOCUS_DURATION   = Charm.QUICK_FOCUS.isActive()  ? 0.4f : 1.5f;
-        DAMAGE_DEAL      = Charm.UNBREAKABLE.isActive()  ? 2    : 1;
-        SOUL_GETAMOUNT   = Charm.SOUL_CATCHER.isActive() ? 16f  : 11f;
-        THROW_SPEED      = Charm.HEAVY_BLOW.isActive()   ? 1400f : 2500f;
+    private void updateCharms() {
+        MAX_AIR_DASHES = Charm.DASHMASTER.isActive() ? 4 : 2;
+        FOCUS_DURATION = Charm.QUICK_FOCUS.isActive() ? 0.4f : 1.5f;
+        DAMAGE_DEAL = Charm.UNBREAKABLE.isActive() ? 2 : 1;
+        SOUL_GETAMOUNT = Charm.SOUL_CATCHER.isActive() ? 16f : 11f;
+        THROW_SPEED = Charm.HEAVY_BLOW.isActive() ? 3500f : 1400f;
     }
 
 // ======================= زیرمتدهای خصوصی =========================
 
-    private void handleCheats(){
+    private void handleCheats() {
         if (CheatCode.EMERGENCY_HEAL.isActive()) {
             increaseHP(1);
             CheatCode.EMERGENCY_HEAL.setFalse();
         }
         if (CheatCode.GOD_MODE.isActive()) {
-            if (maxHp == 5){
                 maxHp = 20;
                 hp = maxHp;
-                CheatCode.GOD_MODE.setFalse();
-            } else {
-                maxHp = 5;
-                hp = maxHp;
-                CheatCode.GOD_MODE.setFalse();
-            }
+//                CheatCode.GOD_MODE.setFalse();
+
+        } else {
+            maxHp = 5;
+            hp = maxHp;
+            CheatCode.GOD_MODE.setFalse();
         }
-        if (CheatCode.SOUL_REFILL.isActive()){
+        if (CheatCode.SOUL_REFILL.isActive()) {
             soul = maxSoul;
 //            CheatCode.SOUL_REFILL.setFalse();
         }
-        if (CheatCode.NO_LIMIT.isActive()){
+        if (CheatCode.NO_LIMIT.isActive()) {
             airDashCount = 0;
             hasDoubleJump = true;
         }
@@ -363,7 +364,7 @@ public class Player extends BaseCharacter {
         if (isFocusActive()) {
             this.velocity.x = 0;
             focusActiveTime += delta;
-            if (focusActiveTime > FOCUS_DURATION && soul >= 33 && hp < maxHp) {
+            if (focusActiveTime > FOCUS_DURATION && soul >= 33f && hp < maxHp) {
                 focusActiveTime = 0;
                 reduceSoul(33f);
                 increaseHP(1);
@@ -421,12 +422,12 @@ public class Player extends BaseCharacter {
     private boolean handleAbilityInput() {
         if (isFixAnimationActive) return false;
 
-        if (GameAction.SPELL_UP.isJustPressed() && soul > 33f) {
+        if (GameAction.SPELL_UP.isJustPressed() && soul >= 33f) {
             reduceSoul(33f);
             startUpwardBlast();
             return true;
         }
-        if (GameAction.SPELL_FORWARD.isJustPressed() && soul > 33) {
+        if (GameAction.SPELL_FORWARD.isJustPressed() && soul >= 33f) {
             reduceSoul(33f);
             startForwardFireball();
             return true;
@@ -659,12 +660,12 @@ public class Player extends BaseCharacter {
 
     private float lastTimeKnightGotDamaged = 0;
 
-    public void takeDamageFormGround(){
+    public void takeDamageFormGround() {
         if (!isAlive || lastTimeKnightGotDamaged < 2.0f) return;
         lastTimeKnightGotDamaged = 0;
         hp--;
-        ((GameScreen)AppStatus.getScreen()).activeCameraShake();
-        setThrown(new Vector2(0f , 4.5f * PLAYERTHROWN_SPEED));
+        ((GameScreen) AppStatus.getScreen()).activeCameraShake();
+        setThrown(new Vector2(0f, 4.5f * PLAYERTHROWN_SPEED));
         if (hp <= 0) {
             die();
         }
@@ -673,10 +674,10 @@ public class Player extends BaseCharacter {
     public void takeDamage(int damage, Enemy enemy) {
         if (!isAlive || lastTimeKnightGotDamaged < 2.0f) return;
         hp -= damage;
-        ((GameScreen)AppStatus.getScreen()).activeCameraShake();
+        ((GameScreen) AppStatus.getScreen()).activeCameraShake();
         lastTimeKnightGotDamaged = 0;
 
-        if (enemy != null && !(enemy instanceof FalseKnight)){
+        if (enemy != null && !(enemy instanceof FalseKnight)) {
             if (enemy.getPosition().x + enemy.getBounds().width / 2f < this.getPosition().x + this.getBounds().width / 2f) {
                 this.setThrown(new Vector2(PLAYERTHROWN_SPEED, 0f));
                 enemy.setThrown(new Vector2(-THROW_SPEED, 0f));
@@ -762,14 +763,13 @@ public class Player extends BaseCharacter {
                 if (facingRight) {
                     setThrown(new Vector2(-PLAYERTHROWN_SPEED, 0));
                     enemy.setThrown(new Vector2(THROW_SPEED, 0));
-                }
-                else {
+                } else {
                     setThrown(new Vector2(PLAYERTHROWN_SPEED, 0));
                     enemy.setThrown(new Vector2(-THROW_SPEED, 0));
                 }
                 break;
             case SCREAM:
-                enemy.setThrown(new Vector2(0, THROW_SPEED * 0.5f));
+                enemy.setThrown(new Vector2(0, THROW_SPEED * 1.5f));
                 break;
         }
 
@@ -779,7 +779,7 @@ public class Player extends BaseCharacter {
         increaseSoul(SOUL_GETAMOUNT);
     }
 
-    public void clearAttackHitBox(){
+    public void clearAttackHitBox() {
         attackHitbox = null;
     }
 
@@ -829,7 +829,7 @@ public class Player extends BaseCharacter {
         isFixAnimationActive = true;
         velocity.x = 0;
         triggerEffect("SoulScream", facingRight);
-        ((GameScreen)AppStatus.getScreen()).activeCameraShake();
+        ((GameScreen) AppStatus.getScreen()).activeCameraShake();
 
         abilityElapsed = 0f;
         abilityHitsFired = 0;
@@ -837,8 +837,8 @@ public class Player extends BaseCharacter {
     }
 
     private void pulseUpwardBlastHitbox() {
-        float hitW = bounds.width * 2f;
-        float hitH = 220f;
+        float hitW = bounds.width * 3f;
+        float hitH = 350f;
         attackHitbox = new Rectangle(
             bounds.x + (bounds.width - hitW) / 2f,
             bounds.y + bounds.height,
@@ -857,7 +857,7 @@ public class Player extends BaseCharacter {
         velocity.x = 0;
         fireballSpawned = false;
         triggerEffect("Blast", facingRight);
-        ((GameScreen)AppStatus.getScreen()).activeCameraShake();
+        ((GameScreen) AppStatus.getScreen()).activeCameraShake();
     }
 
     private void spawnFireballProjectile() {
@@ -995,7 +995,7 @@ public class Player extends BaseCharacter {
 
         float alpha = 1f;
         if (lastTimeKnightGotDamaged < 2.0f) {
-            alpha = 0.3f + 0.7f * (float)Math.abs(Math.sin(lastTimeKnightGotDamaged * 12));
+            alpha = 0.3f + 0.7f * (float) Math.abs(Math.sin(lastTimeKnightGotDamaged * 12));
         }
         batch.setColor(1f, 1f, 1f, alpha);
 
@@ -1064,7 +1064,7 @@ public class Player extends BaseCharacter {
     }
 
     private void drawDebug(Batch batch) {
-        if (!AppStatus.DEBUG)return;
+        if (!AppStatus.DEBUG) return;
         batch.end();
         debugRenderer.setProjectionMatrix(batch.getProjectionMatrix());
         debugRenderer.begin(ShapeRenderer.ShapeType.Line);
@@ -1081,18 +1081,29 @@ public class Player extends BaseCharacter {
         batch.begin();
     }
 
-    public static void init(){
+    public static void init() {
         geo = 0;
         numberOfDeath = 0;
+        soul = 0;
+        kills = 0;
+        totalTime = 0;
+    }
+
+    public static void increaseKill() {
+        kills++;
+    }
+
+    private void resetAfterDeath() {
+        geo = 0;
         soul = 0;
     }
 
 
     public void die() {
         if (!isAlive) return;   // اگر قبلاً مرده، هیچ کاری نکن
+        resetAfterDeath();
         currentState = State.DEATH;
-        numberOfDeath ++;
-        Player.init();
+        numberOfDeath++;
         stateTime = 0f;
         isFixAnimationActive = true;
         this.hasGravity = true;
@@ -1124,15 +1135,23 @@ public class Player extends BaseCharacter {
         return maxHp;
     }
 
-    public void setMaxHp(int maxHp) {
-        this.maxHp = maxHp;
+    public static int getNumberOfDeath() {
+        return numberOfDeath;
+    }
+
+    public static int getKills() {
+        return kills;
+    }
+
+    public static float getTotalTime() {
+        return totalTime;
     }
 
     public int getGeo() {
         return geo;
     }
 
-    public void increaseGeo(int geo){
+    public void increaseGeo(int geo) {
         this.geo += geo;
     }
 

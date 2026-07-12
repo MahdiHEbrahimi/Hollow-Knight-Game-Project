@@ -7,8 +7,8 @@ public class SolidBlock {
     public boolean isDeadly;
     public String type;
     public int respawnId = -1;
-    public String musicPath;   // برای تغییر آهنگ
-    public String mapPath;     // برای تغییر صفحه (همراه با musicPath)
+    public String musicPath;
+    public String mapPath;
 
     public SolidBlock(float x, float y, float width, float height, boolean isDeadly, String type,
                       int respawnId, String musicPath, String mapPath) {

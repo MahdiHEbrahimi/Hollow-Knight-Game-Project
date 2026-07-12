@@ -184,8 +184,9 @@ public class SettingsPanel extends BasePanel {
     }
 
     private void onKeyboard() {
+
         AppStatus.setCurreMenu(MenuType.KEYBOARD);
-        PanelManager.getInstance().performPanelTransition(new KeyboardPanel(true));
+        PanelManager.getInstance().performPanelTransition(new KeyboardPanel(toPauseMenu));
     }
 
     private void onLanguage() {

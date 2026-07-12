@@ -7,38 +7,38 @@ public enum Charm {
         false
     ),
     HEAVY_BLOW(
-        "HeavyBlow",
-        "Increases knockback force on enemies.",
+        "Heavy Blow",
+        "Greatly increases knockback force, pushing enemies farther away.",
         false
     ),
     QUICK_FOCUS(
         "Quick Focus",
-        "Increases the speed of Focus healing.",
+        "Increases Focus speed, reducing time needed to heal.",
         false
     ),
     QUICK_SLASH(
         "Quick Slash",
-        "Increases attack speed with your Nail.",
+        "Greatly increases Nail attack speed.",
         false
     ),
     SHARP_SHADOW(
         "Sharp Shadow",
-        "Deals damage to enemies when dashing through them.",
+        "Dash through enemies dealing damage. Increases Dash length by 20%.",
         false
     ),
     SOUL_CATCHER(
         "Soul Catcher",
-        "Increases the amount of Soul gained from striking enemies.",
+        "Increases Soul gained from striking enemies with the Nail.",
         false
     ),
     UNBREAKABLE(
         "Unbreakable",
-        "Grants immunity to knockback and increased durability.",
+        "Strengthens the Knight, increasing Nail damage.",
         false
     ),
     VOID_HEART(
         "Void Heart",
-        "Unlocks hidden potential within the bearer.",
+        "Spell damage +50%, unlocks dark spells.",
         false
     );
 
@@ -65,7 +65,6 @@ public enum Charm {
     }
 
     public void setActive(boolean active) {
-        System.out.println(this.getDisplayName() + active);
         this.active = active;
     }
 

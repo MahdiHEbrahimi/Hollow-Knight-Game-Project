@@ -204,7 +204,7 @@ public class GameEngine {
         try {
             for (Projectile p : projectiles) {
                 p.update(delta);
-                if (p.damagesPlayer()){
+                if (p.damagesPlayer()) {
                     if (p.getBounds().overlaps(player.getBounds()))
                         player.takeDamage(1, null);
                     if (!p.isActive())
@@ -371,11 +371,12 @@ public class GameEngine {
                     if (((Player) character).getAttackHitbox() != null
                         && ((Player) character).getAttackHitbox().overlaps(block.bounds))
                         character.setThrown(new Vector2(0f, 5000f));
-                    else
+                    else {
                         ((Player) character).takeDamageFormGround();
 
-                    if (block.respawnId >= 0)
-                        respawnPlayer(block.respawnId);
+                        if (block.respawnId >= 0)
+                            respawnPlayer(block.respawnId);
+                    }
                 } else if (character instanceof Enemy) {
                     if (character.isAlive())
                         ((Enemy) character).takeDamage(1);
@@ -434,10 +435,11 @@ public class GameEngine {
     }
 
     private void onScreenTrigger(String mapPath, String musicPath) {
-        ScreenManager.getInstance().performTransition(() -> new GameScreen(mapPath,musicPath));
+        ScreenManager.getInstance().performTransition(() -> new GameScreen(mapPath, musicPath));
     }
 
     public void enemyIsDead(Enemy enemy) {
+        Player.increaseKill();
         SoundManager.getInstance().playSFX("SFX/uumuu_helper_slash.mp3");
         Vector2 position = enemy.getPosition();
         Corpse corpse = enemy.getCorpse();
@@ -462,7 +464,7 @@ public class GameEngine {
         return mapPath;
     }
 
-    public void addProjectile (Projectile projectile){
+    public void addProjectile(Projectile projectile) {
         projectiles.add(projectile);
     }
 

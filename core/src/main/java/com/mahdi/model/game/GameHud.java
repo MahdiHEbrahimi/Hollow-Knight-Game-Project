@@ -24,7 +24,6 @@ public class GameHud extends Group {
     private TextureAtlas hudAtlas;
     private TextureAtlas soulAtlas;
 
-    // انیمیشن‌های کلی HUD
     private Animation<TextureRegion> healthBarIntroAnim;
     private Animation<TextureRegion> geoIntroAnim;
 

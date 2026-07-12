@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.mahdi.model.characters.Player;
+import com.mahdi.model.enums.Achievement;
 import com.mahdi.model.enums.CheatCode;
 import com.mahdi.model.enums.GameAction;
 import com.mahdi.model.game.CheatManager;
@@ -13,8 +15,7 @@ import com.mahdi.model.status.AppStatus;
 import com.mahdi.screen.manager.BrightnessController;
 import com.mahdi.screen.manager.MusicManager;
 import com.mahdi.screen.manager.PanelManager;
-import com.mahdi.screen.manager.ScreenManager;
-import com.mahdi.screen.panels.GuidePanel;
+import com.mahdi.screen.panels.EndOfGamePanel;
 import com.mahdi.screen.panels.InventoryPanel;
 import com.mahdi.screen.panels.PausePanel;
 import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
@@ -29,7 +30,8 @@ public class GameScreen extends BaseScreen {
     private final GameEngine gameEngine;
     private final String mapPath;
     private final String musicPath;
-    private boolean inventory;
+    private boolean isInventory;
+    private boolean isEndOfGame;
 
     public GameScreen(String mapPath, String musicPath) {
         super();
@@ -66,7 +68,7 @@ public class GameScreen extends BaseScreen {
             CheatCode.BOSS_ARENA_TELEPORT.setFalse();
         }
 
-        if ((isPaused && GameAction.PAUSE.isJustPressed() || (inventory && GameAction.INVENTORY.isJustPressed()))) {
+        if (((isPaused && GameAction.PAUSE.isJustPressed() && !isEndOfGame) || (isInventory && GameAction.INVENTORY.isJustPressed()))) {
             resumeGame();
         } else {
             if (GameAction.PAUSE.isJustPressed()) {
@@ -75,7 +77,7 @@ public class GameScreen extends BaseScreen {
                 PanelManager.getInstance().performPanelTransition(new PausePanel(this));
             } else if (GameAction.INVENTORY.isJustPressed()){
                 isPaused = true;
-                inventory = true;
+                isInventory = true;
                 PanelManager.getInstance().initialize(hudStage);
                 PanelManager.getInstance().performPanelTransition(new InventoryPanel(this));
             }
@@ -221,8 +223,16 @@ public class GameScreen extends BaseScreen {
 
     public void resumeGame() {
         isPaused = false;
-        inventory = false;
+        isInventory = false;
         PanelManager.getInstance().dispose();
+    }
+
+    public void endOfGame() {
+        isPaused = true;
+        isEndOfGame = true;
+        PanelManager.getInstance().initialize(hudStage);
+        PanelManager.getInstance().performPanelTransition(new EndOfGamePanel());
+        if (Player.getTotalTime() < 99999f) Achievement.SPEEDRUN.setActive(true);
     }
 
     @Override
