@@ -369,8 +369,10 @@ public class GameEngine {
             if (block.isDeadly && charBounds.overlaps(block.bounds)) {
                 if (character instanceof Player) {
                     if (((Player) character).getAttackHitbox() != null
-                        && ((Player) character).getAttackHitbox().overlaps(block.bounds))
+                        && ((Player) character).getAttackHitbox().overlaps(block.bounds)) {
                         character.setThrown(new Vector2(0f, 5000f));
+                        ((Player) character).setHasDoubleJump(true);
+                    }
                     else {
                         ((Player) character).takeDamageFormGround();
 

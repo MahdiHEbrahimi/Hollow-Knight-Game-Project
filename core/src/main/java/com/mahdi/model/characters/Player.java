@@ -321,17 +321,19 @@ public class Player extends BaseCharacter {
         if (CheatCode.GOD_MODE.isActive()) {
                 maxHp = 20;
                 hp = maxHp;
-//                CheatCode.GOD_MODE.setFalse();
+        }
+        else {
+            if (maxHp != 5) {
+                maxHp = 5;
+                hp = maxHp;
+            }
 
-        } else {
-            maxHp = 5;
-            hp = maxHp;
             CheatCode.GOD_MODE.setFalse();
         }
         if (CheatCode.SOUL_REFILL.isActive()) {
             soul = maxSoul;
-//            CheatCode.SOUL_REFILL.setFalse();
         }
+
         if (CheatCode.NO_LIMIT.isActive()) {
             airDashCount = 0;
             hasDoubleJump = true;
@@ -754,6 +756,7 @@ public class Player extends BaseCharacter {
         switch (currentState) {
             case DOWN_SLASH:
                 setThrown(new Vector2(0, 4 * PLAYERTHROWN_SPEED));
+                hasDoubleJump = true;
                 break;
             case UP_SLASH:
                 enemy.setThrown(new Vector2(0, THROW_SPEED));
@@ -1188,6 +1191,10 @@ public class Player extends BaseCharacter {
 
     public boolean isFixAnimationActive() {
         return isFixAnimationActive;
+    }
+
+    public void setHasDoubleJump(boolean hasDoubleJump) {
+        this.hasDoubleJump = hasDoubleJump;
     }
 
     @Override
