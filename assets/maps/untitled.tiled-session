@@ -1,10 +1,10 @@
 {
-    "activeFile": "FalseKnightRoom.tmx",
+    "activeFile": "CrystalPeak.tmx",
     "expandedProjectPaths": [
-        "Crystal Peak",
+        ".",
         "map 1",
-        "FalseKnightRoom",
-        "."
+        "Crystal Peak",
+        "FalseKnightRoom"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -16,6 +16,7 @@
             "scaleInDock": 1
         },
         "Crystal Peak/GG_scenery_0004_17.tsx": {
+            "dynamicWrapping": false,
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
@@ -96,11 +97,11 @@
             "expandedObjectLayers": [
                 2
             ],
-            "scale": 0.25,
+            "scale": 0.5,
             "selectedLayer": 10,
             "viewCenter": {
-                "x": 16000,
-                "y": 3202
+                "x": 18826,
+                "y": 1011
             }
         },
         "CrystalPeak.tmx#fung_new_0080_Layer-273": {
@@ -117,8 +118,8 @@
             "scale": 0.0625,
             "selectedLayer": 7,
             "viewCenter": {
-                "x": 13024,
-                "y": 4328
+                "x": 6976,
+                "y": 3416
             }
         },
         "FalseKnightRoom/Believer_shrine_pieces_0004_plaque_01.tsx": {
@@ -270,11 +271,11 @@
             "expandedObjectLayers": [
                 4
             ],
-            "scale": 0.125,
+            "scale": 0.75,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 12800,
-                "y": 4004
+                "x": 1633.333333333333,
+                "y": 2443.333333333333
             }
         },
         "untitled.tmx#mine_break_wall": {
@@ -300,10 +301,10 @@
     "project": "untitled.tiled-project",
     "property.type": "string",
     "recentFiles": [
+        "FalseKnightRoom.tmx",
         "untitled.tmx",
         "FalseKnightRoom/fungd_vase_03.tsx",
         "CrystalPeak.tmx",
-        "FalseKnightRoom.tmx",
         "FalseKnightRoom/hive_scenery_0038_h.tsx",
         "FalseKnightRoom/gg_mantis_cage_0001_2.tsx",
         "FalseKnightRoom/Believer_shrine_thin_plaque__0002_1.tsx",
